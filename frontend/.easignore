@@ -1,0 +1,9 @@
+**/AppData/**
+**/Users/**
+*.tmp
+*.log
+*.lock
+node_modules/
+android/
+ios/
+.git/
