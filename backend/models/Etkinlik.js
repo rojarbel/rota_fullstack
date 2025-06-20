@@ -10,6 +10,7 @@ const EtkinlikSchema = new mongoose.Schema(
     fiyat: String,
     aciklama: String,
     gorsel: String,
+    adres: String,
     onaylandi: { type: Boolean, default: false },
     tiklanmaSayisi: { type: Number, default: 0 },
     favoriSayisi: { type: Number, default: 0 },
