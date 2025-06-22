@@ -32,7 +32,7 @@ const mongoose = require("mongoose");
 // Yeni etkinlik oluştur
 router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
   try {
-    const { baslik, sehir, tarih, fiyat, kategori, aciklama, tur } = req.body;
+    const { baslik, sehir, tarih, fiyat, kategori, aciklama, tur, adres } = req.body;
     let gorselPath = req.file ? `/img/${req.file.filename}` : null;
 
 
@@ -65,7 +65,8 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
       tur,
       aciklama,
       gorsel: gorselPath,
-      onaylandi: false, // Yeni etkinlikler başlangıçta onaysız olur
+      onaylandi: false,
+      adres, // Yeni etkinlikler başlangıçta onaysız olur
     });
 
     const savedEtkinlik = await yeniEtkinlik.save();
