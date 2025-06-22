@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import axiosClient from "../src/api/axiosClient";
 import { useCallback } from 'react';
 import logger from '../src/utils/logger';
+import formatDate from '../src/utils/formatDate';
 
 export default function AramaSonuclari() {
   const { q, sehir } = useLocalSearchParams();
@@ -65,7 +66,7 @@ const renderItem = useCallback(({ item }) => (
       {item.baslik}
     </Text>
     <Text style={{ fontSize: 14, color: '#666', marginTop: 2 }}>
-      {item.sehir} • {item.tarih}
+      {item.sehir} • {formatDate(item.tarih)}
     </Text>
     <Text style={{ marginTop: 4, color: '#333', fontWeight: '500' }}>
       {(item.fiyat && item.fiyat !== '0') ? `${item.fiyat} ₺` : 'Ücretsiz'} • {item.kategori}

@@ -14,6 +14,7 @@ import * as Clipboard from 'expo-clipboard';
 import { KeyboardAvoidingView } from 'react-native';
 import CommentCard from '../../src/components/CommentCard';
 import logger from '../../src/utils/logger';
+import formatDate from '../../src/utils/formatDate';
 
 const PRIMARY = '#7B2CBF';
 const ACCENT = '#FFD54F';
@@ -70,7 +71,7 @@ export default function EtkinlikDetay() {
 
   const paylaş = async (tip) => {
     const url = `https://rota.app/etkinlik/${etkinlik.id}`;
-    const mesaj = `${etkinlik.baslik} - ${etkinlik.tarih}\n${url}`;
+    const mesaj = `${etkinlik.baslik} - ${formatDate(etkinlik.tarih)}\n${url}`;
 
 
     try {
@@ -297,8 +298,8 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
           <Text style={{ color: '#666', marginBottom: 2 }}>📂 {etkinlik.kategori}</Text>
           <Text style={{ color: '#666', marginBottom: 2 }}>🏷️ {etkinlik.tur}</Text>
           <Text style={{ color: '#666', marginBottom: 2 }}>📍 {etkinlik.sehir}</Text>
-          <Text style={{ color: '#666', marginBottom: 2 }}>📅 {etkinlik.tarih}</Text>
-          <Text style={{ color: PRIMARY, fontWeight: '600' }}>
+          <Text style={{ color: '#666', marginBottom: 2 }}>📅 {formatDate(etkinlik.tarih)}</Text>
+                    <Text style={{ color: PRIMARY, fontWeight: '600' }}>
             💰 {(etkinlik.fiyat && etkinlik.fiyat !== '0') ? `${etkinlik.fiyat} ₺` : 'Ücretsiz'}
           </Text>
 

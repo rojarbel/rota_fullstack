@@ -13,7 +13,7 @@ import SafeFlatList from '../src/components/SafeFlatList'; // yolunu kendi dizin
 import FastImage from 'expo-fast-image';
 import { useCallback } from 'react';
 import logger from '../src/utils/logger';
-
+import formatDate from '../src/utils/formatDate';
 
 const Index = () => {
     const router = useRouter();
@@ -147,7 +147,7 @@ const renderEtkinlik = useCallback(({ item }) => {
 
         <Text style={styles.title}>{item.baslik || 'Başlık yok'}</Text>
         <Text style={styles.meta}>
-          {(item.kategori || 'Kategori yok')} | {(item.tarih || 'Tarih yok')}
+          {(item.kategori || 'Kategori yok')} | {item.tarih ? formatDate(item.tarih) : 'Tarih yok'}
         </Text>
         <Text numberOfLines={3} style={styles.aciklama}>
           {item.fiyat && item.fiyat !== '0' ? `${item.fiyat} ₺` : 'Ücretsiz'}
