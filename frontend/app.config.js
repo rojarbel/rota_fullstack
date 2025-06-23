@@ -21,9 +21,11 @@ export default {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff',
 
-    },
-          config: {
-        googleMaps: { apiKey: 'AIzaSyBScQ90t460MjP_e8cUDzRtY9dXPl4davI' },
+      },
+      config: {
+        googleMaps: {
+          apiKey: process.env.ANDROID_GOOGLE_MAPS_API_KEY,
+        },
       },
     },
 extra: {
