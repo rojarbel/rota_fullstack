@@ -20,13 +20,12 @@ export default {
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff',
-       config: {
-      googleMaps: {
-      apiKey: 'AIzaSyBScQ90t460MjP_e8cUDzRtY9dXPl4davI' // ENV DEĞİL, STRİNG!,
-        },
+
+    },
+          config: {
+        googleMaps: { apiKey: 'AIzaSyBScQ90t460MjP_e8cUDzRtY9dXPl4davI' },
       },
     },
-      },
 extra: {
   apiUrl: process.env.API_URL,
   eas: {
