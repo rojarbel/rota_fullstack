@@ -19,8 +19,13 @@ export default {
       versionCode: 1,
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#ffffff'
-      }
+        backgroundColor: '#ffffff',
+        config: {
+        googleMaps: {
+          apiKey: process.env.GOOGLE_MAPS_API_KEY,
+        },
+      },
+    },
       },
 extra: {
   apiUrl: process.env.API_URL,
@@ -42,6 +47,8 @@ extra: {
           backgroundColor: '#ffffff'
         }
       ]
+            ,
+      'react-native-maps'
     ],
     experiments: {
       typedRoutes: true
