@@ -4,6 +4,7 @@ import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import axiosClient from '../src/api/axiosClient';
+import { PROVIDER_GOOGLE } from 'react-native-maps'; 
 
 export default function Yakindaki() {
   const [coords, setCoords] = useState(null);
@@ -67,6 +68,7 @@ export default function Yakindaki() {
     <View style={styles.container}>
       {coords && (
         <MapView
+          provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFill}
           showsUserLocation
           initialRegion={{
