@@ -14,6 +14,7 @@ const Favori = require("../models/Favori");
 const Kullanici = require("../models/Kullanici");
 const Yorum = require("../models/Yorum");
 const Bildirim = require("../models/Bildirim");
+const { geocode } = require("../utils/geocodeCache");
 
 
 // Multer ayarı: bellek içine görsel yüklemesi
@@ -606,5 +607,60 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
   res.json({ message: "Favoriden çıkarıldı" });
 });
 
+router.get('/yakindaki', async (req, res) => {
+  const { lat, lng, radius = 50 } = req.query;
+  const userLat = parseFloat(lat);
+  const userLng = parseFloat(lng);
+  const maxRadius = parseFloat(radius) || 50;
+
+  if (isNaN(userLat) || isNaN(userLng)) {
+    return res.status(400).json({ message: 'Geçersiz konum' });
+  }
+
+  try {
+    const etkinlikler = await Etkinlik.find({ onaylandi: true }).lean();
+    const sonuc = [];
+
+    for (const e of etkinlikler) {
+      let coords = null;
+      if (e.adres) {
+        const parts = e.adres.split(/\s+/).filter(Boolean);
+        for (let i = 1; i <= parts.length; i++) {
+          const query = `${e.sehir} ${parts.slice(0, i).join(' ')}`.trim();
+          coords = await geocode(query);
+          if (coords) break;
+        }
+      }
+
+      if (!coords && e.sehir) {
+        coords = await geocode(e.sehir);
+      }
+
+      if (!coords) continue;
+
+      const distance = haversine(userLat, userLng, coords.lat, coords.lng);
+      if (distance <= maxRadius) {
+        sonuc.push({ ...e, latitude: coords.lat, longitude: coords.lng });
+      }
+    }
+
+    res.json(sonuc);
+  } catch (err) {
+    console.error('yakindaki route hata:', err);
+    res.status(500).json({ message: 'Sunucu hatası', error: err.message });
+  }
+});
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const toRad = deg => (deg * Math.PI) / 180;
+  const R = 6371; // km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 module.exports = router;
