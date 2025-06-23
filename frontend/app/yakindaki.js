@@ -71,6 +71,7 @@ export default function Yakindaki() {
           provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFill}
           showsUserLocation
+                    googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY || process.env.ANDROID_GOOGLE_MAPS_API_KEY}
           initialRegion={{
             latitude: coords.latitude,
             longitude: coords.longitude,
