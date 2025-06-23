@@ -416,9 +416,6 @@ res.status(200).json({
 
 
 
-module.exports = router;
-
-
 router.get("/favori-bildirim", verifyToken, async (req, res) => {
   const bugun = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
 
