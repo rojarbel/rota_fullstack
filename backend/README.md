@@ -7,7 +7,7 @@ npm start
 ```
 ## Configuration
 
-Copy `.env.example` to `.env` and set the following variables:
+Copy `.env.example` to `.env` and provide values for the following variables:
 
 - `MONGO_URL`
 - `JWT_SECRET`

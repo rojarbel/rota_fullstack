@@ -18,7 +18,10 @@ async function geocode(address) {
   if (cache[address]) return cache[address];
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) throw new Error('GOOGLE_MAPS_API_KEY not set');
+  if (!apiKey) {
+    console.warn('GOOGLE_MAPS_API_KEY not set, geocoding disabled');
+    return null;
+  }
 
   const url = 'https://maps.googleapis.com/maps/api/geocode/json';
   try {
