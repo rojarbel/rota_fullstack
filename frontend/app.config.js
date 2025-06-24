@@ -1,58 +1,50 @@
 import 'dotenv/config';
 
 export default {
-  expo: {
-    name: 'rota_mobil',
-    slug: 'rota_mobil',
-    version: '1.0.0',
-    orientation: 'portrait',
-    scheme: 'rotamobil',
-    icon: './assets/images/icon.png',
-    userInterfaceStyle: 'automatic',
-    ios: {
-      supportsTablet: true,
-      bundleIdentifier: 'com.roj.routemobile',
-      buildNumber: '1.0.0'
-    },
-    android: {
-      package: 'com.roj.routemobile',
-      versionCode: 1,
-      adaptiveIcon: {
-        foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#ffffff',
-
-      },
-      config: {
-        googleMaps: {
-          apiKey: process.env.ANDROID_GOOGLE_MAPS_API_KEY,
-        },
-      },
-    },
-extra: {
-  apiUrl: process.env.API_URL,
-  eas: {
-    projectId: "7c8d246c-100b-4e00-a19e-0f2be95e9e6b"
-  }
-},
-    runtimeVersion: {
-      policy: 'appVersion'
-    },
-    plugins: [
-      'expo-router',
-      [
-        'expo-splash-screen',
-        {
-          image: './assets/images/splash-icon.png',
-          imageWidth: 200,
-          resizeMode: 'contain',
-          backgroundColor: '#ffffff'
-        }
-      ]
-            ,
-      'react-native-maps'
-    ],
-    experiments: {
-      typedRoutes: true
+  name: "rota-mobil",
+  slug: "rota-mobil",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/images/icon.png",
+  userInterfaceStyle: "automatic",
+  splash: {
+    image: "./assets/images/splash-icon.png",
+    resizeMode: "contain",
+    backgroundColor: "#ffffff"
+  },
+  updates: {
+    fallbackToCacheTimeout: 0
+  },
+  assetBundlePatterns: ["**/*"],
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: "com.roj.rotamobile",
+    config: {
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
     }
+  },
+  android: {
+    package: "com.roj.rotamobile",
+    config: {
+      googleMaps: {
+        apiKey: process.env.GOOGLE_MAPS_API_KEY
+      }
+    }
+  },
+  extra: {
+    apiUrl: process.env.API_URL,
+    eas: {
+      projectId: "7c80246c-10b0-4600-a19e-9f20e59e96ab"
+    }
+  },
+  runtimeVersion: {
+    policy: "appVersion"
+  },
+  plugins: [
+    "expo-router",
+    "expo-splash-screen"
+  ],
+  experiments: {
+    typedRoutes: true
   }
 };
