@@ -34,6 +34,18 @@ const mongoose = require("mongoose");
 router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
   try {
     const { baslik, sehir, tarih, fiyat, kategori, aciklama, tur, adres } = req.body;
+    let latitude = null;
+    let longitude = null;
+
+    try {
+      const coords = await geocode(adres || sehir);
+      if (coords) {
+        latitude = coords.lat;
+        longitude = coords.lng;
+      }
+    } catch (err) {
+      console.warn("📍 Konum bilgisi alınamadı:", err.message);
+    }
     let gorselPath = req.file ? `/img/${req.file.filename}` : null;
 
 
@@ -68,6 +80,8 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
       gorsel: gorselPath,
       onaylandi: false,
       adres, // Yeni etkinlikler başlangıçta onaysız olur
+      latitude,
+      longitude,
     });
 
     const savedEtkinlik = await yeniEtkinlik.save();

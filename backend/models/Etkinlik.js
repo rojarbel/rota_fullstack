@@ -11,6 +11,8 @@ const EtkinlikSchema = new mongoose.Schema(
     aciklama: String,
     gorsel: String,
     adres: String,
+    latitude: { type: Number, index: true },
+    longitude: { type: Number, index: true },
     onaylandi: { type: Boolean, default: false },
     tiklanmaSayisi: { type: Number, default: 0 },
     favoriSayisi: { type: Number, default: 0 },
