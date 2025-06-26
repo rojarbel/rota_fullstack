@@ -7,6 +7,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import axiosClient from '../src/api/axiosClient';
 import { getItem as getSecureItem } from '../src/utils/storage';
 import logger from '../src/utils/logger';
+import { IMAGE_BASE_URL } from '../src/constants';
 
 const Favorilerim = () => {
   const [favoriler, setFavoriler] = useState([]);
@@ -65,7 +66,7 @@ const Favorilerim = () => {
         favoriler.map((etkinlik) => (
           <TouchableOpacity key={etkinlik.id} style={styles.card} onPress={() => detayGoster(etkinlik)}>
             <FastImage
-              uri={`https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net${etkinlik.gorsel}`}
+              uri={`${IMAGE_BASE_URL}${etkinlik.gorsel}`}
               cacheKey={etkinlik.id}
               style={styles.image}
             />

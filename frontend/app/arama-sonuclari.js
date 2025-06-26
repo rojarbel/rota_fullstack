@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import axiosClient from "../src/api/axiosClient";
+import { IMAGE_BASE_URL } from '../src/constants';
 import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
@@ -57,7 +58,7 @@ const renderItem = useCallback(({ item }) => (
     }}
   >
   <Image
-    source={{ uri: `https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net${item.gorsel}` }}
+    source={{ uri: `${IMAGE_BASE_URL}${item.gorsel}` }}
 
       style={{ width: '100%', height: 270, borderRadius: 6 }}
       resizeMode="cover"

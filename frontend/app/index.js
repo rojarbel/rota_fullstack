@@ -14,6 +14,7 @@ import FastImage from 'expo-fast-image';
 import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
+import { IMAGE_BASE_URL } from '../src/constants';
 
 const Index = () => {
     const router = useRouter();
@@ -124,7 +125,7 @@ const renderEtkinlik = useCallback(({ item }) => {
         item.gorsel.trim().length > 0 &&
         !item.gorsel.startsWith('data:image') &&
         item.gorsel.startsWith('/')
-          ? `https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net${item.gorsel}`
+          ? `${IMAGE_BASE_URL}${item.gorsel}`
           : null;
 
     return (

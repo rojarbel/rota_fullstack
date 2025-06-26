@@ -15,11 +15,12 @@ import { KeyboardAvoidingView } from 'react-native';
 import CommentCard from '../../src/components/CommentCard';
 import logger from '../../src/utils/logger';
 import formatDate from '../../src/utils/formatDate';
+import { IMAGE_BASE_URL } from '../../src/constants';
 
 const PRIMARY = '#7B2CBF';
 const ACCENT = '#FFD54F';
 const TEXT = '#333';
-const backendURL = 'https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net';
+const backendURL = IMAGE_BASE_URL;
 
 export default function EtkinlikDetay() {
   const navigation = useNavigation();

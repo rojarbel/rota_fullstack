@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Text, TextInput, TouchableOpacity, View, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import axiosClient from '../api/axiosClient';
+import { IMAGE_BASE_URL } from '../constants';
 import FastImage from 'expo-fast-image';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import qs from 'qs';
@@ -77,7 +78,7 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
         const yeni = res.data.data.map(e => ({
           ...e,
           _id: e._id?.toString() || e.id?.toString(),
-          gorsel: e.gorsel ? `https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net${e.gorsel}` : null,
+          gorsel: e.gorsel ? `${IMAGE_BASE_URL}${e.gorsel}` : null,
         }));
 
         if (res.data.hasMore !== undefined) {

@@ -3,7 +3,7 @@ import { ActivityIndicator, View, Text, Image, StyleSheet } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import axiosClient from '../src/api/axiosClient';
-
+import { IMAGE_BASE_URL } from '../src/constants';
 const PRIMARY = '#7B2CBF';
 
 export default function Yakindaki() {
@@ -74,7 +74,7 @@ export default function Yakindaki() {
           {events.map((e) => {
             const img =
               e.gorsel && e.gorsel.startsWith('/')
-                ? `https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net${e.gorsel}`
+                ? `${IMAGE_BASE_URL}${e.gorsel}`
                 : null;
             return (
               <Marker

@@ -5,6 +5,7 @@ import { Alert, Button, Image, ScrollView, StyleSheet, Text, View } from 'react-
 import { getItem as getSecureItem } from '../../utils/storage';
 import logger from '../../utils/logger';
 import handleApiError from '../../utils/handleApiError';
+import { IMAGE_BASE_URL } from '../../constants';
 
 const EtkinlikOnay = () => {
   const [bekleyenEtkinlikler, setBekleyenEtkinlikler] = useState([]);
@@ -74,7 +75,7 @@ const EtkinlikOnay = () => {
         bekleyenEtkinlikler.map((etkinlik) => (
             <View key={etkinlik.id || etkinlik._id} style={styles.card}>
             <Image
-              source={{ uri: `https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net/img/${etkinlik.gorsel?.split('/').pop()}` }}
+              source={{ uri: `${IMAGE_BASE_URL}/img/${etkinlik.gorsel?.split('/').pop()}` }}
               style={{ width: 200, height: 200 }}
               onError={() => logger.log('Görsel yüklenemedi')}
 

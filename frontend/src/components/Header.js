@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import axiosClient from '../api/axiosClient';
+import { IMAGE_BASE_URL } from '../constants';
 import useAuth from '../hooks/useAuth';
 import { Platform, StatusBar } from 'react-native';
 import { setCachedToken } from '../api/axiosClient';
@@ -307,7 +308,7 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
                 >
                   <FastImage
                     uri={item.gorsel && item.gorsel !== 'null'
-                     ? `https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net${item.gorsel}`
+                     ? `${IMAGE_BASE_URL}${item.gorsel}`
                       : 'https://via.placeholder.com/100'}
                     cacheKey={item._id || item.id || `search-${item.baslik}`}
                     style={styles.eventImage}
@@ -369,7 +370,7 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
           <FastImage
             uri={
               gorsel
-                ? `https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net${gorsel}`
+                ? `${IMAGE_BASE_URL}${gorsel}`
                 : 'https://via.placeholder.com/100'
             }
             style={styles.panelImage}
