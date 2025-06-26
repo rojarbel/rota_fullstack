@@ -638,18 +638,28 @@ router.get('/yakindaki', async (req, res) => {
 
     for (const e of etkinlikler) {
       let coords = null;
-      if (e.adres) {
-        const parts = e.adres.split(/\s+/).filter(Boolean);
-        for (let i = 1; i <= parts.length; i++) {
-          const query = `${e.sehir} ${parts.slice(0, i).join(' ')}`.trim();
-          coords = await geocode(query);
-          if (coords) break;
+
+      // If stored latitude/longitude exist use them directly
+      if (
+        typeof e.latitude === 'number' && !isNaN(e.latitude) &&
+        typeof e.longitude === 'number' && !isNaN(e.longitude)
+      ) {
+        coords = { lat: e.latitude, lng: e.longitude };
+      } else {
+        // Fallback: attempt to geocode the address parts
+        if (e.adres) {
+          const parts = e.adres.split(/\s+/).filter(Boolean);
+          for (let i = 1; i <= parts.length; i++) {
+            const query = `${e.sehir} ${parts.slice(0, i).join(' ')}`.trim();
+            coords = await geocode(query);
+            if (coords) break;
+          }
         }
       }
 
-      if (!coords && e.sehir) {
-        coords = await geocode(e.sehir);
-      }
+        if (!coords && e.sehir) {
+          coords = await geocode(e.sehir);
+        }
 
       if (!coords) continue;
 
