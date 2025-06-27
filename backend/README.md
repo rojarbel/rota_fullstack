@@ -9,9 +9,14 @@ npm start
 
 Copy `.env.example` to `.env` and provide values for the following variables:
 
-- `MONGO_URL`
-- `JWT_SECRET`
-- `GOOGLE_MAPS_API_KEY`
+- `MONGO_URL` - MongoDB connection string
+- `PORT` - port to run the server (defaults to 5000)
+- `JWT_SECRET` - secret for signing access tokens
+- `JWT_REFRESH_SECRET` - secret for signing refresh tokens
+- `GOOGLE_MAPS_API_KEY` - Google Maps API key
+- `EMAIL_USER` - e-mail account used for sending messages
+- `EMAIL_PASS` - password for the e-mail account
+- `CLIENT_BASE_URL` - base URL of the frontend used in e-mails
 
 ## Scheduled cleanup
 

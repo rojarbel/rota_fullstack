@@ -25,6 +25,8 @@ export default function Yakindaki() {
         const { coords } = await Location.getCurrentPositionAsync({});
         const lat = coords.latitude;
         const lng = coords.longitude;
+                const geo = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+        const cityName = geo?.[0]?.city;
 
         setRegion({
           latitude: lat,
@@ -33,8 +35,8 @@ export default function Yakindaki() {
           longitudeDelta: 0.05,
         });
 
-        const { data } = await axiosClient.get('/etkinlik/yakindaki', {
-          params: { lat, lng, radius: 50 },
+        const { data } = await axiosClient.get('/etkinlik', {
+          params: { sehir: cityName },
         });
         setEvents(Array.isArray(data) ? data : []);
       } catch (err) {
