@@ -199,7 +199,9 @@ router.get("/", async (req, res) => {
     }
 
     const etkinlikler = await Etkinlik.find(query)
-      .select("baslik sehir tarih fiyat kategori tur gorsel aciklama onaylandi")
+      .select(
+        "baslik sehir tarih fiyat kategori tur gorsel aciklama onaylandi latitude longitude"
+      )
       .limit(36)
       .lean();
 
@@ -213,7 +215,9 @@ router.get("/", async (req, res) => {
       tur: e.tur,
       gorsel: typeof e.gorsel === "string" && e.gorsel.startsWith("data:image") ? null : e.gorsel,
       aciklama: e.aciklama,
-      onaylandi: e.onaylandi
+      onaylandi: e.onaylandi,
+      latitude: e.latitude,
+      longitude: e.longitude
     }));
 
     res.json(etkinliklerWithId);
