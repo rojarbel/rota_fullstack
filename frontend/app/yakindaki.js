@@ -1,53 +1,104 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View, Text, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
-import * as Location from 'expo-location';
 import axiosClient from '../src/api/axiosClient';
 import { IMAGE_BASE_URL } from '../src/constants';
 const PRIMARY = '#7B2CBF';
+const BLUE = '#3498db';
+
+const cities = [
+  "Adana", "Adıyaman", "Afyon", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın",
+  "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı",
+  "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep",
+  "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars",
+  "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa",
+  "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun",
+  "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van",
+  "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın",
+  "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+];
 
 export default function Yakindaki() {
-  const [loading, setLoading] = useState(true);
-  const [permissionDenied, setPermissionDenied] = useState(false);
+
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState(null);
   const [events, setEvents] = useState([]);
+  const citiesMemo = useMemo(() => cities, []);
+
+
+  const handleCitySelect = (city) => {
+    setSelectedCity(city);
+  };
+
 
   useEffect(() => {
-    const init = async () => {
+    if (!selectedCity) return;
+
+    const fetchEvents = async () => {
+      setLoading(true);
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setPermissionDenied(true);
-          setLoading(false);
-          return;
-        }
-
-        const { coords } = await Location.getCurrentPositionAsync({});
-        const lat = coords.latitude;
-        const lng = coords.longitude;
-                const geo = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
-        const cityName = geo?.[0]?.city;
-
-        setRegion({
-          latitude: lat,
-          longitude: lng,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        });
-
         const { data } = await axiosClient.get('/etkinlik', {
-          params: { sehir: cityName },
+          params: { sehir: selectedCity },
         });
-        setEvents(Array.isArray(data) ? data : []);
+
+        let list = Array.isArray(data) ? data : [];
+        list = list
+          .map(e => ({
+            ...e,
+            lat: parseFloat(e.latitude),
+            lon: parseFloat(e.longitude),
+          }))
+          .filter(e => !Number.isNaN(e.lat) && !Number.isNaN(e.lon));
+
+        setEvents(list);
+
+        if (list.length > 0) {
+          setRegion({
+            latitude: list[0].lat,
+            longitude: list[0].lon,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          });
+        } else {
+          setRegion(null);
+        }
       } catch (err) {
-        console.log('Konum veya etkinlikler alınamadı:', err);
+        console.log('Etkinlikler alınamadı:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    init();
-  }, []);
+
+    fetchEvents();
+  }, [selectedCity]);
+
+
+  if (!selectedCity) {
+    return (
+
+      <View style={styles.container}>
+        <Text style={styles.header}>Şehir Seç</Text>
+        <FlatList
+          data={citiesMemo}
+          keyExtractor={(item) => item}
+          numColumns={3}
+          columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 12 }}
+          contentContainerStyle={{ paddingBottom: 16 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.cityButton, { flex: 1, marginHorizontal: 6 }]}
+              onPress={() => handleCitySelect(item)}
+            >
+              <Text style={styles.cityText}>{item}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+    );
+  }
+
 
   if (loading) {
     return (
@@ -57,13 +108,6 @@ export default function Yakindaki() {
     );
   }
 
-  if (permissionDenied) {
-    return (
-      <View style={styles.center}>
-        <Text>Konum izni verilmedi.</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -71,14 +115,10 @@ export default function Yakindaki() {
         <MapView
           style={StyleSheet.absoluteFillObject}
           initialRegion={region}
-          showsUserLocation
+
         >
           {events.map((e) => {
-                        const lat = parseFloat(e.latitude);
-            const lon = parseFloat(e.longitude);
-            if (Number.isNaN(lat) || Number.isNaN(lon)) {
-              return null;
-            }
+
             const img =
               e.gorsel && e.gorsel.startsWith('/')
                 ? `${IMAGE_BASE_URL}${e.gorsel}`
@@ -86,12 +126,18 @@ export default function Yakindaki() {
             return (
               <Marker
                 key={e._id || e.id}
-                coordinate={{ latitude: lat, longitude: lon }}
+                coordinate={{ latitude: e.lat, longitude: e.lon }}
+
 
                 
               >
-              
-                {img && <Image source={{ uri: img }} style={styles.markerImage} />}
+
+
+                {img ? (
+                  <Image source={{ uri: img }} style={styles.markerImage} />
+                ) : (
+                  <View style={styles.placeholderMarker} />
+                )}
                 <Callout tooltip>
                   <View style={styles.callout}>
                     {img && (
@@ -118,10 +164,47 @@ export default function Yakindaki() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  cityButton: {
+    backgroundColor: PRIMARY,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  cityText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  placeholderMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: BLUE,
   },
   markerImage: {
     width: 30,
@@ -148,5 +231,5 @@ const styles = StyleSheet.create({
   calloutText: {
     fontSize: 12,
     color: '#333',
-  },
+      },
 });
