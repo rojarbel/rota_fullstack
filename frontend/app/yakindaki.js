@@ -74,6 +74,11 @@ export default function Yakindaki() {
           showsUserLocation
         >
           {events.map((e) => {
+                        const lat = parseFloat(e.latitude);
+            const lon = parseFloat(e.longitude);
+            if (Number.isNaN(lat) || Number.isNaN(lon)) {
+              return null;
+            }
             const img =
               e.gorsel && e.gorsel.startsWith('/')
                 ? `${IMAGE_BASE_URL}${e.gorsel}`
@@ -81,7 +86,7 @@ export default function Yakindaki() {
             return (
               <Marker
                 key={e._id || e.id}
-                coordinate={{ latitude: parseFloat(e.latitude), longitude: parseFloat(e.longitude) }}
+                coordinate={{ latitude: lat, longitude: lon }}
 
                 
               >
