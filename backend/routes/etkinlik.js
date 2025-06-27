@@ -640,11 +640,12 @@ router.get('/yakindaki', async (req, res) => {
       let coords = null;
 
       // If stored latitude/longitude exist use them directly
-      if (
-        typeof e.latitude === 'number' && !isNaN(e.latitude) &&
-        typeof e.longitude === 'number' && !isNaN(e.longitude)
-      ) {
-        coords = { lat: e.latitude, lng: e.longitude };
+      if (e.latitude != null && e.longitude != null) {
+        const latNum = Number(e.latitude);
+        const lngNum = Number(e.longitude);
+        if (!isNaN(latNum) && !isNaN(lngNum)) {
+          coords = { lat: latNum, lng: lngNum };
+        }
       } else {
         // Fallback: attempt to geocode the address parts
         if (e.adres) {
