@@ -83,7 +83,9 @@ export default function Yakindaki() {
                 key={e._id || e.id}
                 coordinate={{ latitude: parseFloat(e.latitude), longitude: parseFloat(e.longitude) }}
 
+                
               >
+              
                 {img && <Image source={{ uri: img }} style={styles.markerImage} />}
                 <Callout tooltip>
                   <View style={styles.callout}>
