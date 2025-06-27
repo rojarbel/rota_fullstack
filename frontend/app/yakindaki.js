@@ -151,42 +151,37 @@ export default function Yakindaki() {
                 ? `${IMAGE_BASE_URL}${e.gorsel}`
                 : null;
             return (
-              <Marker
-                key={e._id || e.id}
-                coordinate={{ latitude: e.lat, longitude: e.lon }}
-                                ref={ref => {
-                  if (ref) markersRef.current[e._id || e.id] = ref;
-                }}
+          <Marker
+            key={e._id || e.id}
+            coordinate={{ latitude: e.lat, longitude: e.lon }}
+            ref={ref => {
+              if (ref) markersRef.current[e._id || e.id] = ref;
+            }}
+          >
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => markersRef.current[e._id || e.id]?.showCallout()}
+            >
+              {img ? (
+                <Image source={{ uri: img }} style={styles.markerImage} />
+              ) : (
+                <View style={styles.placeholderMarker} />
+              )}
+            </TouchableOpacity>
 
-
-                  onPress={() =>
-                  markersRef.current[e._id || e.id]?.showCallout()}
-              >
-
-
-                {img ? (
-                  <Image source={{ uri: img }} style={styles.markerImage} />
-                ) : (
-                  <View style={styles.placeholderMarker} />
+            <Callout tooltip>
+              <View style={styles.callout}>
+                {img && <Image source={{ uri: img }} style={styles.calloutImage} />}
+                <Text style={styles.calloutTitle}>{e.baslik}</Text>
+                {e.sehir && <Text style={styles.calloutText}>{e.sehir}</Text>}
+                {e.tarih && (
+                  <Text style={styles.calloutText}>
+                    {new Date(e.tarih).toLocaleDateString('tr-TR')}
+                  </Text>
                 )}
-                
-                <Callout tooltip>
-                  <View style={styles.callout}>
-                    {img && (
-                      <Image source={{ uri: img }} style={styles.calloutImage} />
-                    )}
-                    <Text style={styles.calloutTitle}>{e.baslik}</Text>
-                    {e.sehir && (
-                      <Text style={styles.calloutText}>{e.sehir}</Text>
-                    )}
-                    {e.tarih && (
-                      <Text style={styles.calloutText}>
-                        {new Date(e.tarih).toLocaleDateString('tr-TR')}
-                      </Text>
-                    )}
-                  </View>
-                </Callout>
-              </Marker>
+              </View>
+            </Callout>
+          </Marker>
             );
           })}
         </MapView>
