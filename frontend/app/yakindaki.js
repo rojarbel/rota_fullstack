@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import * as Location from 'expo-location';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import axiosClient from '../src/api/axiosClient';
 import { IMAGE_BASE_URL } from '../src/constants';
@@ -24,12 +25,25 @@ export default function Yakindaki() {
   const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState(null);
   const [events, setEvents] = useState([]);
+    const [locationGranted, setLocationGranted] = useState(false);
   const citiesMemo = useMemo(() => cities, []);
-
+  const markersRef = useRef({});
 
   const handleCitySelect = (city) => {
     setSelectedCity(city);
   };
+
+    useEffect(() => {
+    const requestLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        setLocationGranted(status === 'granted');
+      } catch (err) {
+        console.log('Konum izni alınamadı:', err);
+      }
+    };
+    requestLocation();
+  }, []);
 
 
   useEffect(() => {
@@ -43,13 +57,24 @@ export default function Yakindaki() {
         });
 
         let list = Array.isArray(data) ? data : [];
+                const coordCounter = {};
         list = list
           .map(e => ({
             ...e,
             lat: parseFloat(e.latitude),
             lon: parseFloat(e.longitude),
           }))
-          .filter(e => !Number.isNaN(e.lat) && !Number.isNaN(e.lon));
+          .filter(e => !Number.isNaN(e.lat) && !Number.isNaN(e.lon))
+          .map(e => {
+            const key = `${e.lat},${e.lon}`;
+            const count = coordCounter[key] || 0;
+            coordCounter[key] = count + 1;
+            if (count) {
+              const offset = 0.0001 * count;
+              return { ...e, lat: e.lat + offset, lon: e.lon + offset };
+            }
+            return e;
+          });
 
         setEvents(list);
 
@@ -115,6 +140,8 @@ export default function Yakindaki() {
         <MapView
           style={StyleSheet.absoluteFillObject}
           initialRegion={region}
+                    showsUserLocation={locationGranted}
+          showsMyLocationButton={locationGranted}
 
         >
           {events.map((e) => {
@@ -127,17 +154,25 @@ export default function Yakindaki() {
               <Marker
                 key={e._id || e.id}
                 coordinate={{ latitude: e.lat, longitude: e.lon }}
+                                ref={ref => {
+                  if (ref) markersRef.current[e._id || e.id] = ref;
+                }}
 
 
                 
               >
 
 
-                {img ? (
-                  <Image source={{ uri: img }} style={styles.markerImage} />
-                ) : (
-                  <View style={styles.placeholderMarker} />
-                )}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => markersRef.current[e._id || e.id]?.showCallout()}
+                >
+                  {img ? (
+                    <Image source={{ uri: img }} style={styles.markerImage} />
+                  ) : (
+                    <View style={styles.placeholderMarker} />
+                  )}
+                </TouchableOpacity>
                 <Callout tooltip>
                   <View style={styles.callout}>
                     {img && (
