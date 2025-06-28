@@ -166,8 +166,8 @@ export default function Yakindaki() {
   <View style={styles.markerWrapper}>
     <Image source={{ uri: img }} style={styles.markerImage} />
   </View>
-    <Callout>
-    <View style={styles.callout}>
+    <Callout style={styles.callout}>
+    <View>
       <Image source={{ uri: img }} style={styles.calloutImage} />
       <Text style={styles.calloutTitle}>{e.baslik}</Text>
       {e.sehir && <Text style={styles.calloutText}>📍 {e.sehir}</Text>}
