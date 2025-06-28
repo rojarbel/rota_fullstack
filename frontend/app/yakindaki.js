@@ -157,14 +157,16 @@ export default function Yakindaki() {
             ref={ref => {
               if (ref) markersRef.current[e._id || e.id] = ref;
             }}
-                        onPress={() => markersRef.current[e._id || e.id]?.showCallout()}
+
 
           >
-         {img ? (
-              <Image source={{ uri: img }} style={styles.markerImage} />
-            ) : (
-              <View style={styles.placeholderMarker} />
-            )}
+            <TouchableOpacity onPress={() => markersRef.current[e._id || e.id]?.showCallout()}>
+              {img ? (
+                <Image source={{ uri: img }} style={styles.markerImage} />
+              ) : (
+                <View style={styles.placeholderMarker} />
+              )}
+            </TouchableOpacity>
 
             <Callout tooltip>
               <View style={styles.callout}>
