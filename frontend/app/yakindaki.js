@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import axiosClient from '../src/api/axiosClient';
 import { IMAGE_BASE_URL } from '../src/constants';
+import { useRouter } from 'expo-router';
 const PRIMARY = '#7B2CBF';
 const BLUE = '#3498db';
 
@@ -21,6 +22,7 @@ const cities = [
 
 export default function Yakindaki() {
 
+  const router = useRouter();
   const [selectedCity, setSelectedCity] = useState(null);
   const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState(null);
@@ -161,25 +163,25 @@ export default function Yakindaki() {
 >
   <View style={styles.markerWrapper}>
     <Image source={{ uri: img }} style={styles.markerImage} />
-    <Callout tooltip={false}>
-      <View style={styles.callout}>
-        <Image source={{ uri: img }} style={styles.calloutImage} />
-        <Text style={styles.calloutTitle}>{e.baslik}</Text>
-        {e.sehir && <Text style={styles.calloutText}>📍 {e.sehir}</Text>}
-        {e.tarih && (
-          <Text style={styles.calloutText}>
-            📅 {new Date(e.tarih).toLocaleDateString('tr-TR')}
-          </Text>
-        )}
-        <TouchableOpacity
-          style={styles.calloutButton}
-          onPress={() => alert('Detay sayfasına gidilecek')}
-        >
-          <Text style={styles.calloutButtonText}>Detayları Gör</Text>
-        </TouchableOpacity>
-      </View>
-    </Callout>
   </View>
+    <Callout tooltip>
+    <View style={styles.callout}>
+      <Image source={{ uri: img }} style={styles.calloutImage} />
+      <Text style={styles.calloutTitle}>{e.baslik}</Text>
+      {e.sehir && <Text style={styles.calloutText}>📍 {e.sehir}</Text>}
+      {e.tarih && (
+        <Text style={styles.calloutText}>
+          📅 {new Date(e.tarih).toLocaleDateString('tr-TR')}
+        </Text>
+      )}
+      <TouchableOpacity
+        style={styles.calloutButton}
+        onPress={() => router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })}
+      >
+        <Text style={styles.calloutButtonText}>Detayları Gör</Text>
+      </TouchableOpacity>
+    </View>
+  </Callout>
 </Marker>
 
 
