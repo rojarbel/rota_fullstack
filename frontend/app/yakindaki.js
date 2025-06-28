@@ -160,11 +160,13 @@ export default function Yakindaki() {
   }}
   title={e.baslik}
   description={e.sehir || ''}
+    onPress={() => markersRef.current[e._id || e.id]?.showCallout()}
+
 >
   <View style={styles.markerWrapper}>
     <Image source={{ uri: img }} style={styles.markerImage} />
   </View>
-    <Callout tooltip>
+    <Callout>
     <View style={styles.callout}>
       <Image source={{ uri: img }} style={styles.calloutImage} />
       <Text style={styles.calloutTitle}>{e.baslik}</Text>
