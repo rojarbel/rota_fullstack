@@ -146,41 +146,43 @@ export default function Yakindaki() {
         >
           {events.map((e) => {
 
-            const img =
-              e.gorsel && e.gorsel.startsWith('/')
-                ? `${IMAGE_BASE_URL}${e.gorsel}`
-                : null;
+    const img = e.gorsel
+      ? (e.gorsel.startsWith('/') ? `${IMAGE_BASE_URL}${e.gorsel}` : e.gorsel)
+      : 'https://via.placeholder.com/200x100?text=Etkinlik';
             return (
-          <Marker
-            key={e._id || e.id}
-            coordinate={{ latitude: e.lat, longitude: e.lon }}
-            ref={ref => {
-              if (ref) markersRef.current[e._id || e.id] = ref;
-            }}
+<Marker
+  key={e._id || e.id}
+  coordinate={{ latitude: e.lat, longitude: e.lon }}
+  ref={ref => {
+    if (ref) markersRef.current[e._id || e.id] = ref;
+  }}
+  title={e.baslik}
+  description={e.sehir || ''}
+>
+  <View style={styles.markerWrapper}>
+    <Image source={{ uri: img }} style={styles.markerImage} />
+    <Callout tooltip={false}>
+      <View style={styles.callout}>
+        <Image source={{ uri: img }} style={styles.calloutImage} />
+        <Text style={styles.calloutTitle}>{e.baslik}</Text>
+        {e.sehir && <Text style={styles.calloutText}>📍 {e.sehir}</Text>}
+        {e.tarih && (
+          <Text style={styles.calloutText}>
+            📅 {new Date(e.tarih).toLocaleDateString('tr-TR')}
+          </Text>
+        )}
+        <TouchableOpacity
+          style={styles.calloutButton}
+          onPress={() => alert('Detay sayfasına gidilecek')}
+        >
+          <Text style={styles.calloutButtonText}>Detayları Gör</Text>
+        </TouchableOpacity>
+      </View>
+    </Callout>
+  </View>
+</Marker>
 
 
-          >
-            <TouchableOpacity onPress={() => markersRef.current[e._id || e.id]?.showCallout()}>
-              {img ? (
-                <Image source={{ uri: img }} style={styles.markerImage} />
-              ) : (
-                <View style={styles.placeholderMarker} />
-              )}
-            </TouchableOpacity>
-
-            <Callout tooltip>
-              <View style={styles.callout}>
-                {img && <Image source={{ uri: img }} style={styles.calloutImage} />}
-                <Text style={styles.calloutTitle}>{e.baslik}</Text>
-                {e.sehir && <Text style={styles.calloutText}>{e.sehir}</Text>}
-                {e.tarih && (
-                  <Text style={styles.calloutText}>
-                    {new Date(e.tarih).toLocaleDateString('tr-TR')}
-                  </Text>
-                )}
-              </View>
-            </Callout>
-          </Marker>
             );
           })}
         </MapView>
@@ -245,17 +247,40 @@ const styles = StyleSheet.create({
   },
   calloutImage: {
     width: '100%',
-    height: 100,
+    height: 160,
     borderRadius: 8,
-    marginBottom: 6,
+    marginBottom: 8,
+    resizeMode: 'cover',
   },
   calloutTitle: {
     fontWeight: '700',
     marginBottom: 4,
     color: PRIMARY,
   },
-  calloutText: {
-    fontSize: 12,
-    color: '#333',
-      },
+calloutText: {
+  fontSize: 13,
+  color: '#333',
+  marginBottom: 4,
+},
+
+calloutButton: {
+  backgroundColor: PRIMARY,
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderRadius: 6,
+  alignSelf: 'flex-start',
+  marginTop: 6,
+},
+
+calloutButtonText: {
+  color: '#fff',
+  fontWeight: 'bold',
+  fontSize: 14,
+},
+markerWrapper: {
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 40,
+  height: 40,
+},
 });
