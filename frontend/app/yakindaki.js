@@ -166,7 +166,7 @@ export default function Yakindaki() {
   <View style={styles.markerWrapper}>
     <Image source={{ uri: img }} style={styles.markerImage} />
   </View>
-    <Callout tooltip>
+    <Callout>
     <View style={styles.callout}>
       <Image source={{ uri: img }} style={styles.calloutImage} />
       <Text style={styles.calloutTitle}>{e.baslik}</Text>
@@ -245,9 +245,8 @@ const styles = StyleSheet.create({
   },
   callout: {
     width: 200,
-    minHeight: 220,
     backgroundColor: '#fff',
-    padding: 12,
+    padding: 8,
     borderRadius: 8,
   },
   calloutImage: {
