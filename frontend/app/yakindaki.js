@@ -148,43 +148,55 @@ export default function Yakindaki() {
         >
           {events.map((e) => {
 
-    const img = e.gorsel
-      ? (e.gorsel.startsWith('/') ? `${IMAGE_BASE_URL}${e.gorsel}` : e.gorsel)
-      : 'https://via.placeholder.com/200x100?text=Etkinlik';
+
             return (
 <Marker
   key={e._id || e.id}
   coordinate={{ latitude: e.lat, longitude: e.lon }}
-  ref={ref => {
+  ref={(ref) => {
     if (ref) markersRef.current[e._id || e.id] = ref;
   }}
   title={e.baslik}
   description={e.sehir || ''}
-    onPress={() => markersRef.current[e._id || e.id]?.showCallout()}
-
 >
   <View style={styles.markerWrapper}>
-    <Image source={{ uri: img }} style={styles.markerImage} />
+<Image
+  source={{
+    uri: e.gorsel?.startsWith('/')
+      ? `${IMAGE_BASE_URL}${e.gorsel}`
+      : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
+  }}
+  style={[styles.markerImage, { pointerEvents: 'none' }]}
+/>
   </View>
-    <Callout>
-    <View style={styles.callout}>
-      <Image source={{ uri: img }} style={styles.calloutImage} />
-      <Text style={styles.calloutTitle}>{e.baslik}</Text>
-      {e.sehir && <Text style={styles.calloutText}>📍 {e.sehir}</Text>}
-      {e.tarih && (
-        <Text style={styles.calloutText}>
-          📅 {new Date(e.tarih).toLocaleDateString('tr-TR')}
-        </Text>
-      )}
+
+  <Callout>
+    <View style={styles.calloutContainer}>
+<Image
+  source={{
+    uri: e.gorsel?.startsWith('/')
+      ? `${IMAGE_BASE_URL}${e.gorsel}`
+      : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
+  }}
+  style={styles.calloutImage}
+/>
+      <Text style={styles.calloutTitle}>{e.baslik || 'Etkinlik Başlığı'}</Text>
+
+      <Text style={styles.calloutText}>
+        📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
+      </Text>
       <TouchableOpacity
         style={styles.calloutButton}
-        onPress={() => router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })}
+        onPress={() =>
+          router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
+        }
       >
         <Text style={styles.calloutButtonText}>Detayları Gör</Text>
       </TouchableOpacity>
     </View>
   </Callout>
 </Marker>
+
 
 
             );
@@ -249,42 +261,50 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
   },
-  calloutImage: {
-    width: '100%',
-    height: 160,
-    borderRadius: 8,
-    marginBottom: 8,
-    resizeMode: 'cover',
-  },
-  calloutTitle: {
-    fontWeight: '700',
-    marginBottom: 4,
-    color: PRIMARY,
-  },
+calloutImage: {
+  width: '100%',
+  height: 120,
+  borderRadius: 8,
+  marginBottom: 8,
+},
+calloutTitle: {
+  fontSize: 16,
+  fontWeight: 'bold',
+  color: PRIMARY,
+  marginBottom: 4,
+},
 calloutText: {
   fontSize: 13,
-  color: '#333',
-  marginBottom: 4,
+  color: '#555',
+  marginBottom: 6,
 },
 
 calloutButton: {
   backgroundColor: PRIMARY,
   paddingVertical: 6,
-  paddingHorizontal: 12,
+  paddingHorizontal: 10,
   borderRadius: 6,
   alignSelf: 'flex-start',
-  marginTop: 6,
 },
 
 calloutButtonText: {
   color: '#fff',
   fontWeight: 'bold',
-  fontSize: 14,
+  fontSize: 13,
 },
 markerWrapper: {
   alignItems: 'center',
   justifyContent: 'center',
   width: 40,
   height: 40,
+  pointerEvents: 'none',
+},
+calloutContainer: {
+  width: 220,
+  minHeight: 200,
+  padding: 10,
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  alignItems: 'flex-start',
 },
 });
