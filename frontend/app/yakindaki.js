@@ -166,25 +166,17 @@ export default function Yakindaki() {
       ? `${IMAGE_BASE_URL}${e.gorsel}`
       : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
   }}
-  style={[styles.markerImage, { pointerEvents: 'none' }]}
+  style={styles.markerImage}
 />
   </View>
 
-  <Callout tooltip>
-    <View style={styles.calloutContainer} collapsable={false}>
-<Image
-  source={{
-    uri: e.gorsel?.startsWith('/')
-      ? `${IMAGE_BASE_URL}${e.gorsel}`
-      : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
-  }}
-  style={styles.calloutImage}
-/>
+  <Callout>
+    <View style={styles.calloutContainer}>
       <Text style={styles.calloutTitle}>{e.baslik || 'Etkinlik Başlığı'}</Text>
 
-      <Text style={styles.calloutText}>
-        📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
-      </Text>
+    <Text style={styles.calloutText}>
+      📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
+    </Text>
       <TouchableOpacity
         style={styles.calloutButton}
         onPress={() =>
@@ -297,7 +289,6 @@ markerWrapper: {
   justifyContent: 'center',
   width: 40,
   height: 40,
-  pointerEvents: 'none',
 },
 calloutContainer: {
   width: 220,
