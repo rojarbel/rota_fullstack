@@ -166,29 +166,27 @@ export default function Yakindaki() {
       style={styles.markerImage}
     />
   </View>
-<Callout tooltip>
-  <View style={styles.callout}>
-    <View style={styles.calloutContainer}>
-      <Text style={styles.calloutTitle}>
-        {e.baslik || 'Etkinlik Başlığı'}
-      </Text>
 
-      <Text style={styles.calloutText}>
-        📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
-      </Text>
+<Callout>
+  <View style={styles.calloutContainer}>
+    <Text style={styles.calloutTitle}>
+      {typeof e.baslik === 'string' ? e.baslik : 'Etkinlik Başlığı'}
+    </Text>
 
-      <TouchableOpacity
-        style={styles.calloutButton}
-        onPress={() =>
-          router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
-        }
-      >
-        <Text style={styles.calloutButtonText}>Detayları Gör</Text>
-      </TouchableOpacity>
-    </View>
+    <Text style={styles.calloutText}>
+      📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
+    </Text>
+
+    <TouchableOpacity
+      style={styles.calloutButton}
+      onPress={() =>
+        router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
+      }
+    >
+      <Text style={styles.calloutButtonText}>Detayları Gör</Text>
+    </TouchableOpacity>
   </View>
 </Callout>
-
 
 </Marker>
 
