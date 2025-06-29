@@ -627,57 +627,105 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
 });
 
 router.get('/yakindaki', async (req, res) => {
-  const { lat, lng, radius = 50 } = req.query;
-  const userLat = parseFloat(lat);
-  const userLng = parseFloat(lng);
-  const maxRadius = parseFloat(radius) || 50;
-
-  if (isNaN(userLat) || isNaN(userLng)) {
-    return res.status(400).json({ message: 'Geçersiz konum' });
-  }
-
   try {
-    const etkinlikler = await Etkinlik.find({ onaylandi: true }).lean();
-    const sonuc = [];
+    const { lat, lng, lon, radius = 50000 } = req.query; // radius artık metre cinsinden
+    
+    // lat/lng veya lat/lon parametrelerini destekle
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng || lon);
+    const radiusMeters = parseInt(radius);
 
-    for (const e of etkinlikler) {
-      let coords = null;
+    // Parametre kontrolü
+    if (isNaN(userLat) || isNaN(userLng)) {
+      return res.status(400).json({ 
+        message: 'Geçersiz konum parametreleri',
+        error: 'lat ve lng/lon parametreleri gerekli ve sayısal olmalı'
+      });
+    }
 
-      // If stored latitude/longitude exist use them directly
-      if (e.latitude != null && e.longitude != null) {
-        const latNum = Number(e.latitude);
-        const lngNum = Number(e.longitude);
-        if (!isNaN(latNum) && !isNaN(lngNum)) {
-          coords = { lat: latNum, lng: lngNum };
-        }
-      } else {
-        // Fallback: attempt to geocode the address parts
-        if (e.adres) {
-          const parts = e.adres.split(/\s+/).filter(Boolean);
-          for (let i = 1; i <= parts.length; i++) {
-            const query = `${e.sehir} ${parts.slice(0, i).join(' ')}`.trim();
-            coords = await geocode(query);
-            if (coords) break;
-          }
-        }
+    if (isNaN(radiusMeters) || radiusMeters <= 0) {
+      return res.status(400).json({ 
+        message: 'Geçersiz yarıçap',
+        error: 'radius parametresi pozitif bir sayı olmalı (metre cinsinden)'
+      });
+    }
+
+    // Maksimum yarıçap sınırı (performans için)
+    const maxRadiusMeters = 200000; // 200km
+    const finalRadius = Math.min(radiusMeters, maxRadiusMeters);
+
+    console.log(`🔍 Yakın etkinlik arama: lat=${userLat}, lng=${userLng}, radius=${finalRadius}m`);
+
+    // MongoDB'de koordinatları olan onaylı etkinlikleri getir
+    const etkinlikler = await Etkinlik.find({ 
+      onaylandi: true,
+      latitude: { $exists: true, $ne: null },
+      longitude: { $exists: true, $ne: null }
+    })
+    .select('_id baslik sehir tarih fiyat kategori tur gorsel aciklama latitude longitude adres')
+    .lean();
+
+    console.log(`📍 ${etkinlikler.length} koordinatlı etkinlik bulundu`);
+
+    const yakinEtkinlikler = [];
+
+    for (const etkinlik of etkinlikler) {
+      const etkinlikLat = parseFloat(etkinlik.latitude);
+      const etkinlikLng = parseFloat(etkinlik.longitude);
+
+      // Koordinat doğrulaması
+      if (isNaN(etkinlikLat) || isNaN(etkinlikLng)) {
+        console.warn(`⚠️ Geçersiz koordinat: ${etkinlik.baslik}`);
+        continue;
       }
 
-        if (!coords && e.sehir) {
-          coords = await geocode(e.sehir);
-        }
+      // Mesafe hesapla
+      const distance = haversine(userLat, userLng, etkinlikLat, etkinlikLng);
+      const distanceMeters = distance * 1000; // km'yi metreye çevir
 
-      if (!coords) continue;
-
-      const distance = haversine(userLat, userLng, coords.lat, coords.lng);
-      if (distance <= maxRadius) {
-        sonuc.push({ ...e, latitude: coords.lat, longitude: coords.lng });
+      if (distanceMeters <= finalRadius) {
+        yakinEtkinlikler.push({
+          id: etkinlik._id.toString(),
+          baslik: etkinlik.baslik,
+          sehir: etkinlik.sehir,
+          tarih: etkinlik.tarih,
+          fiyat: etkinlik.fiyat,
+          kategori: etkinlik.kategori,
+          tur: etkinlik.tur,
+          gorsel: typeof etkinlik.gorsel === "string" && etkinlik.gorsel.startsWith("data:image") 
+            ? null 
+            : etkinlik.gorsel,
+          aciklama: etkinlik.aciklama,
+          latitude: etkinlikLat,
+          longitude: etkinlikLng,
+          mesafe: Math.round(distance * 100) / 100, // km cinsinden, 2 ondalık
+          adres: etkinlik.adres
+        });
       }
     }
 
-    res.json(sonuc);
-  } catch (err) {
-    console.error('yakindaki route hata:', err);
-    res.status(500).json({ message: 'Sunucu hatası', error: err.message });
+    // Mesafeye göre sırala (yakından uzağa)
+    yakinEtkinlikler.sort((a, b) => a.mesafe - b.mesafe);
+
+    console.log(`✅ ${yakinEtkinlikler.length} yakın etkinlik bulundu (${finalRadius/1000}km içinde)`);
+
+    res.json({
+      etkinlikler: yakinEtkinlikler,
+      toplam: yakinEtkinlikler.length,
+      arama: {
+        latitude: userLat,
+        longitude: userLng,
+        yarıcap: finalRadius,
+        yarıcapKm: finalRadius / 1000
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Yakındaki etkinlikler hatası:', error);
+    res.status(500).json({ 
+      message: 'Yakındaki etkinlikler alınırken hata oluştu',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Sunucu hatası'
+    });
   }
 });
 
