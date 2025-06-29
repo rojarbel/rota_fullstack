@@ -153,41 +153,43 @@ export default function Yakindaki() {
 <Marker
   key={e._id || e.id}
   coordinate={{ latitude: e.lat, longitude: e.lon }}
-  ref={(ref) => {
-    if (ref) markersRef.current[e._id || e.id] = ref;
-  }}
   title={e.baslik}
   description={e.sehir || ''}
 >
   <View style={styles.markerWrapper}>
-<Image
-  source={{
-    uri: e.gorsel?.startsWith('/')
-      ? `${IMAGE_BASE_URL}${e.gorsel}`
-      : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
-  }}
-  style={styles.markerImage}
-/>
+    <Image
+      source={{
+        uri: e.gorsel?.startsWith('/')
+          ? `${IMAGE_BASE_URL}${e.gorsel}`
+          : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
+      }}
+      style={styles.markerImage}
+    />
   </View>
 
-  <Callout>
-    <View style={styles.calloutContainer}>
-      <Text style={styles.calloutTitle}>{e.baslik || 'Etkinlik Başlığı'}</Text>
+<Callout>
+  <View style={styles.calloutContainer}>
+    <Text style={styles.calloutTitle}>
+      {typeof e.baslik === 'string' ? e.baslik : 'Etkinlik Başlığı'}
+    </Text>
 
     <Text style={styles.calloutText}>
       📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
     </Text>
-      <TouchableOpacity
-        style={styles.calloutButton}
-        onPress={() =>
-          router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
-        }
-      >
-        <Text style={styles.calloutButtonText}>Detayları Gör</Text>
-      </TouchableOpacity>
-    </View>
-  </Callout>
+
+    <TouchableOpacity
+      style={styles.calloutButton}
+      onPress={() =>
+        router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
+      }
+    >
+      <Text style={styles.calloutButtonText}>Detayları Gör</Text>
+    </TouchableOpacity>
+  </View>
+</Callout>
+
 </Marker>
+
 
 
 
@@ -284,18 +286,18 @@ calloutButtonText: {
   fontWeight: 'bold',
   fontSize: 13,
 },
+calloutContainer: {
+  width: 200,
+  padding: 10,
+  backgroundColor: 'white',
+  borderRadius: 10,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
 markerWrapper: {
   alignItems: 'center',
   justifyContent: 'center',
   width: 40,
   height: 40,
-},
-calloutContainer: {
-  width: 220,
-  minHeight: 200,
-  padding: 10,
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  alignItems: 'flex-start',
 },
 });
