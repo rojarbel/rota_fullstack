@@ -61,7 +61,7 @@ export default function Yakindaki() {
       console.log(`🔍 API çağrısı: lat=${lat}, lng=${lon}, radius=${radiusKm}km`);
       
       // Backend'e konum ve yarıçap gönder (metre cinsinden)
-      const { data } = await axiosClient.get('/etkinlik/yakindaki', {
+      const { data } = await axiosClient.get('/yakindaki', {
         params: { 
           lat: lat,
           lng: lon,
