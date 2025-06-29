@@ -200,7 +200,7 @@ router.get("/", async (req, res) => {
 
     const etkinlikler = await Etkinlik.find(query)
       .select(
-        "baslik sehir tarih fiyat kategori tur gorsel aciklama onaylandi latitude longitude"
+        "_id baslik sehir tarih fiyat kategori tur gorsel aciklama onaylandi latitude longitude"
       )
       .limit(36)
       .lean();
@@ -483,7 +483,7 @@ router.get("/search", async (req, res) => {
         { sehir: { $regex: query, $options: "i" } },
       ],
     })
-      .select("baslik sehir tarih fiyat kategori tur gorsel aciklama onaylandi")
+      .select("_id baslik sehir tarih fiyat kategori tur gorsel aciklama onaylandi")
       .limit(36)
       .lean(); 
 
