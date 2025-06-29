@@ -63,7 +63,6 @@ export default function Yakindaki() {
         list = list
           .map(e => ({
             ...e,
-            id: e._id,
             lat: parseFloat(e.latitude),
             lon: parseFloat(e.longitude),
           }))
@@ -152,50 +151,51 @@ export default function Yakindaki() {
 
             return (
 <Marker
-  key={e._id}
-  coordinate={{
-    latitude: parseFloat(e.latitude),
-    longitude: parseFloat(e.longitude),
+  key={e._id || e.id}
+  coordinate={{ latitude: e.lat, longitude: e.lon }}
+  ref={(ref) => {
+    if (ref) markersRef.current[e._id || e.id] = ref;
   }}
+  title={e.baslik}
+  description={e.sehir || ''}
 >
-  <Image
-    source={{ uri: e.gorsel?.startsWith('http') ? e.gorsel : `${IMAGE_BASE_URL}${e.gorsel}` }}
-    style={{
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      borderWidth: 2,
-      borderColor: 'white',
-    }}
-  />
+  <View style={styles.markerWrapper}>
+<Image
+  source={{
+    uri: e.gorsel?.startsWith('/')
+      ? `${IMAGE_BASE_URL}${e.gorsel}`
+      : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
+  }}
+  style={[styles.markerImage, { pointerEvents: 'none' }]}
+/>
+  </View>
 
-  <Callout tooltip onPress={() => router.push(`/etkinlik/${e._id}`)}>
-    <View
-      style={{
-        width: 220,
-        backgroundColor: 'white',
-        padding: 10,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-      }}
-    >
-      <Image
-        source={{ uri: e.gorsel?.startsWith('http') ? e.gorsel : `${IMAGE_BASE_URL}${e.gorsel}` }}
-        style={{ width: '100%', height: 100, borderRadius: 6 }}
-        resizeMode="cover"
-      />
-      <Text style={{ fontWeight: 'bold', fontSize: 15, marginTop: 6 }}>{e.baslik}</Text>
-      <Text style={{ color: 'gray', fontSize: 13 }}>{e.tarih}</Text>
-      <Text style={{ color: 'blue', marginTop: 6, fontWeight: '500' }}>Detayları Gör</Text>
+  <Callout>
+    <View style={styles.calloutContainer}>
+<Image
+  source={{
+    uri: e.gorsel?.startsWith('/')
+      ? `${IMAGE_BASE_URL}${e.gorsel}`
+      : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
+  }}
+  style={styles.calloutImage}
+/>
+      <Text style={styles.calloutTitle}>{e.baslik || 'Etkinlik Başlığı'}</Text>
+
+      <Text style={styles.calloutText}>
+        📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
+      </Text>
+      <TouchableOpacity
+        style={styles.calloutButton}
+        onPress={() =>
+          router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
+        }
+      >
+        <Text style={styles.calloutButtonText}>Detayları Gör</Text>
+      </TouchableOpacity>
     </View>
   </Callout>
 </Marker>
-
-
 
 
 
