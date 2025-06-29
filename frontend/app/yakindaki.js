@@ -3,7 +3,8 @@ import { ActivityIndicator, View, Text, Image, StyleSheet, TouchableOpacity, Ale
 import * as Location from 'expo-location';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import axiosClient from '../src/api/axiosClient';
-import { IMAGE_BASE_URL } from '../src/constants';
+// IMAGE_BASE_URL yerine doğrudan tanımlayın veya constants dosyasını kontrol edin
+const IMAGE_BASE_URL = 'https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net';
 import { useRouter } from 'expo-router';
 
 const PRIMARY = '#7B2CBF';
@@ -20,140 +21,166 @@ export default function Yakindaki() {
   const [permissionStatus, setPermissionStatus] = useState('undetermined');
   const [error, setError] = useState(null);
 
-  // Koordinat doğrulama fonksiyonu - memoized
+  // Koordinat doğrulama fonksiyonu - daha esnek
   const isValidCoordinate = useCallback((lat, lng) => {
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+    
     return (
-      typeof lat === 'number' && 
-      typeof lng === 'number' && 
-      !isNaN(lat) && 
-      !isNaN(lng) &&
-      lat >= -90 && lat <= 90 &&
-      lng >= -180 && lng <= 180
+      !isNaN(latitude) && 
+      !isNaN(longitude) &&
+      latitude >= -90 && latitude <= 90 &&
+      longitude >= -180 && longitude <= 180 &&
+      latitude !== 0 && longitude !== 0 // 0,0 koordinatını geçersiz say
     );
   }, []);
 
-  // Görsel URL'ini güvenli şekilde oluştur - memoized
+  // Görsel URL'ini güvenli şekilde oluştur
   const getImageUrl = useCallback((gorsel) => {
     if (!gorsel || typeof gorsel !== 'string') {
-      return 'https://via.placeholder.com/200x100/cccccc/666666?text=Etkinlik';
+      return 'https://via.placeholder.com/40x40/cccccc/666666?text=E';
     }
     
     if (gorsel.startsWith('http')) return gorsel;
     if (gorsel.startsWith('/')) {
-      const baseUrl = IMAGE_BASE_URL || 'https://your-domain.com';
-      return `${baseUrl}${gorsel}`;
+      return `${IMAGE_BASE_URL}${gorsel}`;
     }
     
     return gorsel;
   }, []);
 
-  // Yakındaki etkinlikleri getir - memoized
+  // Yakındaki etkinlikleri getir - iyileştirilmiş
   const fetchNearbyEvents = useCallback(async (lat, lon, radiusKm) => {
     try {
       setLoading(true);
       setError(null);
       
-      // Parametreleri doğrula
-      if (!isValidCoordinate(lat, lon)) {
-        throw new Error('Geçersiz koordinatlar');
-      }
-
-      console.log(`🔍 API çağrısı: lat=${lat}, lng=${lon}, radius=${radiusKm}km`);
+      console.log(`🔍 API çağrısı başlıyor: lat=${lat}, lng=${lon}, radius=${radiusKm}km`);
       
-      // Backend'e konum ve yarıçap gönder (metre cinsinden)
-      const { data } = await axiosClient.get('/etkinlik/yakindaki', {
+      // API çağrısı - daha kısa timeout
+      const response = await axiosClient.get('/etkinlik/yakindaki', {
         params: { 
-          lat: lat,
-          lng: lon,
-          radius: radiusKm * 1000 // km'yi metre'ye çevir
+          lat: lat.toString(),
+          lng: lon.toString(),
+          radius: (radiusKm * 1000).toString() // km'yi metre'ye çevir
         },
-        timeout: 15000 // 15 saniye timeout
+        timeout: 8000 // 8 saniye timeout
       });
 
-      console.log('📍 API yanıtı:', data);
+      console.log('📍 API yanıtı alındı:', response.data);
 
-      // Veri yapısını kontrol et - backend'den gelen yapıya uygun
+      // Backend'den gelen veri yapısını kontrol et
+      const data = response.data;
       let eventList = [];
+
       if (data?.etkinlikler && Array.isArray(data.etkinlikler)) {
         eventList = data.etkinlikler;
       } else if (Array.isArray(data)) {
         eventList = data;
       } else {
-        console.warn('Beklenmeyen veri yapısı:', data);
-        eventList = [];
+        console.warn('⚠️ Beklenmeyen veri yapısı:', data);
+        throw new Error('Sunucudan geçersiz veri formatı alındı');
       }
 
-      // Koordinat verilerini işle ve güvenli parse et
-      const coordCounter = {};
+      console.log(`📊 Toplam ${eventList.length} etkinlik alındı`);
+
+      // Etkinlikleri işle ve filtrele
       const processedEvents = eventList
-        .map(e => {
-          // Backend'den gelen veri yapısına göre koordinat alanlarını kontrol et
-          const lat = parseFloat(e.latitude || e.lat);
-          const lon = parseFloat(e.longitude || e.lng || e.lon);
-          
-          return {
-            ...e,
-            lat: isNaN(lat) ? null : lat,
-            lon: isNaN(lon) ? null : lon,
-            // ID alanını normalize et
-            id: e.id || e._id?.toString?.() || e._id,
+        .map((event, index) => {
+          const processedEvent = {
+            ...event,
+            // ID'yi normalize et
+            id: event.id || event._id?.toString?.() || event._id || `event_${index}`,
+            // Koordinatları güvenli parse et - Backend'deki field isimleriyle uyumlu
+            lat: parseFloat(event.latitude) || null,
+            lon: parseFloat(event.longitude) || null,
+            // Diğer alanları temizle
+            baslik: event.baslik || 'İsimsiz Etkinlik',
+            sehir: event.sehir || 'Bilinmeyen Şehir',
+            mesafe: event.mesafe ? parseFloat(event.mesafe) : null
           };
+
+          console.log(`📍 Etkinlik ${index + 1}: ${processedEvent.baslik} - Koordinat: ${processedEvent.lat}, ${processedEvent.lon}`);
+          return processedEvent;
         })
-        .filter(e => {
-          // Geçerli koordinatları olan etkinlikleri filtrele
-          return e.lat !== null && e.lon !== null && isValidCoordinate(e.lat, e.lon);
-        })
-        .map(e => {
-          // Aynı koordinatlarda birden fazla etkinlik varsa daha belirgin kaydır
-          const key = `${e.lat.toFixed(5)},${e.lon.toFixed(5)}`;
-          const count = coordCounter[key] || 0;
-          coordCounter[key] = count + 1;
+        .filter(event => {
+          const isValid = event.lat !== null && event.lon !== null && 
+                          isValidCoordinate(event.lat, event.lon);
           
-          if (count > 0) {
-            // Offset'i artırdık ki görsel olarak ayrılabilsin
-            const offset = 0.0005 * count; // Offset'i artırdım
-            const angle = (count * 60) * (Math.PI / 180); // 60 derece aralıklarla dağıt
-            return { 
-              ...e, 
-              lat: e.lat + (Math.cos(angle) * offset), 
-              lon: e.lon + (Math.sin(angle) * offset),
-              offsetApplied: true
-            };
+          if (!isValid) {
+            console.warn(`❌ Geçersiz koordinat filtre edildi: ${event.baslik} - ${event.lat}, ${event.lon}`);
           }
-          return e;
+          
+          return isValid;
         });
 
       console.log(`✅ ${processedEvents.length} geçerli etkinlik işlendi`);
-      setEvents(processedEvents);
 
-      if (processedEvents.length === 0) {
-        setError(`${radiusKm}km yarıçapında etkinlik bulunamadı`);
+      // Aynı koordinatlarda birden fazla etkinlik varsa offset uygula
+      const coordCounter = {};
+      const finalEvents = processedEvents.map(event => {
+        const key = `${event.lat.toFixed(4)},${event.lon.toFixed(4)}`;
+        const count = coordCounter[key] || 0;
+        coordCounter[key] = count + 1;
+        
+        if (count > 0) {
+          const offset = 0.001 * count;
+          const angle = (count * 45) * (Math.PI / 180);
+          return { 
+            ...event, 
+            lat: event.lat + (Math.cos(angle) * offset), 
+            lon: event.lon + (Math.sin(angle) * offset),
+            offsetApplied: true
+          };
+        }
+        return event;
+      });
+
+      setEvents(finalEvents);
+
+      if (finalEvents.length === 0) {
+        setError(`${radiusKm}km yarıçapında koordinatı olan etkinlik bulunamadı`);
       }
 
     } catch (error) {
       console.error('❌ Yakındaki etkinlikler hatası:', error);
+      
       let errorMessage = 'Bilinmeyen hata';
       
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+      if (error.response) {
+        // HTTP hata kodu
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (status === 400) {
+          errorMessage = data?.message || 'Geçersiz parametre';
+        } else if (status === 404) {
+          errorMessage = 'API endpoint bulunamadı';
+        } else if (status === 500) {
+          errorMessage = 'Sunucu hatası';
+        } else {
+          errorMessage = `HTTP ${status}: ${data?.message || 'Sunucu hatası'}`;
+        }
+      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        errorMessage = 'İstek zaman aşımına uğradı';
+      } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+        errorMessage = 'İnternet bağlantısı sorunu';
       } else if (error.message) {
         errorMessage = error.message;
       }
       
-      setError('Etkinlikler yüklenemedi: ' + errorMessage);
+      setError(errorMessage);
       
-      // Network hatası kontrolü
+      // Kullanıcıya uygun alert göster
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         Alert.alert('Zaman Aşımı', 'İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.');
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
         Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.');
-      } else {
-        Alert.alert('Hata', 'Yakındaki etkinlikler yüklenirken sorun oluştu.');
       }
     } finally {
       setLoading(false);
     }
-  }, [isValidCoordinate]);
+  }, [isValidCoordinate]); // fetchNearbyEvents dependency'lerini minimal tutun
 
   // Konum izni alma ve kullanıcı konumunu belirleme
   useEffect(() => {
@@ -162,29 +189,26 @@ export default function Yakindaki() {
         setLoading(true);
         setError(null);
         
+        console.log('📍 Konum izni isteniyor...');
+        
         // Konum izni iste
         const { status } = await Location.requestForegroundPermissionsAsync();
+        console.log('📍 Konum izni durumu:', status);
         setPermissionStatus(status);
         
         if (status !== 'granted') {
           setError('Konum izni verilmedi');
-          Alert.alert(
-            'Konum İzni Gerekli',
-            'Yakınındaki etkinlikleri gösterebilmek için konum iznine ihtiyacımız var.',
-            [
-              { text: 'İptal', style: 'cancel' },
-              { text: 'Tekrar Dene', onPress: () => requestLocationAndFetch() }
-            ]
-          );
           setLoading(false);
           return;
         }
 
+        console.log('📍 Kullanıcı konumu alınıyor...');
+        
         // Kullanıcının mevcut konumunu al
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
-          timeout: 20000, // 20 saniye timeout
-          maximumAge: 60000, // 1 dakika cache
+          timeout: 15000,
+          maximumAge: 60000,
         });
 
         const userCoords = {
@@ -192,12 +216,13 @@ export default function Yakindaki() {
           longitude: location.coords.longitude,
         };
 
+        console.log('📍 Kullanıcı konumu alındı:', userCoords);
+
         // Koordinat doğrulaması
         if (!isValidCoordinate(userCoords.latitude, userCoords.longitude)) {
           throw new Error('Geçersiz konum koordinatları alındı');
         }
 
-        console.log('📍 Kullanıcı konumu:', userCoords);
         setUserLocation(userCoords);
         
         // Harita bölgesini ayarla
@@ -208,11 +233,14 @@ export default function Yakindaki() {
           longitudeDelta: 0.1,
         });
 
+        console.log('📍 Yakındaki etkinlikler aranıyor...');
+        
         // Yakındaki etkinlikleri getir
-        await fetchNearbyEvents(userCoords.latitude, userCoords.longitude, radius);
+        await fetchNearbyEvents(userCoords.latitude, userCoords.longitude, DEFAULT_RADIUS);
 
       } catch (error) {
-        console.error('Konum alınamadı:', error);
+        console.error('❌ Konum alma hatası:', error);
+        
         let errorMessage = 'Konum bilgisi alınamadı';
         
         if (error.code === 'E_LOCATION_SERVICES_DISABLED') {
@@ -224,7 +252,6 @@ export default function Yakindaki() {
         }
         
         setError(errorMessage);
-        Alert.alert('Konum Hatası', errorMessage);
         setLoading(false);
       }
     };
@@ -232,32 +259,36 @@ export default function Yakindaki() {
     requestLocationAndFetch();
   }, []); // Sadece mount'ta çalışsın
 
-  // Radius değişikliklerini dinle
+  // Radius değişikliklerini dinle - fetchNearbyEvents dependency'sini kaldırdık
   useEffect(() => {
-    if (userLocation && radius && !loading) {
+    if (userLocation && radius && !loading && permissionStatus === 'granted') {
+      console.log(`🔄 Radius değişti: ${radius}km`);
+      // Doğrudan çağır, dependency olarak ekleme
       fetchNearbyEvents(userLocation.latitude, userLocation.longitude, radius);
     }
-  }, [radius, userLocation, fetchNearbyEvents, loading]);
+  }, [radius]); // Sadece radius değişikliklerini dinle
 
   // Yarıçapı değiştir
-  const changeRadius = useCallback(async (newRadius) => {
+  const changeRadius = useCallback((newRadius) => {
     if (userLocation && newRadius !== radius && !loading) {
+      console.log(`🎯 Radius değiştiriliyor: ${radius}km -> ${newRadius}km`);
       setRadius(newRadius);
-      // fetchNearbyEvents useEffect ile otomatik çağrılacak
     }
   }, [userLocation, radius, loading]);
 
   // Konumu yenile
   const refreshLocation = useCallback(async () => {
     if (permissionStatus === 'granted' && !loading) {
+      console.log('🔄 Konum yenileniyor...');
+      
       try {
         setLoading(true);
         setError(null);
         
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
-          timeout: 20000,
-          maximumAge: 5000, // 5 saniye cache
+          timeout: 15000,
+          maximumAge: 5000,
         });
 
         const userCoords = {
@@ -279,17 +310,17 @@ export default function Yakindaki() {
 
         await fetchNearbyEvents(userCoords.latitude, userCoords.longitude, radius);
       } catch (error) {
-        console.error('Konum yenilenemedi:', error);
+        console.error('❌ Konum yenileme hatası:', error);
         setError('Konum yenilenemedi: ' + error.message);
-        Alert.alert('Hata', 'Konum yenilenemedi. GPS ayarlarınızı kontrol edin.');
+        setLoading(false);
       }
     }
-  }, [permissionStatus, radius, fetchNearbyEvents, isValidCoordinate, loading]);
+  }, [permissionStatus, radius, isValidCoordinate]);
 
   // Etkinlik detayına git
   const goToEventDetail = useCallback((event) => {
     const eventId = event.id || event._id;
-    console.log('Etkinlik detayına gidiliyor:', eventId);
+    console.log('📱 Etkinlik detayına gidiliyor:', eventId);
     
     if (eventId) {
       router.push({ 
@@ -303,7 +334,9 @@ export default function Yakindaki() {
 
   // Memoized marker components
   const eventMarkers = useMemo(() => {
-    return events.map((event) => {
+    console.log(`🗺️ ${events.length} marker oluşturuluyor`);
+    
+    return events.map((event, index) => {
       // Tarih formatlama
       let formattedDate = 'Tarih Bilinmiyor';
       if (event.tarih) {
@@ -317,16 +350,22 @@ export default function Yakindaki() {
             });
           }
         } catch (e) {
-          console.warn('Tarih formatlanamadı:', event.tarih);
+          console.warn('⚠️ Tarih formatlanamadı:', event.tarih);
         }
       }
 
+      const description = [
+        `📅 ${formattedDate}`,
+        `📍 ${event.sehir || 'Şehir Bilinmiyor'}`,
+        event.mesafe ? `🚶 ${event.mesafe} km uzaklıkta` : null
+      ].filter(Boolean).join('\n');
+
       return (
         <Marker
-          key={`${event.id}-${event.lat}-${event.lon}`}
+          key={`${event.id}-${index}`}
           coordinate={{ latitude: event.lat, longitude: event.lon }}
           title={event.baslik || 'Etkinlik'}
-          description={`📅 ${formattedDate}\n📍 ${event.sehir || 'Şehir Bilinmiyor'}${event.mesafe ? `\n🚶 ${event.mesafe} km uzaklıkta` : ''}`}
+          description={description}
           onCalloutPress={() => goToEventDetail(event)}
         >
           <View style={styles.markerWrapper}>
@@ -334,13 +373,12 @@ export default function Yakindaki() {
               source={{ uri: getImageUrl(event.gorsel) }}
               style={styles.markerImage}
               onError={(e) => {
-                console.warn('Marker görseli yüklenemedi:', event.gorsel, e.nativeEvent.error);
+                console.warn('⚠️ Marker görseli yüklenemedi:', event.gorsel);
               }}
-              defaultSource={{ uri: 'https://via.placeholder.com/40x40/cccccc/666666?text=E' }}
             />
             {event.mesafe && (
               <View style={styles.distanceBadge}>
-                <Text style={styles.distanceText}>{event.mesafe}km</Text>
+                <Text style={styles.distanceText}>{event.mesafe.toFixed(1)}km</Text>
               </View>
             )}
           </View>
@@ -350,7 +388,7 @@ export default function Yakindaki() {
   }, [events, getImageUrl, goToEventDetail]);
 
   // İzin verilmemişse
-  if (permissionStatus === 'denied' || (error && error.includes('izin'))) {
+  if (permissionStatus === 'denied') {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>🗺️ Konum İzni Gerekli</Text>
@@ -362,6 +400,8 @@ export default function Yakindaki() {
           onPress={() => {
             setError(null);
             setPermissionStatus('undetermined');
+            // Konum iznini tekrar iste
+            Location.requestForegroundPermissionsAsync();
           }}
         >
           <Text style={styles.retryButtonText}>İzin Ver</Text>
@@ -375,13 +415,15 @@ export default function Yakindaki() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={PRIMARY} />
-        <Text style={styles.loadingText}>Yakındaki etkinlikler aranıyor...</Text>
+        <Text style={styles.loadingText}>
+          {!userLocation ? 'Konum belirleniyor...' : 'Yakındaki etkinlikler aranıyor...'}
+        </Text>
         <Text style={styles.loadingSubText}>Bu işlem birkaç saniye sürebilir</Text>
       </View>
     );
   }
 
-  // Hata durumu
+  // Hata durumu - konum alınamadıysa
   if (error && !userLocation) {
     return (
       <View style={styles.center}>
@@ -397,8 +439,20 @@ export default function Yakindaki() {
     );
   }
 
+  // Ana görünüm
   return (
     <View style={{ flex: 1 }}>
+      {/* Debug Bilgisi (sadece development için) */}
+      {__DEV__ && (
+        <View style={styles.debugInfo}>
+          <Text style={styles.debugText}>
+            Debug: User: {userLocation ? `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}` : 'null'} | 
+            Events: {events.length} | 
+            Radius: {radius}km
+          </Text>
+        </View>
+      )}
+
       {/* Kontrol Paneli */}
       <View style={styles.controlPanel}>
         <View style={styles.radiusControls}>
@@ -448,7 +502,7 @@ export default function Yakindaki() {
       </View>
 
       {/* Harita */}
-      {region && (
+      {region ? (
         <MapView
           style={StyleSheet.absoluteFillObject}
           initialRegion={region}
@@ -473,6 +527,13 @@ export default function Yakindaki() {
           {/* Etkinlik işaretleri */}
           {eventMarkers}
         </MapView>
+      ) : (
+        <View style={styles.center}>
+          <Text style={styles.errorText}>Harita yüklenemedi</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refreshLocation}>
+            <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -527,9 +588,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
+  debugInfo: {
+    position: 'absolute',
+    top: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 8,
+    borderRadius: 4,
+    zIndex: 2000,
+  },
+  debugText: {
+    color: '#fff',
+    fontSize: 10,
+    fontFamily: 'monospace',
+  },
   controlPanel: {
     position: 'absolute',
-    top: 60,
+    top: __DEV__ ? 80 : 60,
     left: 16,
     right: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
