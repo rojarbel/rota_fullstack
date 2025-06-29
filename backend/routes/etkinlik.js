@@ -470,6 +470,108 @@ const bugunkuler = favoriler.filter(f => {
 
 
 // Etkinlik arama (başlık, kategori veya şehir bazlı)
+router.get('/yakindaki', async (req, res) => {
+  try {
+    const { lat, lng, lon, radius = 50000 } = req.query; // radius artık metre cinsinden
+    
+    // lat/lng veya lat/lon parametrelerini destekle
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng || lon);
+    const radiusMeters = parseInt(radius);
+
+    // Parametre kontrolü
+    if (isNaN(userLat) || isNaN(userLng)) {
+      return res.status(400).json({ 
+        message: 'Geçersiz konum parametreleri',
+        error: 'lat ve lng/lon parametreleri gerekli ve sayısal olmalı'
+      });
+    }
+
+    if (isNaN(radiusMeters) || radiusMeters <= 0) {
+      return res.status(400).json({ 
+        message: 'Geçersiz yarıçap',
+        error: 'radius parametresi pozitif bir sayı olmalı (metre cinsinden)'
+      });
+    }
+
+    // Maksimum yarıçap sınırı (performans için)
+    const maxRadiusMeters = 200000; // 200km
+    const finalRadius = Math.min(radiusMeters, maxRadiusMeters);
+
+    console.log(`🔍 Yakın etkinlik arama: lat=${userLat}, lng=${userLng}, radius=${finalRadius}m`);
+
+    // MongoDB'de koordinatları olan onaylı etkinlikleri getir
+    const etkinlikler = await Etkinlik.find({ 
+      onaylandi: true,
+      latitude: { $exists: true, $ne: null },
+      longitude: { $exists: true, $ne: null }
+    })
+    .select('_id baslik sehir tarih fiyat kategori tur gorsel aciklama latitude longitude adres')
+    .lean();
+
+    console.log(`📍 ${etkinlikler.length} koordinatlı etkinlik bulundu`);
+
+    const yakinEtkinlikler = [];
+
+    for (const etkinlik of etkinlikler) {
+      const etkinlikLat = parseFloat(etkinlik.latitude);
+      const etkinlikLng = parseFloat(etkinlik.longitude);
+
+      // Koordinat doğrulaması
+      if (isNaN(etkinlikLat) || isNaN(etkinlikLng)) {
+        console.warn(`⚠️ Geçersiz koordinat: ${etkinlik.baslik}`);
+        continue;
+      }
+
+      // Mesafe hesapla
+      const distance = haversine(userLat, userLng, etkinlikLat, etkinlikLng);
+      const distanceMeters = distance * 1000; // km'yi metreye çevir
+
+      if (distanceMeters <= finalRadius) {
+        yakinEtkinlikler.push({
+          id: etkinlik._id.toString(),
+          baslik: etkinlik.baslik,
+          sehir: etkinlik.sehir,
+          tarih: etkinlik.tarih,
+          fiyat: etkinlik.fiyat,
+          kategori: etkinlik.kategori,
+          tur: etkinlik.tur,
+          gorsel: typeof etkinlik.gorsel === "string" && etkinlik.gorsel.startsWith("data:image") 
+            ? null 
+            : etkinlik.gorsel,
+          aciklama: etkinlik.aciklama,
+          latitude: etkinlikLat,
+          longitude: etkinlikLng,
+          mesafe: Math.round(distance * 100) / 100, // km cinsinden, 2 ondalık
+          adres: etkinlik.adres
+        });
+      }
+    }
+
+    // Mesafeye göre sırala (yakından uzağa)
+    yakinEtkinlikler.sort((a, b) => a.mesafe - b.mesafe);
+
+    console.log(`✅ ${yakinEtkinlikler.length} yakın etkinlik bulundu (${finalRadius/1000}km içinde)`);
+
+    res.json({
+      etkinlikler: yakinEtkinlikler,
+      toplam: yakinEtkinlikler.length,
+      arama: {
+        latitude: userLat,
+        longitude: userLng,
+        yarıcap: finalRadius,
+        yarıcapKm: finalRadius / 1000
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Yakındaki etkinlikler hatası:', error);
+    res.status(500).json({ 
+      message: 'Yakındaki etkinlikler alınırken hata oluştu',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Sunucu hatası'
+    });
+  }
+});
 
 router.get("/search", async (req, res) => {
   try {
@@ -626,108 +728,7 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
   res.json({ message: "Favoriden çıkarıldı" });
 });
 
-router.get('/yakindaki', async (req, res) => {
-  try {
-    const { lat, lng, lon, radius = 50000 } = req.query; // radius artık metre cinsinden
-    
-    // lat/lng veya lat/lon parametrelerini destekle
-    const userLat = parseFloat(lat);
-    const userLng = parseFloat(lng || lon);
-    const radiusMeters = parseInt(radius);
 
-    // Parametre kontrolü
-    if (isNaN(userLat) || isNaN(userLng)) {
-      return res.status(400).json({ 
-        message: 'Geçersiz konum parametreleri',
-        error: 'lat ve lng/lon parametreleri gerekli ve sayısal olmalı'
-      });
-    }
-
-    if (isNaN(radiusMeters) || radiusMeters <= 0) {
-      return res.status(400).json({ 
-        message: 'Geçersiz yarıçap',
-        error: 'radius parametresi pozitif bir sayı olmalı (metre cinsinden)'
-      });
-    }
-
-    // Maksimum yarıçap sınırı (performans için)
-    const maxRadiusMeters = 200000; // 200km
-    const finalRadius = Math.min(radiusMeters, maxRadiusMeters);
-
-    console.log(`🔍 Yakın etkinlik arama: lat=${userLat}, lng=${userLng}, radius=${finalRadius}m`);
-
-    // MongoDB'de koordinatları olan onaylı etkinlikleri getir
-    const etkinlikler = await Etkinlik.find({ 
-      onaylandi: true,
-      latitude: { $exists: true, $ne: null },
-      longitude: { $exists: true, $ne: null }
-    })
-    .select('_id baslik sehir tarih fiyat kategori tur gorsel aciklama latitude longitude adres')
-    .lean();
-
-    console.log(`📍 ${etkinlikler.length} koordinatlı etkinlik bulundu`);
-
-    const yakinEtkinlikler = [];
-
-    for (const etkinlik of etkinlikler) {
-      const etkinlikLat = parseFloat(etkinlik.latitude);
-      const etkinlikLng = parseFloat(etkinlik.longitude);
-
-      // Koordinat doğrulaması
-      if (isNaN(etkinlikLat) || isNaN(etkinlikLng)) {
-        console.warn(`⚠️ Geçersiz koordinat: ${etkinlik.baslik}`);
-        continue;
-      }
-
-      // Mesafe hesapla
-      const distance = haversine(userLat, userLng, etkinlikLat, etkinlikLng);
-      const distanceMeters = distance * 1000; // km'yi metreye çevir
-
-      if (distanceMeters <= finalRadius) {
-        yakinEtkinlikler.push({
-          id: etkinlik._id.toString(),
-          baslik: etkinlik.baslik,
-          sehir: etkinlik.sehir,
-          tarih: etkinlik.tarih,
-          fiyat: etkinlik.fiyat,
-          kategori: etkinlik.kategori,
-          tur: etkinlik.tur,
-          gorsel: typeof etkinlik.gorsel === "string" && etkinlik.gorsel.startsWith("data:image") 
-            ? null 
-            : etkinlik.gorsel,
-          aciklama: etkinlik.aciklama,
-          latitude: etkinlikLat,
-          longitude: etkinlikLng,
-          mesafe: Math.round(distance * 100) / 100, // km cinsinden, 2 ondalık
-          adres: etkinlik.adres
-        });
-      }
-    }
-
-    // Mesafeye göre sırala (yakından uzağa)
-    yakinEtkinlikler.sort((a, b) => a.mesafe - b.mesafe);
-
-    console.log(`✅ ${yakinEtkinlikler.length} yakın etkinlik bulundu (${finalRadius/1000}km içinde)`);
-
-    res.json({
-      etkinlikler: yakinEtkinlikler,
-      toplam: yakinEtkinlikler.length,
-      arama: {
-        latitude: userLat,
-        longitude: userLng,
-        yarıcap: finalRadius,
-        yarıcapKm: finalRadius / 1000
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Yakındaki etkinlikler hatası:', error);
-    res.status(500).json({ 
-      message: 'Yakındaki etkinlikler alınırken hata oluştu',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Sunucu hatası'
-    });
-  }
-});
 
 function haversine(lat1, lon1, lat2, lon2) {
   const toRad = deg => (deg * Math.PI) / 180;

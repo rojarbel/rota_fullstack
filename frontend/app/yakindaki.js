@@ -57,17 +57,21 @@ export default function Yakindaki() {
       
       console.log(`🔍 API çağrısı başlıyor: lat=${lat}, lng=${lon}, radius=${radiusKm}km`);
       
-      // API çağrısı - daha kısa timeout
+      // API çağrısı - düzeltilmiş parametreler
       const response = await axiosClient.get('/etkinlik/yakindaki', {
-      params: { 
-        lat: lat.toString(),
-        lon: lon.toString(),  // ✅ DÜZELTİLDİ
-        radius: radiusKm.toString()
-      },
-        timeout: 8000 // 8 saniye timeout
+        params: { 
+          lat: lat.toString(),
+          lng: lon.toString(),  // ✅ DÜZELTİLDİ: Backend 'lng' parametresi bekliyor
+          radius: (radiusKm * 1000).toString() // ✅ DÜZELTİLDİ: km'yi metreye çevir
+        },
+        timeout: 8000
       });
 
-      console.log('📍 API yanıtı alındı:', response.data);
+      console.log('📍 API çağrısı yapıldı:', {
+        lat: lat.toString(),
+        lng: lon.toString(),
+        radius: (radiusKm * 1000).toString()
+      });
 
       // Backend'den gelen veri yapısını kontrol et
       const data = response.data;
