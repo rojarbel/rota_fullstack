@@ -170,8 +170,8 @@ export default function Yakindaki() {
 />
   </View>
 
-  <Callout>
-    <View style={styles.calloutContainer}>
+  <Callout tooltip>
+    <View style={styles.calloutContainer} collapsable={false}>
 <Image
   source={{
     uri: e.gorsel?.startsWith('/')
