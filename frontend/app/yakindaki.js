@@ -59,11 +59,11 @@ export default function Yakindaki() {
       
       // API çağrısı - daha kısa timeout
       const response = await axiosClient.get('/etkinlik/yakindaki', {
-        params: { 
-          lat: lat.toString(),
-          lng: lon.toString(),
-          radius: (radiusKm * 1000).toString() // km'yi metre'ye çevir
-        },
+      params: { 
+        lat: lat.toString(),
+        lon: lon.toString(),  // ✅ DÜZELTİLDİ
+        radius: radiusKm.toString()
+      },
         timeout: 8000 // 8 saniye timeout
       });
 

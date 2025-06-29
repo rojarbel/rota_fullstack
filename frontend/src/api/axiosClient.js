@@ -6,7 +6,8 @@ import Constants from 'expo-constants';
 let cachedToken = null;
 
 // ✅ API URL artık expo.config.js içindeki extra alanından alınır
-const API_BASE_URL = `${Constants.expoConfig.extra.apiUrl}/api`;
+const API_BASE_URL = `${Constants.manifest?.extra?.apiUrl || 'https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net'}/api`;
+
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
