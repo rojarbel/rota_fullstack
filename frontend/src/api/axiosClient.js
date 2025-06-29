@@ -5,13 +5,13 @@ import Constants from 'expo-constants';
 
 let cachedToken = null;
 
+// ✅ API URL artık expo.config.js içindeki extra alanından alınır
 const API_BASE_URL = `${Constants.expoConfig.extra.apiUrl}/api`;
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Access token ekle - tokenu bellekte tut
 axiosClient.interceptors.request.use(async (config) => {
   if (!cachedToken) {
     cachedToken = await getSecureItem('accessToken');
@@ -22,7 +22,6 @@ axiosClient.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Token yenileme
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -44,7 +43,7 @@ axiosClient.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-        const map = {
+    const map = {
       400: 'İstek hatalı.',
       401: 'Oturum açmanız gerekiyor.',
       403: 'Bu işlem için yetkiniz yok.',
@@ -54,7 +53,7 @@ axiosClient.interceptors.response.use(
     error.userMessage = map[error.response?.status] || 'Bir hata oluştu.';
     return Promise.reject(error);
   }
-  );
+);
 
 export const setCachedToken = (newToken) => {
   cachedToken = newToken;
