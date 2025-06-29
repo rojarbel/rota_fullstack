@@ -27,7 +27,7 @@ export default function Yakindaki() {
   const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState(null);
   const [events, setEvents] = useState([]);
-    const [locationGranted, setLocationGranted] = useState(false);
+  const [locationGranted, setLocationGranted] = useState(false);
   const citiesMemo = useMemo(() => cities, []);
   const markersRef = useRef({});
 
@@ -35,7 +35,7 @@ export default function Yakindaki() {
     setSelectedCity(city);
   };
 
-    useEffect(() => {
+  useEffect(() => {
     const requestLocation = async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -46,7 +46,6 @@ export default function Yakindaki() {
     };
     requestLocation();
   }, []);
-
 
   useEffect(() => {
     if (!selectedCity) return;
@@ -59,7 +58,7 @@ export default function Yakindaki() {
         });
 
         let list = Array.isArray(data) ? data : [];
-                const coordCounter = {};
+        const coordCounter = {};
         list = list
           .map(e => ({
             ...e,
@@ -97,14 +96,11 @@ export default function Yakindaki() {
       }
     };
 
-
     fetchEvents();
   }, [selectedCity]);
 
-
   if (!selectedCity) {
     return (
-
       <View style={styles.container}>
         <Text style={styles.header}>Şehir Seç</Text>
         <FlatList
@@ -126,7 +122,6 @@ export default function Yakindaki() {
     );
   }
 
-
   if (loading) {
     return (
       <View style={styles.center}>
@@ -135,64 +130,44 @@ export default function Yakindaki() {
     );
   }
 
-
   return (
     <View style={{ flex: 1 }}>
       {region && (
         <MapView
           style={StyleSheet.absoluteFillObject}
           initialRegion={region}
-                    showsUserLocation={locationGranted}
+          showsUserLocation={locationGranted}
           showsMyLocationButton={locationGranted}
-
         >
           {events.map((e) => {
-
-
+            // Debug için console log
+            console.log('Event data:', e);
+            
             return (
-<Marker
-  key={e._id || e.id}
-  coordinate={{ latitude: e.lat, longitude: e.lon }}
-  title={e.baslik}
-  description={e.sehir || ''}
->
-  <View style={styles.markerWrapper}>
-    <Image
-      source={{
-        uri: e.gorsel?.startsWith('/')
-          ? `${IMAGE_BASE_URL}${e.gorsel}`
-          : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
-      }}
-      style={styles.markerImage}
-    />
-  </View>
-
-<Callout>
-  <View style={styles.calloutContainer}>
-    <Text style={styles.calloutTitle}>
-      {typeof e.baslik === 'string' ? e.baslik : 'Etkinlik Başlığı'}
-    </Text>
-
-    <Text style={styles.calloutText}>
-      📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
-    </Text>
-
-    <TouchableOpacity
-      style={styles.calloutButton}
-      onPress={() =>
-        router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
-      }
-    >
-      <Text style={styles.calloutButtonText}>Detayları Gör</Text>
-    </TouchableOpacity>
-  </View>
-</Callout>
-
-</Marker>
-
-
-
-
+              <Marker
+                key={e._id || e.id}
+                coordinate={{ latitude: e.lat, longitude: e.lon }}
+                title={e.baslik || 'Etkinlik'}
+                description={`📅 ${e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'} \n📍 ${e.sehir || selectedCity}`}
+                onCalloutPress={() => {
+                  console.log('Callout pressed for event:', e._id || e.id);
+                  router.push({ 
+                    pathname: '/etkinlik/[id]', 
+                    params: { id: e._id || e.id } 
+                  });
+                }}
+              >
+                <View style={styles.markerWrapper}>
+                  <Image
+                    source={{
+                      uri: e.gorsel?.startsWith('/')
+                        ? `${IMAGE_BASE_URL}${e.gorsel}`
+                        : (e.gorsel || 'https://via.placeholder.com/200x100?text=Etkinlik')
+                    }}
+                    style={styles.markerImage}
+                  />
+                </View>
+              </Marker>
             );
           })}
         </MapView>
@@ -248,56 +223,21 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
-  callout: {
-    width: 200,
+
+  markerWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
     backgroundColor: '#fff',
-    padding: 8,
-    borderRadius: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-calloutImage: {
-  width: '100%',
-  height: 120,
-  borderRadius: 8,
-  marginBottom: 8,
-},
-calloutTitle: {
-  fontSize: 16,
-  fontWeight: 'bold',
-  color: PRIMARY,
-  marginBottom: 4,
-},
-calloutText: {
-  fontSize: 13,
-  color: '#555',
-  marginBottom: 6,
-},
-
-calloutButton: {
-  backgroundColor: PRIMARY,
-  paddingVertical: 6,
-  paddingHorizontal: 10,
-  borderRadius: 6,
-  alignSelf: 'flex-start',
-},
-
-calloutButtonText: {
-  color: '#fff',
-  fontWeight: 'bold',
-  fontSize: 13,
-},
-calloutContainer: {
-  width: 220,
-  minHeight: 200,
-  padding: 10,
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  alignItems: 'flex-start',
-},
-markerWrapper: {
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 40,
-  height: 40,
-},
 });
