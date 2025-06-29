@@ -166,27 +166,29 @@ export default function Yakindaki() {
       style={styles.markerImage}
     />
   </View>
+<Callout tooltip>
+  <View style={styles.callout}>
+    <View style={styles.calloutContainer}>
+      <Text style={styles.calloutTitle}>
+        {e.baslik || 'Etkinlik Başlığı'}
+      </Text>
 
-<Callout>
-  <View style={styles.calloutContainer}>
-    <Text style={styles.calloutTitle}>
-      {typeof e.baslik === 'string' ? e.baslik : 'Etkinlik Başlığı'}
-    </Text>
+      <Text style={styles.calloutText}>
+        📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
+      </Text>
 
-    <Text style={styles.calloutText}>
-      📅 {e.tarih ? new Date(e.tarih).toLocaleDateString('tr-TR') : 'Tarih Bilinmiyor'}
-    </Text>
-
-    <TouchableOpacity
-      style={styles.calloutButton}
-      onPress={() =>
-        router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
-      }
-    >
-      <Text style={styles.calloutButtonText}>Detayları Gör</Text>
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.calloutButton}
+        onPress={() =>
+          router.push({ pathname: '/etkinlik/[id]', params: { id: e._id || e.id } })
+        }
+      >
+        <Text style={styles.calloutButtonText}>Detayları Gör</Text>
+      </TouchableOpacity>
+    </View>
   </View>
 </Callout>
+
 
 </Marker>
 
@@ -287,12 +289,12 @@ calloutButtonText: {
   fontSize: 13,
 },
 calloutContainer: {
-  width: 200,
+  width: 220,
+  minHeight: 200,
   padding: 10,
-  backgroundColor: 'white',
-  borderRadius: 10,
-  alignItems: 'center',
-  justifyContent: 'center',
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  alignItems: 'flex-start',
 },
 markerWrapper: {
   alignItems: 'center',
