@@ -48,38 +48,42 @@ const renderItem = useCallback(({ item }) => (
     style={{
       backgroundColor: '#fff',
       padding: 14,
-      marginBottom: 16,
-      borderRadius: 12,
+      marginBottom: 20,
+      borderRadius: 16,
       shadowColor: '#000',
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 3,
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
     }}
   >
   <Image
     source={{ uri: `${IMAGE_BASE_URL}${item.gorsel}` }}
 
-      style={{ width: '100%', height: 270, borderRadius: 6 }}
+      style={{ width: '100%', height: 240, borderRadius: 12 }}
+
       resizeMode="cover"
     />
-    <Text style={{ fontSize: 18, fontWeight: '700', color: '#333', marginTop: 8 }}>
+    <Text style={{ fontSize: 17, fontWeight: '700', color: '#111', marginTop: 10 }}>
+
       {item.baslik}
     </Text>
-    <Text style={{ fontSize: 14, color: '#666', marginTop: 2 }}>
+    <Text style={{ fontSize: 14, color: '#666', marginTop: 6 }}>
+
       {item.sehir} • {formatDate(item.tarih)}
     </Text>
-    <Text style={{ marginTop: 4, color: '#333', fontWeight: '500' }}>
+    <Text style={{ marginTop: 8, color: '#000', fontWeight: '600' }}>
       {(item.fiyat && item.fiyat !== '0') ? `${item.fiyat} ₺` : 'Ücretsiz'} • {item.kategori}
     </Text>
   </TouchableOpacity>
 ), []);
 
   return (
-    <View style={{ padding: 16, backgroundColor: '#f2f2f2', flex: 1 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>
-        {q || sehir} için sonuçlar
-        </Text>
+    <View style={{ padding: 16, backgroundColor: '#fff', flex: 1 }}>
+
+    <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 20, color: '#222' }}>
+      “{q || sehir}” için sonuçlar
+    </Text>
 
       {loading ? (
         <ActivityIndicator size="large" color="#6c5ce7" />

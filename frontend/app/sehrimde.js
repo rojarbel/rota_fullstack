@@ -45,7 +45,11 @@ export default function Sehrimde() {
         data={citiesMemo}
         keyExtractor={(item) => item}
         numColumns={3}
-        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 12 }}
+        columnWrapperStyle={{
+          justifyContent: 'space-between',
+          marginBottom: 16,
+          paddingHorizontal: 4
+        }}
         contentContainerStyle={{ paddingBottom: 16 }}
         renderItem={({ item }) => (
           <TouchableOpacity style={[styles.cityButton, { flex: 1, marginHorizontal: 6 }]} onPress={() => handleCitySelect(item)}>
@@ -59,28 +63,30 @@ export default function Sehrimde() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    paddingTop: 24,
+    paddingHorizontal: 16,
     flex: 1,
     backgroundColor: '#fff',
   },
 header: {
-  fontSize: 24,
+  fontSize: 26,
   fontWeight: 'bold',
   marginBottom: 20,
   textAlign: 'center',
   color: TEXT,
+  letterSpacing: 0.3,
 },
 cityButton: {
   backgroundColor: PRIMARY,
-  paddingVertical: 16,
-  paddingHorizontal: 12,
-  marginBottom: 12,
-  borderRadius: 12,
-  elevation: 2,
+  paddingVertical: 14,
+  paddingHorizontal: 10,
+  marginBottom: 10,
+  borderRadius: 14,
+  elevation: 1,
   shadowColor: '#000',
-  shadowOpacity: 0.08,
-  shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 4,
+  shadowOpacity: 0.05,
+  shadowOffset: { width: 0, height: 1 },
+  shadowRadius: 2,
 },
 cityText: {
   color: '#fff',

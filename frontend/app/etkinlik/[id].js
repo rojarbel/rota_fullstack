@@ -281,22 +281,37 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
           cacheKey={etkinlik.id}
           style={{
             width: '100%',
-            height: 330,
+            height: 300,
             borderRadius: 16,
-            marginTop: 12,
+            backgroundColor: '#e0e0e0',
             shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 3,
+            shadowOpacity: 0.08,
+            shadowRadius: 6,
+            shadowOffset: { width: 0, height: 2 },
+            elevation: 4,
           }}
         />
 
-        <View style={{ marginTop: 20, backgroundColor: '#fff', borderRadius: 12, padding: 16 }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: TEXT, marginBottom: 4 }}>
+        <View
+          style={{
+            marginTop: 24,
+            backgroundColor: '#fff',
+            borderRadius: 14,
+            padding: 20,
+            shadowColor: '#000',
+            shadowOpacity: 0.05,
+            shadowOffset: { width: 0, height: 1 },
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
+          <Text style={{ fontSize: 22, fontWeight: '700', lineHeight: 30, color: '#111' }}>
             {etkinlik.baslik}
           </Text>
-          <Text style={{ color: '#666', marginBottom: 2 }}>📂 {etkinlik.kategori}</Text>
+          <Text style={{ fontSize: 15, color: '#666', marginTop: 6 }}>
+            {etkinlik.kategori}
+          </Text>
+
           <Text style={{ color: '#666', marginBottom: 2 }}>🏷️ {etkinlik.tur}</Text>
           <Text style={{ color: '#666', marginBottom: 2 }}>📍 {etkinlik.sehir}</Text>
           <Text style={{ color: '#666', marginBottom: 2 }}>📅 {formatDate(etkinlik.tarih)}</Text>
@@ -307,15 +322,23 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
           <TouchableOpacity
             onPress={favoriToggle}
             style={{
-              marginTop: 20,
+              marginTop: 24,
               paddingVertical: 12,
-              borderRadius: 8,
-              backgroundColor: favorideMi ? '#f8f4ff' : '#fff',
-              borderWidth: 1,
-              borderColor: PRIMARY,
+              borderRadius: 10,
+              backgroundColor: PRIMARY,
+              shadowColor: '#000',
+              shadowOpacity: 0.04,
+              shadowOffset: { width: 0, height: 1 },
+              shadowRadius: 4,
+              elevation: 2,
             }}
           >
-            <Text style={{ textAlign: 'center', color: PRIMARY, fontWeight: '600' }}>
+              <Text style={{
+                textAlign: 'center',
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#fff',
+              }}>
               {favorideMi ? 'Favoriden Çıkar' : 'Favorilere Ekle'}
             </Text>
           </TouchableOpacity>
@@ -411,10 +434,10 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
                 key={tip}
                 onPress={() => paylaş(tip)}
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 12,
-                  backgroundColor: '#f0f0f0',
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: '#fafafa',
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}
@@ -501,7 +524,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
               multiline
               scrollEnabled={false}
                 style={{
-                  borderColor: '#ccc',
+                 borderColor: '#ddd',
                   borderWidth: 1,
                   borderRadius: 8,
                   padding: 12,
