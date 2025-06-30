@@ -275,7 +275,9 @@ const handleSubmit = async () => {
         multiline
         numberOfLines={6}
       />
-      {location && (
+        <Text style={styles.label}>Etkinlik Konumu</Text>
+
+        {location ? (
           <View style={{ height: 250, marginBottom: 16 }}>
             <MapView
               style={{ flex: 1, borderRadius: 10 }}
@@ -287,9 +289,13 @@ const handleSubmit = async () => {
               )}
             </MapView>
             <Text style={{ marginTop: 6, fontSize: 14, color: '#666' }}>
-              Haritaya dokunarak etkinlik konumunu işaretleyin
+              Haritaya dokunarak etkinliğin yerini seçin.
             </Text>
           </View>
+        ) : (
+          <Text style={{ marginBottom: 16, color: 'red', fontWeight: 'bold' }}>
+            Konum alınamadı. Lütfen konum izni verin ya da sayfayı yeniden açın.
+          </Text>
         )}
 
 <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
