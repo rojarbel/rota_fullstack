@@ -22,7 +22,7 @@ const Menu = ({ isMobile }) => {
 
   return (
     <View style={[styles.tabBar, isMobile && styles.mobileBar]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 6 }}>
         {categories.map((cat) => {
           const isActive = currentPath === cat.path;
           return (
@@ -41,30 +41,33 @@ const Menu = ({ isMobile }) => {
 };
 
 const styles = StyleSheet.create({
-  tabBar: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
+tabBar: {
+  flexDirection: 'row',
+  backgroundColor: '#fff',
+  paddingVertical: 8,
+  paddingHorizontal: 8,
+  borderRadius: 10,
+    },
   mobileBar: {
     backgroundColor: '#f9f9f9',
   },
   tabItem: {
-    marginHorizontal: 12,
+    marginHorizontal: 8,
     paddingVertical: 6,
     borderBottomWidth: 2,
     borderColor: 'transparent',
   },
   activeTabItem: {
     borderColor: PRIMARY,
+    backgroundColor: '#F4EDFA', // Açık mor tonu
+    borderRadius: 8,
+    paddingHorizontal: 10,
   },
   tabLabel: {
     color: '#666',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
+    paddingBottom: 2,
   },
   activeTabLabel: {
     color: PRIMARY,

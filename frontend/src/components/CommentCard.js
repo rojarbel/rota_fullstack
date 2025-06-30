@@ -3,6 +3,7 @@ import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-nat
 import axiosClient from '../api/axiosClient';
 import { AuthContext } from '../context/AuthContext';
 import handleApiError from '../utils/handleApiError';
+import { Ionicons } from '@expo/vector-icons';
 
 const PRIMARY = '#7B2CBF';
 
@@ -22,7 +23,12 @@ const zamanFarki = (tarih) => {
 const touchableIcon = (liked, onPress, count, tarih) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
     <TouchableOpacity onPress={onPress}>
-      <Text style={{ fontSize: 18 }}>{liked ? '💜' : '🤍'}</Text>
+<Ionicons
+  name={liked ? 'heart' : 'heart-outline'}
+  size={18}
+  color={liked ? PRIMARY : '#999'}
+  onPress={onPress}
+/>
     </TouchableOpacity>
     <Text style={{ fontSize: 12, color: '#888' }}>{count}</Text>
     <Text style={{ fontSize: 12, color: '#aaa' }}>· {zamanFarki(tarih)}</Text>
@@ -93,7 +99,18 @@ function CommentCard({
   return (
     <View key={yorum._id} style={{ marginBottom: 12 }}>
       <View style={{ flexDirection: 'row', paddingLeft: isAltYorum ? 48 : 0 }}>
-        <Image source={{ uri: yorum.avatarUrl }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }} />
+        <Image source={{ uri: yorum.avatarUrl || `https://ui-avatars.com/api/?name=${yorum.kullanici}` }} style={{
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  marginRight: 10,
+  borderWidth: 1,
+  borderColor: '#eee',
+  shadowColor: '#000',
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 2,
+}} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontWeight: '600' }}>{yorum.kullanici}</Text>
 
@@ -110,7 +127,8 @@ function CommentCard({
               </TouchableOpacity>
             </>
           ) : (
-            <Text style={{ color: '#555', marginVertical: 4 }}>{yorum.yorum}</Text>
+          <Text style={{ color: '#444', fontSize: 15, lineHeight: 20, marginVertical: 6 }}>{yorum.yorum}</Text>
+
           )}
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -129,9 +147,19 @@ function CommentCard({
             )}
 
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity onPress={() => setYanitId(yorum._id)}>
-                <Text style={{ color: PRIMARY }}>Yanıtla</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                paddingVertical: 6,
+                paddingHorizontal: 14,
+                backgroundColor: '#f5f5f5',
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: '#e0e0e0',
+              }}
+              onPress={() => setYanitId(yorum._id)}
+            >
+              <Text style={{ color: PRIMARY, fontWeight: '500' }}>Yanıtla</Text>
+            </TouchableOpacity>
             </View>
           </View>
           <View style={{ marginTop: 8, display: String(yanitId) === String(yorum._id) ? 'flex' : 'none' }}>
@@ -149,10 +177,12 @@ function CommentCard({
               blurOnSubmit={false}
               style={{
                 borderWidth: 1,
-                borderColor: '#ccc',
-                borderRadius: 8,
-                padding: 10,
-                minHeight: 60,
+                borderColor: '#ddd',
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                fontSize: 15,
+                backgroundColor: '#fafafa',
               }}
             />
             <TouchableOpacity
@@ -166,11 +196,13 @@ function CommentCard({
                 width: 100,
               }}
             >
-              <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>Yanıtla</Text>
+            <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600', fontSize: 15 }}>Yanıtla</Text>
+
             </TouchableOpacity>
           </View>
         </View>
       </View>
+      <View style={{ height: 0.6, backgroundColor: '#ddd', marginVertical: 12 }} />
       {altYorumlar.map(alt => (
         <CommentCard
           key={alt._id}

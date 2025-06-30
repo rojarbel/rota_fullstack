@@ -24,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TouchableWithoutFeedback, Keyboard } from 'react-native';
 
 
+
 const Header = ({ onHamburgerClick, onSearchChange }) => {
 const [profilePhoto, setProfilePhoto] = useState(null);
 
@@ -162,7 +163,7 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
 };
 
   return (
-   <View style={styles.header}>
+    <View>
     {bildirimPanelAcik && (
     <TouchableWithoutFeedback>
       <View style={[styles.bildirimDisiKapan, { zIndex: 50 }]} pointerEvents="none" />
@@ -170,11 +171,14 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
     )}
 
     <View style={styles.topBar}>
-  <Image source={require('../assets/logo.png')} style={styles.logo} />
+      <View style={styles.logoContainer}>
+        <Image source={require('../assets/logo.png')} style={styles.logo} />
+      </View>
 
   <TextInput
     style={styles.searchInput}
     placeholder="Etkinlik Ara"
+    placeholderTextColor="#999"
     value={searchQuery}
     onChangeText={(text) => {
       setSearchQuery(text);
@@ -216,12 +220,21 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
 
 {isLoggedIn && (
   <View style={{ position: 'relative' }}>
-    <TouchableOpacity onPress={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}>
+      <TouchableOpacity
+        onPress={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+        activeOpacity={0.8}
+      >
       <View style={styles.avatar}>
         {profilePhoto ? (
           <Image
             source={{ uri: profilePhoto }}
-            style={{ width: 32, height: 32, borderRadius: 16 }}
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              borderWidth: 2,
+              borderColor: '#6c5ce7',
+            }}
             resizeMode="cover"
           />
         ) : (
@@ -250,6 +263,7 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
           auth.setUsername(null);
           router.push('/login');
         }}>
+          <Ionicons name="log-out-outline" size={16} color="#666" style={{ marginRight: 8 }} />
           <Text style={styles.dropdownItem}>Çıkış Yap</Text>
         </TouchableOpacity>
       </View>
@@ -315,7 +329,13 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
                   />
                   <View style={styles.eventTextContainer}>
                     <Text style={styles.eventTitle}>{item.baslik}</Text>
-                    <Text style={styles.eventSubtitle}>{item.sehir} – {item.tarih}</Text>
+                <Text style={styles.eventSubtitle}>
+                  {item.sehir} – {new Date(item.tarih).toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -402,12 +422,13 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
   );
 };
   const styles = StyleSheet.create({
-header: {
-  paddingHorizontal: 12,
-  backgroundColor: '#fff',
-  zIndex: 10,
-  position: 'relative',
-},
+  header: {
+    paddingHorizontal: 12,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    backgroundColor: '#fff',
+    zIndex: 10,
+    position: 'relative',
+  },
 
     logoContainer: {
       flexDirection: 'row',
@@ -427,10 +448,16 @@ header: {
       flex: 1,
       marginHorizontal: 8,
       borderWidth: 1,
-      borderColor: '#ccc',
-      borderRadius: 8,
-      paddingLeft: 12,
-      paddingVertical: 8,
+      borderColor: '#E0E0E0',
+      borderRadius: 12,
+      paddingLeft: 16,
+      paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+      backgroundColor: '#FAFAFA',
+      shadowColor: '#000',
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      elevation: 2,
+      fontSize: 15,
     },
     dropdown: {
       marginTop: 4,
@@ -439,6 +466,11 @@ header: {
       borderColor: '#ccc',
       borderRadius: 6,
       maxHeight: 250,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 4,
+      paddingBottom: 8,
     },
     dropdownItemContainer: {
       flexDirection: 'row',
@@ -452,6 +484,12 @@ header: {
       height: 50,
       borderRadius: 6,
       marginRight: 10,
+      borderWidth: 0.5,
+      borderColor: '#ddd',
+      shadowColor: '#000',
+      shadowOpacity: 0.07,
+      shadowRadius: 6,
+      elevation: 3,
     },
     eventTextContainer: {
       flex: 1,
@@ -461,7 +499,7 @@ header: {
     },
     eventSubtitle: {
       color: '#888',
-      fontSize: 12,
+      fontSize: 13,
     },
     modalOverlay: {
       flex: 1,
@@ -513,26 +551,31 @@ header: {
       textAlign: 'center',
       color: '#888',
     },
-      notificationButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#f1f1f1',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-      },
+    notificationButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: '#fff',
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.06,
+      shadowRadius: 6,
+      elevation: 4,
+    },
     bell: {
       fontSize: 20,
     },
     notificationBadge: {
-      position: 'absolute',
-      top: -5,
-      right: -5,
-      backgroundColor: 'red',
-      borderRadius: 12,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      top: -6,
+      right: -6,
+      backgroundColor: '#ff3b30',
+      borderRadius: 9,
+      height: 18,
+      minWidth: 18,
+      paddingHorizontal: 4,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     notificationCount: {
       color: '#fff',
@@ -580,26 +623,27 @@ dropdownMenu: {
   position: 'absolute',
   top: 45,
   right: 0,
-  zIndex: 100,
+  zIndex: Platform.OS === 'android' ? 50 : 1000,
   backgroundColor: '#fff',
   borderRadius: 6,
   borderWidth: 1,
   borderColor: '#ccc',
   paddingVertical: 4,
   shadowColor: '#000',
-  shadowOpacity: 0.1,
-  shadowRadius: 6,
-  elevation: 5,
+  shadowOpacity: 0.08,
+  shadowRadius: 12,
+  elevation: 6,
   width: 150,          // 🔥 EKLENDİ
   minWidth: 120,       // 🔥 EKLENDİ (güvence)
+  
 },
     dropdownItem: {
-      paddingVertical: 10,
+      paddingVertical: 12,
       paddingHorizontal: 16,
-      borderBottomWidth: 1,
-      borderColor: '#eee',
-      fontSize: 14,
-      color: '#444',
+      textAlign: 'left',
+      color: '#333',
+      fontSize: 15,
+      fontWeight: '500',
     },
     loggedInArea: {
       flexDirection: 'column',
@@ -626,20 +670,27 @@ dropdownMenu: {
       fontWeight: 'bold',
     },
     topBar: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 8,
-},
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 12,
+      backgroundColor: '#fff',
+    },
 
-avatar: {
-  width: 32,
-  height: 32,
-  borderRadius: 16,
-  backgroundColor: '#6c5ce7',
-  alignItems: 'center',
-  justifyContent: 'center',
-},
+    avatar: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: '#6c5ce7',
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 3,
+    },
 
 avatarText: {
   color: '#fff',
@@ -649,6 +700,9 @@ avatarText: {
 loginText: {
   color: '#6c5ce7',
   fontWeight: 'bold',
+  fontSize: 15,
+  padding: 4,
+  borderRadius: 6,
 },
 bildirimDisiKapan: {
   position: 'absolute',

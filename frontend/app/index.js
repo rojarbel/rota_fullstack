@@ -252,13 +252,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
     flexWrap: 'wrap',
   },
-  tab: {
-  backgroundColor: '#eee',
+tab: {
+  backgroundColor: '#F4F4F4',
   paddingVertical: 10,
-  paddingHorizontal: 16,
-  borderRadius: 20,
+  paddingHorizontal: 18,
+  borderRadius: 24,
   marginHorizontal: 6,
-  marginBottom: 8,
+  marginBottom: 10,
+  borderWidth: 1,
+  borderColor: '#E0E0E0',
+  shadowColor: '#000',
+  shadowOpacity: 0.03,
+  shadowOffset: { width: 0, height: 1 },
+  shadowRadius: 2,
+  elevation: 1,
 },
 activeTab: {
   backgroundColor: PRIMARY,
@@ -273,37 +280,39 @@ activeTabText: {
 
 card: {
   backgroundColor: '#fff',
-  borderRadius: 12,
-  padding: 12,
-  marginBottom: 16,
+  borderRadius: 14,
+  padding: 14,
+  marginBottom: 20,
   shadowColor: '#000',
-  shadowOpacity: 0.1,
+  shadowOpacity: 0.05,
   shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 8,
-  elevation: 3,
+  shadowRadius: 6,
+  elevation: 1,
 },
-  image: {
-    width: '100%',
-    height: 270,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
+image: {
+  width: '100%',
+  height: 260,
+  borderRadius: 12,
+  marginBottom: 10,
+},
 title: {
   fontSize: 18,
-  fontWeight: '700',
+  fontWeight: '600',
   color: PRIMARY,
   marginBottom: 4,
 },
 meta: {
-  fontSize: 13,
-  color: '#777',
-  marginBottom: 6,
+  fontSize: 14,
+  color: '#555',
+  marginBottom: 4,
 },
 aciklama: {
-  fontSize: 14,
+  fontSize: 15,
+  fontWeight: '500',
   color: TEXT,
-  lineHeight: 20,
+  lineHeight: 22,
 },
+
 });
 
 export default Index;
