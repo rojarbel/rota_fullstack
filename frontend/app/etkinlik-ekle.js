@@ -11,6 +11,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import logger from '../src/utils/logger';
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
+
+
 
 const kategorilerVeTurler = {
   Aktivizm: [
@@ -37,6 +41,26 @@ const EtkinlikEkleScreen = () => {
     }
   }, [authLoaded, isLoggedIn]);
 
+  useEffect(() => {
+  (async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Konum izni reddedildi');
+      return;
+    }
+
+    let loc = await Location.getCurrentPositionAsync({});
+    setLocation({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    });
+  })();
+}, []);
+
+  const [location, setLocation] = useState(null);
+  const [markerCoords, setMarkerCoords] = useState(null);
   const [baslik, setBaslik] = useState('');
   const [sehir, setSehir] = useState('');
   const [tarih, setTarih] = useState('');
@@ -69,6 +93,9 @@ const EtkinlikEkleScreen = () => {
   };
 
 const handleSubmit = async () => {
+  if (!markerCoords) {
+  alert("Lütfen haritada etkinliğin konumunu seçin.");
+  return;}
   const formData = new FormData();
   formData.append('baslik', baslik);
   formData.append('sehir', sehir);
@@ -77,7 +104,10 @@ const handleSubmit = async () => {
   formData.append('tarih', tarih);
   formData.append('fiyat', fiyat);
   formData.append('aciklama', aciklama);
-
+  if (markerCoords) {
+  formData.append('latitude', markerCoords.latitude);
+  formData.append('longitude', markerCoords.longitude);
+}
   if (gorsel) {
     const fileName = gorsel.split('/').pop();
     const fileType = fileName.split('.').pop();
@@ -245,6 +275,22 @@ const handleSubmit = async () => {
         multiline
         numberOfLines={6}
       />
+      {location && (
+          <View style={{ height: 250, marginBottom: 16 }}>
+            <MapView
+              style={{ flex: 1, borderRadius: 10 }}
+              initialRegion={location}
+              onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
+            >
+              {markerCoords && (
+                <Marker coordinate={markerCoords} title="Etkinlik Konumu" />
+              )}
+            </MapView>
+            <Text style={{ marginTop: 6, fontSize: 14, color: '#666' }}>
+              Haritaya dokunarak etkinlik konumunu işaretleyin
+            </Text>
+          </View>
+        )}
 
 <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
   <Text style={styles.submitButtonText}>Gönder</Text>
