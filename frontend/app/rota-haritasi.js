@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
+import polyline from '@mapbox/polyline';
 
 export default function RotaHaritasi() {
   const { lat, lng, baslik } = useLocalSearchParams();
   const [konum, setKonum] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+
+  const GOOGLE_API_KEY = 'AIzaSyBScQ90t460MjP_e8cUDzRtY9dXPl4davI'; // 🔒 Buraya kendi API key'ini yaz
 
   useEffect(() => {
     (async () => {
@@ -14,11 +18,38 @@ export default function RotaHaritasi() {
       if (status !== 'granted') return;
 
       const location = await Location.getCurrentPositionAsync({});
-      setKonum(location.coords);
+      const origin = location.coords;
+      setKonum(origin);
+
+      const destination = {
+        latitude: parseFloat(lat),
+        longitude: parseFloat(lng),
+      };
+
+      const originStr = `${origin.latitude},${origin.longitude}`;
+      const destinationStr = `${destination.latitude},${destination.longitude}`;
+
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&mode=walking&key=${GOOGLE_API_KEY}`;
+
+      try {
+        const response = await fetch(url);
+        const json = await response.json();
+
+        if (json.routes?.length) {
+          const points = decodePolyline(json.routes[0].overview_polyline.points);
+          setRouteCoordinates(points);
+        }
+      } catch (err) {
+        console.error('Rota alınamadı:', err);
+      }
     })();
   }, []);
 
-  if (!konum) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
+  const decodePolyline = (t) => {
+    return polyline.decode(t).map(([latitude, longitude]) => ({ latitude, longitude }));
+  };
+
+  if (!konum || !lat || !lng) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
 
   const hedefKonum = {
     latitude: parseFloat(lat),
@@ -37,11 +68,14 @@ export default function RotaHaritasi() {
     >
       <Marker coordinate={konum} title="Benim Konumum" pinColor="blue" />
       <Marker coordinate={hedefKonum} title={baslik || 'Etkinlik'} pinColor="red" />
-      <Polyline
-        coordinates={[konum, hedefKonum]}
-        strokeColor="#7B2CBF"
-        strokeWidth={4}
-      />
+
+      {routeCoordinates.length > 0 && (
+        <Polyline
+          coordinates={routeCoordinates}
+          strokeColor="#7B2CBF"
+          strokeWidth={5}
+        />
+      )}
     </MapView>
   );
 }
