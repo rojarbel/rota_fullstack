@@ -380,11 +380,7 @@ export default function Yakindaki() {
                 console.warn('⚠️ Marker görseli yüklenemedi:', event.gorsel);
               }}
             />
-            {event.mesafe && (
-              <View style={styles.distanceBadge}>
-                <Text style={styles.distanceText}>{event.mesafe.toFixed(1)}km</Text>
-              </View>
-            )}
+
           </View>
         </Marker>
       );
@@ -452,7 +448,6 @@ export default function Yakindaki() {
       {/* Kontrol Paneli */}
       <View style={styles.controlPanel}>
         <View style={styles.radiusControls}>
-          <Text style={styles.radiusLabel}>Arama Yarıçapı:</Text>
           <View style={styles.radiusButtons}>
             {[25, 50, 100].map((r) => (
               <TouchableOpacity
@@ -593,12 +588,12 @@ const styles = StyleSheet.create({
   },
   controlPanel: {
     position: 'absolute',
-    top: __DEV__ ? 80 : 60,
+    top: 12,
     left: 16,
-    right: 16,
+    right: 64,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
-    padding: 16,
+    padding: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -626,13 +621,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   radiusButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 6,
     backgroundColor: '#f0f0f0',
     borderWidth: 1,
     borderColor: '#ddd',
-    minWidth: 100,
+    minWidth: 90,
     alignItems: 'center',
     justifyContent: 'space-around',
   },
@@ -688,28 +683,25 @@ const styles = StyleSheet.create({
   markerWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 1,
   },
 markerImage: {
-  width: 40,           // Boyutu küçülttük (80'den 40'a)
-  height: 40,          // Yüksekliği de aynı yaptık
-  borderRadius: 20,    // Tam daire için width/height'ın yarısı
+  width: 36,
+  height: 36,
+  borderRadius: 18, // Tam çember için width/height'ın yarısı
   resizeMode: 'cover',
   backgroundColor: '#f0f0f0',
-  overflow: 'hidden',
-  borderWidth: 1,      // İsteğe bağlı: kenarlık ekleyebilirsiniz
-  borderColor: '#fff', // İsteğe bağlı: beyaz kenarlık
+  overflow: 'hidden', // ✅ Bu satırı tekrar ekleyin - önemli!
+  borderWidth: 1, // Border kalınlığını artırabilirsiniz
+  borderColor: '#fff',
+  // Gölge efekti
+  shadowColor: '#000',
+  shadowOffset: {
+    width: 0,
+    height: 2,
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  elevation: 5,
 },
-  distanceBadge: {
-    position: 'absolute',
-    bottom: -4,
-    backgroundColor: PRIMARY,
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-  },
-  distanceText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: 'bold',
-  },
 });
