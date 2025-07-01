@@ -446,16 +446,8 @@ export default function Yakindaki() {
   // Ana görünüm
   return (
     <View style={{ flex: 1 }}>
-      {/* Debug Bilgisi (sadece development için) */}
-      {__DEV__ && (
-        <View style={styles.debugInfo}>
-          <Text style={styles.debugText}>
-            Debug: User: {userLocation ? `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}` : 'null'} | 
-            Events: {events.length} | 
-            Radius: {radius}km
-          </Text>
-        </View>
-      )}
+
+
 
       {/* Kontrol Paneli */}
       <View style={styles.controlPanel}>
@@ -483,15 +475,7 @@ export default function Yakindaki() {
           </View>
         </View>
         
-        <TouchableOpacity 
-          style={[styles.refreshButton, loading && styles.refreshButtonDisabled]} 
-          onPress={refreshLocation}
-          disabled={loading}
-        >
-          <Text style={styles.refreshButtonText}>
-            {loading ? '⏳' : '🔄'} Yenile
-          </Text>
-        </TouchableOpacity>
+
       </View>
 
       {/* Etkinlik Sayısı ve Hata Mesajı */}
@@ -627,6 +611,7 @@ const styles = StyleSheet.create({
   },
   radiusControls: {
     flex: 1,
+    alignItems: 'center',
   },
   radiusLabel: {
     fontSize: 12,
@@ -636,24 +621,29 @@ const styles = StyleSheet.create({
   },
   radiusButtons: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
     gap: 6,
   },
   radiusButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
     backgroundColor: '#f0f0f0',
     borderWidth: 1,
     borderColor: '#ddd',
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'space-around',
   },
   radiusButtonActive: {
     backgroundColor: PRIMARY,
     borderColor: PRIMARY,
   },
   radiusButtonText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   radiusButtonTextActive: {
     color: '#fff',
@@ -699,17 +689,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  markerImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderColor: '#fff',
-    backgroundColor: '#f0f0f0',
-  },
+markerImage: {
+  width: 40,           // Boyutu küçülttük (80'den 40'a)
+  height: 40,          // Yüksekliği de aynı yaptık
+  borderRadius: 20,    // Tam daire için width/height'ın yarısı
+  resizeMode: 'cover',
+  backgroundColor: '#f0f0f0',
+  overflow: 'hidden',
+  borderWidth: 1,      // İsteğe bağlı: kenarlık ekleyebilirsiniz
+  borderColor: '#fff', // İsteğe bağlı: beyaz kenarlık
+},
   distanceBadge: {
     position: 'absolute',
-    bottom: -8,
+    bottom: -4,
     backgroundColor: PRIMARY,
     borderRadius: 8,
     paddingHorizontal: 4,
