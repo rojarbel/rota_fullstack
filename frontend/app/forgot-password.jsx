@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import axiosClient from "../src/api/axiosClient";
 import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState("");
@@ -45,7 +46,8 @@ const ForgotPasswordScreen = () => {
 
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}> 
+      <TouchableOpacity onPress={() => router.push("/login")}>
+
         <Text style={styles.link}>Giriş sayfasına dönmek için buraya tıklayın</Text>
       </TouchableOpacity>
     </View>
@@ -57,14 +59,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#f9f9fb",
+
   },
 title: {
-  fontSize: 26,
-  fontWeight: "bold",
+  fontWeight: "600",
+  letterSpacing: 0.3,
+  color: "#333",
   marginBottom: 24,
   textAlign: "center",
-  color: "#333",
+  fontSize: 24,
 },
   label: {
     fontSize: 14,
@@ -73,18 +77,24 @@ title: {
 input: {
   borderWidth: 1,
   borderColor: "#ccc",
-  paddingVertical: 12,
+  paddingVertical: 14,
   paddingHorizontal: 14,
-  borderRadius: 8,
+  borderRadius: 12,
   fontSize: 15,
   backgroundColor: "#fafafa",
   marginBottom: 16,
+  shadowOpacity: 0.04,
+  shadowRadius: 4,
+  elevation: 2,
 },
   button: {
     backgroundColor: "#7B2CBF",
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 14,
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+
   },
   buttonText: {
     color: "white",
@@ -98,8 +108,9 @@ input: {
 link: {
   color: "#7B2CBF",
   textAlign: "center",
-  marginTop: 20,
-  fontSize: 13,
+  fontSize: 14,
+  marginTop: 24,
+  textDecorationLine: 'underline',
 },
 buttonPressed: {
   transform: [{ scale: 0.98 }],

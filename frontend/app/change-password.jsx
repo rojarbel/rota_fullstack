@@ -58,12 +58,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#f9f9fb",
   },
 title: {
   fontSize: 28,
   fontWeight: "800",
   color: "#333",
+  letterSpacing: 0.3,
   textAlign: "center",
   marginBottom: 28,
 },
@@ -76,15 +77,19 @@ input: {
   borderColor: "#ddd",
   paddingVertical: 12,
   paddingHorizontal: 14,
-  borderRadius: 10,
+  borderRadius: 12,
   backgroundColor: "#f9f9f9",
   fontSize: 15,
   marginBottom: 16,
+  shadowColor: "#000",
+  shadowOpacity: 0.04,
+  shadowRadius: 4,
+  elevation: 2,
 },
 button: {
   backgroundColor: "#7B2CBF",
-  paddingVertical: 14,
-  borderRadius: 10,
+  paddingVertical: 16,
+  borderRadius: 14,
   alignItems: "center",
   marginTop: 8,
   shadowColor: "#000",
@@ -92,6 +97,8 @@ button: {
   shadowRadius: 6,
   shadowOffset: { width: 0, height: 4 },
   elevation: 2,
+  paddingHorizontal: 18,
+
 },
 buttonText: {
   color: "white",
@@ -106,7 +113,9 @@ buttonText: {
   link: {
     color: "#7B2CBF",
     textAlign: "center",
-    marginTop: 16,
+fontSize: 14,
+marginTop: 24,
+textDecorationLine: 'underline',
   },
 });
 

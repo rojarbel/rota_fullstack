@@ -73,7 +73,13 @@ const Favorilerim = () => {
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{etkinlik.baslik}</Text>
               <Text style={styles.cardText}>{etkinlik.sehir}</Text>
-              <Text style={styles.cardText}>{etkinlik.tarih}</Text>
+              <Text style={styles.cardText}>
+                {new Date(etkinlik.tarih).toLocaleDateString('tr-TR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </Text>
               <Text style={styles.cardText}>{etkinlik.kategori} - {etkinlik.tur}</Text>
             </View>
           </TouchableOpacity>

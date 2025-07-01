@@ -112,25 +112,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#f9f9fb",
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+    color: "#333",
     marginBottom: 32,
     textAlign: "center",
-    color: TEXT,
-  },
+      },
   input: {
     backgroundColor: "#fafafa",
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: 14,
     fontSize: 15,
     color: TEXT,
     marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   eyeIcon: {
     position: 'absolute',
@@ -142,7 +147,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: PRIMARY,
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: "center",
     marginTop: 12,
     shadowColor: "#000",
@@ -150,6 +155,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
     elevation: 3,
+    paddingVertical: 16,
+    addingHorizontal: 18,
   },
   buttonText: {
     color: "#fff",
@@ -159,8 +166,9 @@ const styles = StyleSheet.create({
   link: {
     color: PRIMARY,
     textAlign: "center",
-    marginTop: 20,
-    fontSize: 13,
+    fontSize: 14,
+    marginTop: 24,
+    textDecorationLine: 'underline',
   }
 });
 
