@@ -93,6 +93,10 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
       adres, // Yeni etkinlikler başlangıçta onaysız olur
       latitude,
       longitude,
+      location: latitude && longitude ? {
+        type: 'Point',
+        coordinates: [parseFloat(latitude), parseFloat(longitude)]
+      } : undefined,
     });
 
     const savedEtkinlik = await yeniEtkinlik.save();
@@ -479,7 +483,7 @@ const bugunkuler = favoriler.filter(f => {
 // Etkinlik arama (başlık, kategori veya şehir bazlı)
 router.get('/yakindaki', async (req, res) => {
   try {
-    const { lat, lng, lon, radius = 50000 } = req.query; // radius artık metre cinsinden
+    const { lat, lng, lon, radius = 50000 } = req.query;
     
     // lat/lng veya lat/lon parametrelerini destekle
     const userLat = parseFloat(lat);
@@ -488,94 +492,70 @@ router.get('/yakindaki', async (req, res) => {
 
     // Parametre kontrolü
     if (isNaN(userLat) || isNaN(userLng)) {
-      return res.status(400).json({ 
-        message: 'Geçersiz konum parametreleri',
-        error: 'lat ve lng/lon parametreleri gerekli ve sayısal olmalı'
+      return res.status(400).json({
+        message: 'Ge\u00e7ersiz konum parametreleri',
+        error: 'lat ve lng/lon parametreleri gerekli ve say\u0131sal olmal\u0131'
       });
     }
 
     if (isNaN(radiusMeters) || radiusMeters <= 0) {
-      return res.status(400).json({ 
-        message: 'Geçersiz yarıçap',
-        error: 'radius parametresi pozitif bir sayı olmalı (metre cinsinden)'
+      return res.status(400).json({
+        message: 'Ge\u00e7ersiz yar\u0131\u00e7ap',
+        error: 'radius parametresi pozitif bir say\u0131 olmal\u0131 (metre cinsinden)'
       });
     }
 
     // Maksimum yarıçap sınırı (performans için)
-    const maxRadiusMeters = 200000; // 200km
+    const maxRadiusMeters = 200000;
     const finalRadius = Math.min(radiusMeters, maxRadiusMeters);
 
-    console.log(`🔍 Yakın etkinlik arama: lat=${userLat}, lng=${userLng}, radius=${finalRadius}m`);
-
-    // MongoDB'de koordinatları olan onaylı etkinlikleri getir
-    const etkinlikler = await Etkinlik.find({ 
-      onaylandi: true,
-      latitude: { $exists: true, $ne: null },
-      longitude: { $exists: true, $ne: null }
-    })
-    .select('_id baslik sehir tarih fiyat kategori tur gorsel aciklama latitude longitude adres')
-    .lean();
-
-    console.log(`📍 ${etkinlikler.length} koordinatlı etkinlik bulundu`);
-
-    const yakinEtkinlikler = [];
-
-    for (const etkinlik of etkinlikler) {
-      const etkinlikLat = parseFloat(etkinlik.latitude);
-      const etkinlikLng = parseFloat(etkinlik.longitude);
-
-      // Koordinat doğrulaması
-      if (isNaN(etkinlikLat) || isNaN(etkinlikLng)) {
-        console.warn(`⚠️ Geçersiz koordinat: ${etkinlik.baslik}`);
-        continue;
+    const pipeline = [
+      {
+        $geoNear: {
+          near: { type: 'Point', coordinates: [userLng, userLat] },
+          distanceField: 'mesafe',
+          maxDistance: finalRadius,
+          spherical: true,
+          query: { onaylandi: true }
+        }
       }
-
-      // Mesafe hesapla
-      const distance = haversine(userLat, userLng, etkinlikLat, etkinlikLng);
-      const distanceMeters = distance * 1000; // km'yi metreye çevir
-
-      if (distanceMeters <= finalRadius) {
-        yakinEtkinlikler.push({
-          id: etkinlik._id.toString(),
-          baslik: etkinlik.baslik,
-          sehir: etkinlik.sehir,
-          tarih: etkinlik.tarih,
-          fiyat: etkinlik.fiyat,
-          kategori: etkinlik.kategori,
-          tur: etkinlik.tur,
-          gorsel: typeof etkinlik.gorsel === "string" && etkinlik.gorsel.startsWith("data:image") 
-            ? null 
-            : etkinlik.gorsel,
-          aciklama: etkinlik.aciklama,
-          latitude: etkinlikLat,
-          longitude: etkinlikLng,
-          mesafe: Math.round(distance * 100) / 100, // km cinsinden, 2 ondalık
-          adres: etkinlik.adres
-        });
-      }
-    }
+    ];
 
     // Mesafeye göre sırala (yakından uzağa)
-    yakinEtkinlikler.sort((a, b) => a.mesafe - b.mesafe);
+    const etkinlikler = await Etkinlik.aggregate(pipeline);
 
-    console.log(`✅ ${yakinEtkinlikler.length} yakın etkinlik bulundu (${finalRadius/1000}km içinde)`);
+    const sonuc = etkinlikler.map(e => ({
+      id: e._id.toString(),
+      baslik: e.baslik,
+      sehir: e.sehir,
+      tarih: e.tarih,
+      fiyat: e.fiyat,
+      kategori: e.kategori,
+      tur: e.tur,
+      gorsel: typeof e.gorsel === 'string' && e.gorsel.startsWith('data:image') ? null : e.gorsel,
+      aciklama: e.aciklama,
+      latitude: e.latitude,
+      longitude: e.longitude,
+      adres: e.adres,
+      mesafe: Math.round(e.mesafe / 10) / 100 // m to km, 2 decimals
+    }));
 
     res.json({
-      etkinlikler: yakinEtkinlikler,
-      toplam: yakinEtkinlikler.length,
+      etkinlikler: sonuc,
+      toplam: sonuc.length,
       arama: {
         latitude: userLat,
         longitude: userLng,
-        yarıcap: finalRadius,
-        yarıcapKm: finalRadius / 1000
+        yar\u0131cap: finalRadius,
+        yar\u0131capKm: finalRadius / 1000
       }
     });
 
   } catch (error) {
-    console.error('❌ Yakındaki etkinlikler hatası:', error);
-    res.status(500).json({ 
-      message: 'Yakındaki etkinlikler alınırken hata oluştu',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Sunucu hatası'
+    console.error('\u274c Yak\u0131ndaki etkinlikler hatas\u0131:', error);
+    res.status(500).json({
+      message: 'Yak\u0131ndaki etkinlikler al\u0131n\u0131rken hata olu\u015ftu',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Sunucu hatas\u0131'
     });
   }
 });
@@ -736,17 +716,5 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
 });
 
 
-
-function haversine(lat1, lon1, lat2, lon2) {
-  const toRad = deg => (deg * Math.PI) / 180;
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 module.exports = router;
