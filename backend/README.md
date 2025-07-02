@@ -24,3 +24,12 @@ Old events are automatically removed by a cron job defined in `jobs/deleteOldEve
 The cron runs every night at 00:01 **as long as the application process is running**.
 At startup the cleanup job is also executed once immediately.
 
+## Image caching
+
+Images are served from the `/img` endpoint in `public/img`. The Express server
+sets a `Cache-Control` header with a 30&nbsp;day `max-age` and the `immutable`
+flag so browsers can aggressively cache them.
+
+For even better performance you can upload the contents of `public/img` to a CDN
+(e.g. Amazon CloudFront or Cloudflare) and point your frontend at that URL. The
+server's caching headers work well with most CDNs.

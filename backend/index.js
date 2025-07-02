@@ -29,7 +29,13 @@ app.use(compression());
 app.use(express.json());
 
 // Static dosya (Görseller için)
-app.use('/img', express.static(path.join(__dirname, 'public/img')));
+app.use(
+  '/img',
+  express.static(path.join(__dirname, 'public/img'), {
+    maxAge: '30d',
+    immutable: true,
+  })
+);
 
 
 // Route'lar

@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { getItem as getSecureItem, setItem as setSecureItem } from '../utils/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import qs from 'qs';
 import logger from '../utils/logger';
 import Constants from 'expo-constants';
 
@@ -59,5 +61,31 @@ axiosClient.interceptors.response.use(
 export const setCachedToken = (newToken) => {
   cachedToken = newToken;
 };
+export const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+export async function getWithCache(url, options = {}, ttl = DEFAULT_CACHE_TTL) {
+  try {
+    const paramsString = options.params
+      ? qs.stringify(options.params, { arrayFormat: 'repeat' })
+      : '';
+    const cacheKey = `cache:${url}?${paramsString}`;
+    const cached = await AsyncStorage.getItem(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Date.now() - parsed.timestamp < ttl) {
+        return { data: parsed.data };
+      }
+      await AsyncStorage.removeItem(cacheKey);
+    }
+    const response = await axiosClient.get(url, options);
+    await AsyncStorage.setItem(
+      cacheKey,
+      JSON.stringify({ timestamp: Date.now(), data: response.data })
+    );
+    return response;
+  } catch (err) {
+    // Fallback to normal request if cache fails
+    return axiosClient.get(url, options);
+  }
+}
 export default axiosClient;

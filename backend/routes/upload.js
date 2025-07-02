@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const sharp = require('sharp');
+const { Worker } = require('worker_threads');
 const fs = require('fs');
 
 const router = express.Router();
@@ -28,17 +28,17 @@ const upload = multer({
 });
 
 
-router.post('/', upload.single('file'), async (req, res) => {
+router.post('/', upload.single('file'), (req, res) => {
   try {
     const originalPath = path.join(__dirname, '../public/img', req.file.filename);
-    const optimizedPath = originalPath;
+        // İşlemci işini arka planda yapmak için worker kullan
+    const worker = new Worker(path.join(__dirname, '../jobs/imageWorker.js'));
+    worker.postMessage({ filePath: originalPath });
+    worker.on('error', (err) => {
+      console.error('Worker hatası:', err);
+    });
 
-    await sharp(originalPath)
-      .resize({ width: 1024 })
-      .jpeg({ quality: 80 })
-      .toFile(optimizedPath);
-
-    res.status(200).json({ filename: req.file.filename });
+    res.status(202).json({ filename: req.file.filename });
   } catch (error) {
     console.error('Dosya yükleme hatası:', error);
     res.status(500).json({ message: 'Dosya yüklenemedi' });
