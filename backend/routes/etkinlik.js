@@ -15,6 +15,7 @@ const Kullanici = require("../models/Kullanici");
 const Yorum = require("../models/Yorum");
 const Bildirim = require("../models/Bildirim");
 const { geocode } = require("../utils/geocodeCache");
+const fsPromises = require("fs/promises");
 function getOptimizedPath(originalPath) {
   return originalPath.replace(".webp", "_optimized.webp");
 }
@@ -64,7 +65,7 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
     if (req.file) {
       const imagePath = path.join(__dirname, '../public/img', req.file.filename);
       
-      const fsPromises = require("fs/promises");
+
 
       try {
         await fs.access(imagePath); // dosya varsa devam et
