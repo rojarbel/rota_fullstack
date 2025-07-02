@@ -18,12 +18,14 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const bildirimRoute = require("./routes/bildirim");
+const compression = require('compression');
 
 // App oluştur
 const app = express();
 
 // Middleware'ler
 app.use(cors());
+app.use(compression());
 app.use(express.json());
 
 // Static dosya (Görseller için)
@@ -42,6 +44,7 @@ app.use('/api/etkinlik', etkinlikRoutes);
 app.use('/api/upload', uploadRoute);
 app.use("/api/yorum", require("./routes/yorum"));
 app.use("/api/bildirim", bildirimRoute);
+
 
 // Basit test endpoint'i
 app.get('/', (req, res) => {

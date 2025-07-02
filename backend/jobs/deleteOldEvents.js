@@ -15,21 +15,24 @@ async function silGecmisEtkinlikler() {
     const filter = { $expr: { $lt: [ { $toDate: "$tarih" }, today ] } };
 
     const silinecekler = await Etkinlik.find(filter);
+    const unlink = fs.promises.unlink;
 
-    for (const etkinlik of silinecekler) {
-      if (etkinlik.gorsel) {
-        const sanitizedFilename = etkinlik.gorsel.replace(/^\/img\//, "");
-        const gorselPath = path.join(__dirname, '../public/img', sanitizedFilename);
-        if (fs.existsSync(gorselPath)) {
+    await Promise.all(
+      silinecekler.map(async (etkinlik) => {
+        if (etkinlik.gorsel) {
+          const sanitizedFilename = etkinlik.gorsel.replace(/^\/img\//, "");
+          const gorselPath = path.join(__dirname, '../public/img', sanitizedFilename);
           try {
-            fs.unlinkSync(gorselPath);
+            await unlink(gorselPath);
             console.log(`[DOSYA SİLİNDİ] ${etkinlik.gorsel}`);
           } catch (err) {
-            console.error(`[HATA] Görsel silinemedi: ${etkinlik.gorsel} → ${err.message}`);
+            if (err.code !== 'ENOENT') {
+              console.error(`[HATA] Görsel silinemedi: ${etkinlik.gorsel} → ${err.message}`);
+            }
           }
         }
-      }
-    }
+      })
+    );
 
     const result = await Etkinlik.deleteMany(filter);
     console.log(`[ETKİNLİK TEMİZLEME] ${result.deletedCount} etkinlik silindi (tarih < ${today.toISOString().split("T")[0]}).`);

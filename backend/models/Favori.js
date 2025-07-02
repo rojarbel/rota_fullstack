@@ -19,6 +19,13 @@ const favoriSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
+
+// Performans indexleri
+favoriSchema.index({ kullaniciId: 1 });
+favoriSchema.index({ etkinlikId: 1 });
+favoriSchema.index({ kullaniciId: 1, etkinlikId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Favori", favoriSchema);

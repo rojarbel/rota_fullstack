@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     borderWidth: 1,
     borderColor: '#ddd',
-    minWidth: 90,
+    minWidth: 9,
     alignItems: 'center',
     justifyContent: 'space-around',
   },
