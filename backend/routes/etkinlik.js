@@ -16,6 +16,8 @@ const Yorum = require("../models/Yorum");
 const Bildirim = require("../models/Bildirim");
 const { geocode } = require("../utils/geocodeCache");
 const fsPromises = require("fs/promises");
+const NodeCache = require("node-cache");
+const cache = new NodeCache({ stdTTL: 300 });
 function getOptimizedPath(originalPath) {
   return originalPath.replace(".webp", "_optimized.webp");
 }
@@ -256,6 +258,12 @@ router.get("/tum", async (req, res) => {
       filter,
     } = req.query;
 
+        const cacheKey = `tum:${JSON.stringify(req.query)}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const nowTimestamp = now.getTime(); // ← Burası kritik
@@ -433,14 +441,19 @@ if (bitis) {
     const etkinlikler = await Etkinlik.aggregate(pipeline);
     const hasMore = etkinlikler.length === parseInt(limit);
     const totalCount = await Etkinlik.countDocuments(match);
-res.status(200).json({
-  data: etkinlikler.map(e => ({
-    ...e,
-    _id: e._id?.toString?.() ?? e.id,
-  })),
-  hasMore,
-  totalCount
-});
+    const responseData = {
+      data: etkinlikler.map(e => ({
+        ...e,
+        _id: e._id?.toString?.() ?? e.id,
+      })),
+      hasMore,
+      totalCount
+    };
+
+    cache.set(cacheKey, responseData);
+    res.status(200).json(responseData);
+
+
   } catch (error) {
     console.error("Etkinlik çekme hatası:", error.message);
     res.status(500).json({ error: "Sunucu hatası" });
