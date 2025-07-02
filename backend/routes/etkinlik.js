@@ -15,6 +15,10 @@ const Kullanici = require("../models/Kullanici");
 const Yorum = require("../models/Yorum");
 const Bildirim = require("../models/Bildirim");
 const { geocode } = require("../utils/geocodeCache");
+function getOptimizedPath(originalPath) {
+  return originalPath.replace(".webp", "_optimized.webp");
+}
+
 
 
 // Multer ayarı: bellek içine görsel yüklemesi
@@ -32,6 +36,10 @@ const mongoose = require("mongoose");
 
 // Yeni etkinlik oluştur
 router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
+  const allowedTypes = ["image/webp", "image/jpeg", "image/png"];
+  if (req.file && !allowedTypes.includes(req.file.mimetype)) {
+    return res.status(400).json({ message: "Geçersiz görsel formatı" });
+  }
   try {
     const { baslik, sehir, tarih, fiyat, kategori, aciklama, tur, adres } = req.body;
 
@@ -56,22 +64,20 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
     if (req.file) {
       const imagePath = path.join(__dirname, '../public/img', req.file.filename);
       
-      if (fs.existsSync(imagePath)) {
-      const optimizedPath = imagePath.replace('.webp', '_optimized.webp');
+      const fsPromises = require("fs/promises");
 
-      await sharp(imagePath)
-        .resize({ width: 1024, withoutEnlargement: true })
-        .webp({ quality: 75 })
-        .toFile(optimizedPath);
-
-      // eski dosyayı sil
-      fs.unlinkSync(imagePath);
-
-      // optimize edilmiş dosyayı yeni path olarak kullan
-      gorselPath = `/img/${path.basename(optimizedPath)}`;
-      } else {
-        console.warn("⚠️ Görsel dosyası bulunamadı:", imagePath);
-      }
+      try {
+        await fs.access(imagePath); // dosya varsa devam et
+        const optimizedPath = getOptimizedPath(imagePath);
+        await sharp(imagePath)
+          .resize({ width: 1024, withoutEnlargement: true })
+          .webp({ quality: 75 })
+          .toFile(optimizedPath);
+        await fsPromises.unlink(imagePath); // async silme
+        gorselPath = `/img/${path.basename(optimizedPath)}`; // başarıyla dönüştü
+      } catch (err) {
+        console.warn("⚠️ Görsel dosyası bulunamadı veya işlenemedi:", imagePath);
+}
     }
     const yeniEtkinlik = new Etkinlik({
       baslik,
