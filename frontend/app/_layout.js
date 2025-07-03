@@ -1,4 +1,4 @@
-import { Slot, Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import { View, StatusBar } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Header from '../src/components/Header';
@@ -26,16 +26,10 @@ function AppLayoutInner() {
 
 export default function Layout() {
   return (
-    <Stack screenOptions={{ headerShown: false, gestureEnabled: true }}>
-      <Stack.Screen name="(app)" options={{ headerShown: true }}>
-        {() => (
-          <AuthProvider>
-            <SafeAreaProvider>
-              <AppLayoutInner />
-            </SafeAreaProvider>
-          </AuthProvider>
-        )}
-      </Stack.Screen>
-    </Stack>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <AppLayoutInner />
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }
