@@ -26,12 +26,16 @@ function AppLayoutInner() {
 
 export default function Layout() {
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <AppLayoutInner />
-        </Stack>
-      </SafeAreaProvider>
-    </AuthProvider>
+    <Stack screenOptions={{ headerShown: false, gestureEnabled: true }}>
+      <Stack.Screen name="(app)" options={{ headerShown: true }}>
+        {() => (
+          <AuthProvider>
+            <SafeAreaProvider>
+              <AppLayoutInner />
+            </SafeAreaProvider>
+          </AuthProvider>
+        )}
+      </Stack.Screen>
+    </Stack>
   );
 }
