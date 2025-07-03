@@ -1,4 +1,4 @@
-import { Slot } from 'expo-router';
+import { Slot, Stack } from 'expo-router';
 import { View, StatusBar } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Header from '../src/components/Header';
@@ -28,7 +28,9 @@ export default function Layout() {
   return (
     <AuthProvider>
       <SafeAreaProvider>
-        <AppLayoutInner />
+        <Stack screenOptions={{ headerShown: false }}>
+          <AppLayoutInner />
+        </Stack>
       </SafeAreaProvider>
     </AuthProvider>
   );
