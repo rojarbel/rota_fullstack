@@ -361,7 +361,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
               marginTop: 12,
               paddingVertical: 12,
               borderRadius: 8,
-              backgroundColor: '#4CAF50',
+              backgroundColor:  '#FFAC38',
             }}
           >
             <Text style={{ textAlign: 'center', color: '#fff', fontWeight: '600' }}>
