@@ -7,7 +7,7 @@ import { IMAGE_BASE_URL } from '../src/constants';
 import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
-
+import FastImage from 'expo-fast-image';
 export default function AramaSonuclari() {
   const { q, sehir } = useLocalSearchParams();
   const [etkinlikler, setEtkinlikler] = useState([]);
@@ -42,41 +42,50 @@ useEffect(() => {
   fetch();
 }, [q, sehir]);
 
-const renderItem = useCallback(({ item }) => (
-  <TouchableOpacity
-    onPress={() => router.push({ pathname: '/etkinlik/[id]', params: { id: item.id } })}
-    style={{
-      backgroundColor: '#fff',
-      padding: 14,
-      marginBottom: 20,
-      borderRadius: 16,
-      shadowColor: '#000',
-      shadowOpacity: 0.08,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
-    }}
-  >
-  <Image
-    source={{ uri: `${IMAGE_BASE_URL}${item.gorsel}` }}
-
-      style={{ width: '100%', height: 240, borderRadius: 12 }}
-
-      resizeMode="cover"
-    />
-    <Text style={{ fontSize: 17, fontWeight: '700', color: '#111', marginTop: 10 }}>
-
-      {item.baslik}
-    </Text>
-    <Text style={{ fontSize: 14, color: '#666', marginTop: 6 }}>
-
-      {item.sehir} • {formatDate(item.tarih)}
-    </Text>
-    <Text style={{ marginTop: 8, color: '#000', fontWeight: '600' }}>
-      {(item.fiyat && item.fiyat !== '0') ? `${item.fiyat} ₺` : 'Ücretsiz'} • {item.kategori}
-    </Text>
-  </TouchableOpacity>
-), []);
+const renderItem = useCallback(({ item }) => {
+  const gorselUrl =
+    typeof item.gorsel === 'string' &&
+    item.gorsel.trim().length > 0 &&
+    !item.gorsel.startsWith('data:image') &&
+    item.gorsel.startsWith('/')
+      ? `${IMAGE_BASE_URL}${item.gorsel}`
+      : null;
+        return (
+    <TouchableOpacity
+      onPress={() => router.push({ pathname: '/etkinlik/[id]', params: { id: item.id } })}
+      style={{
+        backgroundColor: '#fff',
+        padding: 14,
+        marginBottom: 20,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 4,
+      }}
+    >
+      {gorselUrl ? (
+        <FastImage uri={gorselUrl} cacheKey={item.id} style={{ width: '100%', height: 240, borderRadius: 12 }} />
+      ) : (
+        <Image
+          source={require('../assets/placeholder.png')}
+          style={{ width: '100%', height: 240, borderRadius: 12 }}
+          resizeMode="cover"
+        />
+      )}
+      <Text style={{ fontSize: 17, fontWeight: '700', color: '#111', marginTop: 10 }}>
+        {item.baslik}
+      </Text>
+      <Text style={{ fontSize: 14, color: '#666', marginTop: 6 }}>
+        {item.sehir} • {formatDate(item.tarih)}
+      </Text>
+      <Text style={{ marginTop: 8, color: '#000', fontWeight: '600' }}>
+        {(item.fiyat && item.fiyat !== '0') ? `${item.fiyat} ₺` : 'Ücretsiz'} • {item.kategori}
+      </Text>
+    </TouchableOpacity>
+  );
+}, []);
 
   return (
     <View style={{ padding: 16, backgroundColor: '#fff', flex: 1 }}>

@@ -6,6 +6,7 @@ import axiosClient from '../src/api/axiosClient';
 // IMAGE_BASE_URL yerine doğrudan tanımlayın veya constants dosyasını kontrol edin
 const IMAGE_BASE_URL = 'https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net';
 import { useRouter } from 'expo-router';
+import { getItem as getSecureItem } from '../src/utils/storage'; 
 
 const PRIMARY = '#7B2CBF';
 const BLUE = '#3498db';
@@ -186,6 +187,16 @@ export default function Yakindaki() {
     }
   }, [isValidCoordinate]); // fetchNearbyEvents dependency'lerini minimal tutun
 
+      useEffect(() => {
+        const checkLogin = async () => {
+          const token = await getSecureItem('accessToken');
+          if (!token) {
+            router.replace('/login');
+          }
+        };
+        checkLogin();
+      }, []);
+      
   // Konum izni alma ve kullanıcı konumunu belirleme
   useEffect(() => {
 const requestLocationAndFetch = async (retryCount = 3) => {
