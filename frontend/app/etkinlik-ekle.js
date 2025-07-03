@@ -13,6 +13,7 @@ import * as FileSystem from 'expo-file-system';
 import logger from '../src/utils/logger';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { ActivityIndicator } from 'react-native';
 
 
 
@@ -41,22 +42,39 @@ const EtkinlikEkleScreen = () => {
     }
   }, [authLoaded, isLoggedIn]);
 
-  useEffect(() => {
-  (async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Konum izni reddedildi');
-      return;
-    }
+useEffect(() => {
+  let isMounted = true;
+  const fetchLocation = async (retries = 3) => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Konum izni reddedildi');
+        return;
+      }
 
-    let loc = await Location.getCurrentPositionAsync({});
-    setLocation({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    });
-  })();
+      const loc = await Location.getCurrentPositionAsync({});
+      if (isMounted) {
+        setLocation({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+      }
+    } catch (error) {
+      if (retries > 0) {
+        setTimeout(() => fetchLocation(retries - 1), 1500);
+      } else {
+        alert('Konum alınamadı, lütfen tekrar deneyin.');
+      }
+    }
+  };
+
+  fetchLocation();
+
+  return () => {
+    isMounted = false;
+  };
 }, []);
 
   const [location, setLocation] = useState(null);
@@ -164,17 +182,13 @@ const handleSubmit = async () => {
         onChangeText={setBaslik}
       />
 
-<Picker
-  selectedValue={sehir}
-  onValueChange={(val) => setSehir(val)}
-  style={{
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 16,
-  }}
->
+<View style={styles.pickerWrapper}>
+  <Picker
+    selectedValue={sehir}
+    onValueChange={(val) => setSehir(val)}
+    style={{ flex: 1 }} // sadece genişliği al
+  >
+  <Picker.Item label="Şehir Seçin" value="" /> {/* ✅ Burası eklendi */}
   {[  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın",
   "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı",
   "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep",
@@ -187,35 +201,38 @@ const handleSubmit = async () => {
     <Picker.Item key={city} label={city} value={city} />
   ))}
 </Picker>
+</View>
 
-      <Text style={styles.label}>Kategori</Text>
-      <Picker
-        selectedValue={selectedKategori}
-        onValueChange={(itemValue) => {
-          setSelectedKategori(itemValue);
-          setSelectedTur('');
-        }}
-        style={styles.picker}
-      >
+<View style={styles.pickerWrapper}>
+  <Picker
+    selectedValue={selectedKategori}
+    onValueChange={(itemValue) => {
+      setSelectedKategori(itemValue);
+      setSelectedTur('');
+    }}
+    style={{ flex: 1 }}
+  >
         <Picker.Item label="Kategori Seçin" value="" />
         {Object.keys(kategorilerVeTurler).map((kategori) => (
           <Picker.Item key={kategori} label={kategori} value={kategori} />
         ))}
       </Picker>
+</View>
 
       {selectedKategori !== '' && (
         <>
-          <Text style={styles.label}>Tür</Text>
-          <Picker
-            selectedValue={selectedTur}
-            onValueChange={(itemValue) => setSelectedTur(itemValue)}
-            style={styles.picker}
-          >
+  <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={selectedTur}
+              onValueChange={(itemValue) => setSelectedTur(itemValue)}
+              style={{ flex: 1 }}
+            >
             <Picker.Item label="Tür Seçin" value="" />
             {kategorilerVeTurler[selectedKategori].map((tur) => (
               <Picker.Item key={tur} label={tur} value={tur} />
             ))}
           </Picker>
+          </View>
         </>
       )}
 
@@ -277,26 +294,27 @@ const handleSubmit = async () => {
       />
         <Text style={styles.label}>Etkinlik Konumu</Text>
 
-        {location ? (
-          <View style={{ height: 250, marginBottom: 16 }}>
-            <MapView
-              style={{ flex: 1, borderRadius: 10 }}
-              initialRegion={location}
-              onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
-            >
-              {markerCoords && (
-                <Marker coordinate={markerCoords} title="Etkinlik Konumu" />
-              )}
-            </MapView>
-            <Text style={{ marginTop: 6, fontSize: 14, color: '#666' }}>
-              Haritaya dokunarak etkinliğin yerini seçin.
-            </Text>
-          </View>
-        ) : (
-          <Text style={{ marginBottom: 16, color: 'red', fontWeight: 'bold' }}>
-            Konum alınamadı. Lütfen konum izni verin ya da sayfayı yeniden açın.
-          </Text>
-        )}
+{location ? (
+  <View style={{ height: 250, marginBottom: 16 }}>
+    <MapView
+      style={{ flex: 1, borderRadius: 10 }}
+      initialRegion={location}
+      onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
+    >
+      {markerCoords && (
+        <Marker coordinate={markerCoords} title="Etkinlik Konumu" />
+      )}
+    </MapView>
+    <Text style={{ marginTop: 6, fontSize: 14, color: '#666' }}>
+      Haritaya dokunarak etkinliğin yerini seçin.
+    </Text>
+  </View>
+) : (
+  <View style={{ height: 250, justifyContent: 'center', alignItems: 'center' }}>
+    <Text style={{ color: 'gray', marginBottom: 10 }}>Konum yükleniyor...</Text>
+    <ActivityIndicator size="large" color="#7B2CBF" />
+  </View>
+)}
 
 <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
   <Text style={styles.submitButtonText}>Gönder</Text>
@@ -321,7 +339,7 @@ input: {
   backgroundColor: '#fff',
   paddingVertical: 14,
   paddingHorizontal: 16,
-  fontSize: 15,
+  fontSize: 16,
   borderRadius: 10,
   borderWidth: 1,
   borderColor: '#ddd',
@@ -373,6 +391,15 @@ submitButtonText: {
   color: 'white',
   fontSize: 16,
   fontWeight: '600',
+},
+pickerWrapper: {
+  backgroundColor: '#fff',
+  borderRadius: 10,
+  borderWidth: 1,
+  borderColor: '#ddd',
+  marginBottom: 16,
+  height: 52,
+  justifyContent: 'center',
 },
 
 });

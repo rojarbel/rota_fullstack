@@ -188,77 +188,59 @@ export default function Yakindaki() {
 
   // Konum izni alma ve kullanıcı konumunu belirleme
   useEffect(() => {
-    const requestLocationAndFetch = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log('📍 Konum izni isteniyor...');
-        
-        // Konum izni iste
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        console.log('📍 Konum izni durumu:', status);
-        setPermissionStatus(status);
-        
-        if (status !== 'granted') {
-          setError('Konum izni verilmedi');
-          setLoading(false);
-          return;
-        }
+const requestLocationAndFetch = async (retryCount = 3) => {
+  try {
+    setLoading(true);
+    setError(null);
 
-        console.log('📍 Kullanıcı konumu alınıyor...');
-        
-        // Kullanıcının mevcut konumunu al
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-          timeout: 15000,
-          maximumAge: 60000,
-        });
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    setPermissionStatus(status);
 
-        const userCoords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
+    if (status !== 'granted') {
+      setError('Konum izni verilmedi');
+      setLoading(false);
+      return;
+    }
 
-        console.log('📍 Kullanıcı konumu alındı:', userCoords);
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
+      timeout: 10000,
+      maximumAge: 10000,
+    });
 
-        // Koordinat doğrulaması
-        if (!isValidCoordinate(userCoords.latitude, userCoords.longitude)) {
-          throw new Error('Geçersiz konum koordinatları alındı');
-        }
-
-        setUserLocation(userCoords);
-        
-        // Harita bölgesini ayarla
-        setRegion({
-          latitude: userCoords.latitude,
-          longitude: userCoords.longitude,
-          latitudeDelta: 0.1,
-          longitudeDelta: 0.1,
-        });
-
-        console.log('📍 Yakındaki etkinlikler aranıyor...');
-        
-        // Yakındaki etkinlikleri getir
-        await fetchNearbyEvents(userCoords.latitude, userCoords.longitude, DEFAULT_RADIUS);
-
-      } catch (error) {
-        console.error('❌ Konum alma hatası:', error);
-        
-        let errorMessage = 'Konum bilgisi alınamadı';
-        
-        if (error.code === 'E_LOCATION_SERVICES_DISABLED') {
-          errorMessage = 'Konum servisleri kapalı. Lütfen GPS\'inizi açın.';
-        } else if (error.code === 'E_LOCATION_TIMEOUT') {
-          errorMessage = 'Konum belirleme zaman aşımına uğradı.';
-        } else if (error.message) {
-          errorMessage += ': ' + error.message;
-        }
-        
-        setError(errorMessage);
-        setLoading(false);
-      }
+    const userCoords = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
     };
+
+    if (!isValidCoordinate(userCoords.latitude, userCoords.longitude)) {
+      throw new Error('Geçersiz koordinat');
+    }
+
+    setUserLocation(userCoords);
+    setRegion({
+      latitude: userCoords.latitude,
+      longitude: userCoords.longitude,
+      latitudeDelta: 0.1,
+      longitudeDelta: 0.1,
+    });
+
+    await fetchNearbyEvents(userCoords.latitude, userCoords.longitude, DEFAULT_RADIUS);
+
+  } catch (error) {
+    console.error('❌ Konum hatası:', error.message);
+
+    if (retryCount > 0) {
+      console.log(`🔁 Yeniden denenecek... Kalan: ${retryCount}`);
+      setTimeout(() => requestLocationAndFetch(retryCount - 1), 1500);
+    } else {
+      setError('Konum alınamadı. Lütfen tekrar deneyin.');
+    }
+
+  } finally {
+    setLoading(false);
+  }
+};
 
     requestLocationAndFetch();
   }, []); // Sadece mount'ta çalışsın
