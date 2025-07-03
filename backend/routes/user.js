@@ -1,11 +1,19 @@
 const multer = require("multer");
 const path = require("path");
 const express = require("express");
+const fs = require("fs");
+const fsPromises = require("fs/promises");
+const sharp = require("sharp");
 const router = express.Router();
 const User = require("../models/User");
 const verifyToken = require("../middleware/verifyToken");
 const verifyAdmin = require("../middleware/verifyAdmin");
 const bcrypt = require("bcryptjs");
+
+function getWebpFilename(original) {
+  return original.replace(/\.jpg$/, ".webp");
+}
+
 
 // Tüm kullanıcıları getir (admin değilse boş array dön)
 const profileStorage = multer.diskStorage({
@@ -50,7 +58,25 @@ router.get("/me", verifyToken, async (req, res) => {
 // Kullanıcı bilgilerini güncelle (sadece giriş yapmış kullanıcı)
 router.put("/update", verifyToken, uploadProfile.single("image"), async (req, res) => {
   const { email, fullname, city, birthDate } = req.body;
-  const image = req.file ? `/img/profil/${req.file.filename}` : null;
+  let image = null;
+
+  if (req.file) {
+    const originalPath = path.join(__dirname, "../public/img/profil", req.file.filename);
+    try {
+      await fs.access(originalPath);
+      const webpFilename = getWebpFilename(req.file.filename);
+      const optimizedPath = path.join(__dirname, "../public/img/profil", webpFilename);
+      await sharp(originalPath)
+        .resize({ width: 1024, withoutEnlargement: true })
+        .webp({ quality: 75 })
+        .toFile(optimizedPath);
+      await fsPromises.unlink(originalPath);
+      image = `/img/profil/${webpFilename}`;
+    } catch (err) {
+      console.warn("⚠️ Profil görseli bulunamadı veya işlenemedi:", originalPath);
+      image = `/img/profil/${req.file.filename}`;
+    }
+  }
 
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -67,8 +93,8 @@ router.put("/update", verifyToken, uploadProfile.single("image"), async (req, re
 
 
 let fullImageUrl = updatedUser.image;
-if (req.file) {
-  fullImageUrl = `${req.protocol}://${req.get("host")}/img/profil/${req.file.filename}`;
+if (image) {
+  fullImageUrl = `${req.protocol}://${req.get("host")}${image}`;
 } else if (updatedUser.image && !updatedUser.image.startsWith("http")) {
   fullImageUrl = `${req.protocol}://${req.get("host")}${updatedUser.image}`;
 }
