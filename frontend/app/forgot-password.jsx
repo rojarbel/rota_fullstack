@@ -28,6 +28,7 @@ const ForgotPasswordScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="ornek@mail.com"
+        placeholderTextColor="#999"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"

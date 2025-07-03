@@ -77,6 +77,7 @@ setToken(accessToken);
       <TextInput
         style={styles.input}
         placeholder="E-posta"
+        placeholderTextColor="#999"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -86,6 +87,7 @@ setToken(accessToken);
   <TextInput
     style={styles.input}
     placeholder="Şifre"
+    placeholderTextColor="#999"
     value={password}
     onChangeText={setPassword}
     secureTextEntry={!showPassword}

@@ -31,12 +31,12 @@ export default {
       }
     }
   },
-  extra: {
-    apiUrl: process.env.API_URL,
-    eas: {
-      projectId: "7c80246c-10b0-4600-a19e-9f20e59e96ab"
-    }
-  },
+extra: {
+  apiUrl: process.env.API_URL,
+  eas: {
+    projectId: "b1a15c95-8768-4813-a915-264207ed7584"
+  }
+},
   runtimeVersion: {
     policy: "appVersion"
   },

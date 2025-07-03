@@ -50,6 +50,7 @@ const RegisterScreen = () => {
         <TextInput
           style={styles.input}
           placeholder="Kullanıcı Adı"
+          placeholderTextColor="#999"
           value={username}
           onChangeText={(text) => setUsername(text.replace(/\s/g, ''))}
         />
@@ -57,6 +58,7 @@ const RegisterScreen = () => {
         <TextInput
           style={styles.input}
           placeholder="E-posta"
+          placeholderTextColor="#999"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -67,6 +69,7 @@ const RegisterScreen = () => {
           <TextInput
             style={styles.input}
             placeholder="Şifre"
+            placeholderTextColor="#999"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -83,6 +86,7 @@ const RegisterScreen = () => {
           <TextInput
             style={styles.input}
             placeholder="Şifre (tekrar)"
+            placeholderTextColor="#999"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}

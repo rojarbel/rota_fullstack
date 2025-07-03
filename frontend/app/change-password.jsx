@@ -27,6 +27,7 @@ const ChangePasswordScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="Mevcut şifre"
+        placeholderTextColor="#999"
         secureTextEntry
         value={currentPassword}
         onChangeText={setCurrentPassword}
@@ -35,6 +36,7 @@ const ChangePasswordScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="Yeni şifre"
+        placeholderTextColor="#999"
         secureTextEntry
         value={newPassword}
         onChangeText={setNewPassword}

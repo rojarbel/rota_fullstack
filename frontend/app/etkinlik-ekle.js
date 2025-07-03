@@ -178,6 +178,7 @@ const handleSubmit = async () => {
       <TextInput
         style={styles.input}
         placeholder="Etkinlik Başlığı"
+        placeholderTextColor="#999"
         value={baslik}
         onChangeText={setBaslik}
       />
@@ -267,6 +268,7 @@ const handleSubmit = async () => {
       <TextInput
         style={styles.input}
         placeholder="Fiyat (₺)"
+        placeholderTextColor="#999"
         value={fiyat}
         onChangeText={setFiyat}
         keyboardType="numeric"
@@ -287,6 +289,7 @@ const handleSubmit = async () => {
       <TextInput
         style={[styles.input, { minHeight: 100, textAlignVertical: 'top' }]}
         placeholder="Açıklama"
+        placeholderTextColor="#999"
         value={aciklama}
         onChangeText={setAciklama}
         multiline
