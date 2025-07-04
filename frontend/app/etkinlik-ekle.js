@@ -80,16 +80,18 @@ useEffect(() => {
   const [location, setLocation] = useState(null);
   const [markerCoords, setMarkerCoords] = useState(null);
   const [baslik, setBaslik] = useState('');
-  const [sehir, setSehir] = useState('');
+  const [sehir, setSehir] = useState(''); // ✅ Zaten boş string
   const [tarih, setTarih] = useState('');
   const [aciklama, setAciklama] = useState('');
-  const [selectedKategori, setSelectedKategori] = useState('');
-  const [selectedTur, setSelectedTur] = useState('');
+  const [selectedKategori, setSelectedKategori] = useState(''); // ✅ Zaten boş string
+  const [selectedTur, setSelectedTur] = useState(''); // ✅ Zaten boş string
   const [fiyat, setFiyat] = useState('');
   const [gorsel, setGorsel] = useState(null);
   const [gorselPreview, setGorselPreview] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+
   const handleImagePick = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -160,6 +162,7 @@ const handleSubmit = async () => {
     setAciklama('');
     setGorsel(null);
     setGorselPreview(null);
+    setMarkerCoords(null); // ✅ Harita marker'ını da sıfırla
     router.push('/');
   } catch (error) {
     logger.error('Etkinlik gönderme hatası:', error.response?.data || error.message);
@@ -185,57 +188,55 @@ const handleSubmit = async () => {
 
 <View style={styles.pickerWrapper}>
   <Picker
-    selectedValue={sehir}
+    selectedValue={sehir || ''} // ✅ Boş string garantisi
     onValueChange={(val) => setSehir(val)}
-    style={{ flex: 1 }} // sadece genişliği al
+    style={{ flex: 1 }}
   >
-  <Picker.Item label="Şehir Seçin" value="" /> {/* ✅ Burası eklendi */}
-  {[  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın",
-  "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı",
-  "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep",
-  "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars",
-  "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa",
-  "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun",
-  "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van",
-  "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın",
-  "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"].map(city => (
-    <Picker.Item key={city} label={city} value={city} />
-  ))}
-</Picker>
+    <Picker.Item label="Şehir Seçin" value="" />
+    {[  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın",
+    "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı",
+    "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep",
+    "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars",
+    "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa",
+    "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun",
+    "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van",
+    "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın",
+    "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"].map(city => (
+      <Picker.Item key={city} label={city} value={city} />
+    ))}
+  </Picker>
 </View>
 
 <View style={styles.pickerWrapper}>
   <Picker
-    selectedValue={selectedKategori}
+    selectedValue={selectedKategori || ''} // ✅ Boş string garantisi
     onValueChange={(itemValue) => {
       setSelectedKategori(itemValue);
-      setSelectedTur('');
+      setSelectedTur(''); // Tür'ü sıfırla
     }}
     style={{ flex: 1 }}
   >
-        <Picker.Item label="Kategori Seçin" value="" />
-        {Object.keys(kategorilerVeTurler).map((kategori) => (
-          <Picker.Item key={kategori} label={kategori} value={kategori} />
-        ))}
-      </Picker>
+    <Picker.Item label="Kategori Seçin" value="" />
+    {Object.keys(kategorilerVeTurler).map((kategori) => (
+      <Picker.Item key={kategori} label={kategori} value={kategori} />
+    ))}
+  </Picker>
 </View>
 
-      {selectedKategori !== '' && (
-        <>
+{selectedKategori !== '' && (
   <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={selectedTur}
-              onValueChange={(itemValue) => setSelectedTur(itemValue)}
-              style={{ flex: 1 }}
-            >
-            <Picker.Item label="Tür Seçin" value="" />
-            {kategorilerVeTurler[selectedKategori].map((tur) => (
-              <Picker.Item key={tur} label={tur} value={tur} />
-            ))}
-          </Picker>
-          </View>
-        </>
-      )}
+    <Picker
+      selectedValue={selectedTur || ''} // ✅ Boş string garantisi
+      onValueChange={(itemValue) => setSelectedTur(itemValue)}
+      style={{ flex: 1 }}
+    >
+      <Picker.Item label="Tür Seçin" value="" />
+      {kategorilerVeTurler[selectedKategori]?.map((tur) => ( // ✅ Optional chaining eklendi
+        <Picker.Item key={tur} label={tur} value={tur} />
+      ))}
+    </Picker>
+  </View>
+)}
 
             <TouchableOpacity
               style={styles.input}
@@ -246,24 +247,35 @@ const handleSubmit = async () => {
               </Text>
             </TouchableOpacity>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display="default"
-                onChange={(event, date) => {
-                  setShowDatePicker(Platform.OS === 'ios'); // iOS için açık kalsın
-                  if (date) {
-                    const gun = String(date.getDate()).padStart(2, '0');
-                    const ay = String(date.getMonth() + 1).padStart(2, '0');
-                    const yil = date.getFullYear();
-                    const formatted = `${yil}-${ay}-${gun}`;
-                    setTarih(formatted);
-                    setSelectedDate(date);
-                  }
-                }}
-              />
-            )}
+{showDatePicker && (
+  <DateTimePicker
+    value={selectedDate}
+    mode="date"
+    display="default"
+    onChange={(event, selectedDate) => {
+      // Android için picker'ı her zaman kapat
+      // iOS için sadece kullanıcı "Done" dediğinde kapat
+      if (Platform.OS === 'android') {
+        setShowDatePicker(false);
+      }
+      
+      // Her iki platform için de: eğer tarih seçildiyse kaydet
+      if (selectedDate && selectedDate instanceof Date) {
+        const gun = String(selectedDate.getDate()).padStart(2, '0');
+        const ay = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const yil = selectedDate.getFullYear();
+        const formatted = `${yil}-${ay}-${gun}`;
+        setTarih(formatted);
+        setSelectedDate(selectedDate);
+        
+        // iOS için de picker'ı kapat (isteğe bağlı)
+        if (Platform.OS === 'ios') {
+          setShowDatePicker(false);
+        }
+      }
+    }}
+  />
+)}
 
       <TextInput
         style={styles.input}
