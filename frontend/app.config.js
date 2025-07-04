@@ -34,9 +34,6 @@ export default {
   extra: {
     apiUrl: process.env.API_URL,
     imageCdnUrl: process.env.IMAGE_CDN_URL,
-    eas: {
-      projectId: "b1a15c95-8768-4813-a915-264207ed7584"
-    }
   },
   runtimeVersion: {
     policy: "appVersion"
