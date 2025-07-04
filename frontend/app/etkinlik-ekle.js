@@ -1,18 +1,17 @@
 // app/etkinlik-ekle.js
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image, TouchableOpacity, Platform, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Platform, Alert, Modal, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axiosClient from '../src/api/axiosClient';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
 import useAuth from '../src/hooks/useAuth';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import * as FileSystem from 'expo-file-system';
 import logger from '../src/utils/logger';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { ActivityIndicator } from 'react-native';
+
 
 const kategorilerVeTurler = {
   Aktivizm: [
@@ -40,6 +39,10 @@ const sehirListesi = [
   "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın",
   "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ];
+
+
+
+// ... kategorilerVeTurler ve sehirListesi aynı kalıyor ...
 
 const EtkinlikEkleScreen = () => {
   const router = useRouter();
@@ -80,7 +83,6 @@ const EtkinlikEkleScreen = () => {
     };
 
     fetchLocation();
-
     return () => {
       isMounted = false;
     };
@@ -100,9 +102,28 @@ const EtkinlikEkleScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  const formatDate = (date) => {
+    const gun = String(date.getDate()).padStart(2, '0');
+    const ay = String(date.getMonth() + 1).padStart(2, '0');
+    const yil = date.getFullYear();
+    return `${yil}-${ay}-${gun}`;
+  };
+
+  const handleConfirm = (date) => {
+    if (date && date instanceof Date && !isNaN(date)) {
+      const formatted = formatDate(date);
+      setTarih(formatted);
+      setSelectedDate(date);
+    }
+    setShowDatePicker(false);
+  };
+
+  const handleCancel = () => {
+    setShowDatePicker(false);
+  };
+
   const handleImagePick = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (!permissionResult.granted) {
       Alert.alert('Uyarı', 'Galeriye erişim izni gerekli.');
       return;
@@ -134,7 +155,7 @@ const EtkinlikEkleScreen = () => {
     formData.append('tarih', tarih);
     formData.append('fiyat', fiyat);
     formData.append('aciklama', aciklama);
-    
+
     if (markerCoords) {
       formData.append('latitude', markerCoords.latitude);
       formData.append('longitude', markerCoords.longitude);
@@ -160,7 +181,7 @@ const EtkinlikEkleScreen = () => {
 
     try {
       const res = await axiosClient.post('/etkinlik', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       Alert.alert('Başarılı', 'Etkinlik başarıyla gönderildi!');
@@ -181,34 +202,18 @@ const EtkinlikEkleScreen = () => {
     }
   };
 
-  const formatDate = (date) => {
-    const gun = String(date.getDate()).padStart(2, '0');
-    const ay = String(date.getMonth() + 1).padStart(2, '0');
-    const yil = date.getFullYear();
-    return `${yil}-${ay}-${gun}`;
-  };
 
-  const handleDateChange = (event, selectedDate) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-    
-    if (selectedDate && selectedDate instanceof Date) {
-      const formatted = formatDate(selectedDate);
-      setTarih(formatted);
-      setSelectedDate(selectedDate);
-      
-      if (Platform.OS === 'ios') {
-        setShowDatePicker(false);
-      }
-    }
-  };
+
+
+
+
 
   return (
-    <ScrollView
+<ScrollView
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
+      scrollEnabled={!showDatePicker}
     >
       <Text style={styles.title}>Etkinlik Ekle</Text>
 
@@ -280,27 +285,30 @@ const EtkinlikEkleScreen = () => {
       )}
 
       {/* Tarih Seçimi */}
-      <View style={styles.dateContainer}>
-        <Text style={styles.pickerLabel}>Tarih</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={[styles.dateButtonText, { color: tarih ? '#333' : '#999' }]}>
-            {tarih || 'Tarih Seçin'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleDateChange}
-          style={Platform.OS === 'ios' ? styles.datePickerIOS : {}}
-        />
-      )}
+<View style={styles.dateContainer}>
+  <Text style={styles.pickerLabel}>Tarih</Text>
+  <TouchableOpacity
+    style={styles.dateButton}
+    onPress={() => setShowDatePicker(true)}
+    disabled={showDatePicker}
+  >
+    <Text style={[styles.dateButtonText, { color: tarih ? '#333' : '#999' }]}>
+      {tarih || 'Tarih Seçin'}
+    </Text>
+  </TouchableOpacity>
+  <DateTimePickerModal
+    isVisible={showDatePicker}
+    mode="date"
+    onConfirm={handleConfirm}
+    onCancel={handleCancel}
+    date={selectedDate}
+    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+    confirmText="Onayla"
+    cancelText="İptal"
+    headerTextIOS="Tarih Seçin"
+    minimumDate={new Date()} // Geçmiş tarihleri engelle
+  />
+</View>
 
       <TextInput
         style={styles.input}
@@ -392,7 +400,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 6,
   },
-  // Picker Container ve Label
   pickerContainer: {
     marginBottom: 16,
   },
@@ -408,13 +415,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     ...Platform.select({
-      ios: {
-        height: 120,
-      },
-      android: {
-        height: 52,
-        justifyContent: 'center',
-      },
+      ios: { height: 120 },
+      android: { height: 52, justifyContent: 'center' },
     }),
   },
   pickerIOS: {
@@ -430,7 +432,6 @@ const styles = StyleSheet.create({
     color: '#333',
     height: 120,
   },
-  // Tarih Seçimi
   dateContainer: {
     marginBottom: 16,
   },
@@ -445,11 +446,6 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     fontSize: 16,
-  },
-  datePickerIOS: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 16,
   },
   imageButton: {
     backgroundColor: '#7B2CBF',
