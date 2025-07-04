@@ -1,6 +1,6 @@
 // app/etkinlik-ekle.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image, TouchableOpacity, Platform, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axiosClient from '../src/api/axiosClient';
 import { Picker } from '@react-native-picker/picker';
@@ -8,14 +8,11 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import useAuth from '../src/hooks/useAuth';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import logger from '../src/utils/logger';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { ActivityIndicator } from 'react-native';
-
-
 
 const kategorilerVeTurler = {
   Aktivizm: [
@@ -32,6 +29,18 @@ const kategorilerVeTurler = {
   Tiyatro: ['Çocuk', 'Dram', 'Komedi', 'Müzikal', 'Stand-Up', 'Trajedi']
 };
 
+const sehirListesi = [
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın",
+  "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı",
+  "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep",
+  "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars",
+  "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa",
+  "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun",
+  "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van",
+  "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın",
+  "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+];
+
 const EtkinlikEkleScreen = () => {
   const router = useRouter();
   const { isLoggedIn, authLoaded } = useAuth();
@@ -42,61 +51,60 @@ const EtkinlikEkleScreen = () => {
     }
   }, [authLoaded, isLoggedIn]);
 
-useEffect(() => {
-  let isMounted = true;
-  const fetchLocation = async (retries = 3) => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Konum izni reddedildi');
-        return;
-      }
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLocation = async (retries = 3) => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Uyarı', 'Konum izni reddedildi');
+          return;
+        }
 
-      const loc = await Location.getCurrentPositionAsync({});
-      if (isMounted) {
-        setLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
+        const loc = await Location.getCurrentPositionAsync({});
+        if (isMounted) {
+          setLocation({
+            latitude: loc.coords.latitude,
+            longitude: loc.coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          });
+        }
+      } catch (error) {
+        if (retries > 0) {
+          setTimeout(() => fetchLocation(retries - 1), 1500);
+        } else {
+          Alert.alert('Hata', 'Konum alınamadı, lütfen tekrar deneyin.');
+        }
       }
-    } catch (error) {
-      if (retries > 0) {
-        setTimeout(() => fetchLocation(retries - 1), 1500);
-      } else {
-        alert('Konum alınamadı, lütfen tekrar deneyin.');
-      }
-    }
-  };
+    };
 
-  fetchLocation();
+    fetchLocation();
 
-  return () => {
-    isMounted = false;
-  };
-}, []);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const [location, setLocation] = useState(null);
   const [markerCoords, setMarkerCoords] = useState(null);
   const [baslik, setBaslik] = useState('');
-  const [sehir, setSehir] = useState(''); // ✅ Zaten boş string
+  const [sehir, setSehir] = useState('');
   const [tarih, setTarih] = useState('');
   const [aciklama, setAciklama] = useState('');
-  const [selectedKategori, setSelectedKategori] = useState(''); // ✅ Zaten boş string
-  const [selectedTur, setSelectedTur] = useState(''); // ✅ Zaten boş string
+  const [selectedKategori, setSelectedKategori] = useState('');
+  const [selectedTur, setSelectedTur] = useState('');
   const [fiyat, setFiyat] = useState('');
   const [gorsel, setGorsel] = useState(null);
   const [gorselPreview, setGorselPreview] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-
   const handleImagePick = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-      alert('Galeriye erişim izni gerekli.');
+      Alert.alert('Uyarı', 'Galeriye erişim izni gerekli.');
       return;
     }
 
@@ -112,64 +120,90 @@ useEffect(() => {
     }
   };
 
-const handleSubmit = async () => {
-  if (!markerCoords) {
-  alert("Lütfen haritada etkinliğin konumunu seçin.");
-  return;}
-  const formData = new FormData();
-  formData.append('baslik', baslik);
-  formData.append('sehir', sehir);
-  formData.append('kategori', selectedKategori);
-  formData.append('tur', selectedTur);
-  formData.append('tarih', tarih);
-  formData.append('fiyat', fiyat);
-  formData.append('aciklama', aciklama);
-  if (markerCoords) {
-  formData.append('latitude', markerCoords.latitude);
-  formData.append('longitude', markerCoords.longitude);
-}
-  if (gorsel) {
-    const fileName = gorsel.split('/').pop();
-    const fileType = fileName.split('.').pop();
-    const mime = `image/${fileType || 'jpeg'}`;
-
-    // ✅ Dosya URI'yi blob'a çevir ve append et
-    const fileInfo = await FileSystem.getInfoAsync(gorsel);
-    if (fileInfo.exists) {
-      formData.append('gorsel', {
-        uri: fileInfo.uri,
-        name: fileName,
-        type: mime,
-      });
-    } else {
-      alert("Görsel dosyası bulunamadı.");
+  const handleSubmit = async () => {
+    if (!markerCoords) {
+      Alert.alert('Uyarı', 'Lütfen haritada etkinliğin konumunu seçin.');
       return;
     }
-  }
 
-  try {
-   const res = await axiosClient.post('/etkinlik', formData, {
-   headers: { 'Content-Type': 'multipart/form-data' }
- });
+    const formData = new FormData();
+    formData.append('baslik', baslik);
+    formData.append('sehir', sehir);
+    formData.append('kategori', selectedKategori);
+    formData.append('tur', selectedTur);
+    formData.append('tarih', tarih);
+    formData.append('fiyat', fiyat);
+    formData.append('aciklama', aciklama);
+    
+    if (markerCoords) {
+      formData.append('latitude', markerCoords.latitude);
+      formData.append('longitude', markerCoords.longitude);
+    }
 
-    alert('Etkinlik başarıyla gönderildi!');
-    setBaslik('');
-    setSehir('');
-    setSelectedKategori('');
-    setSelectedTur('');
-    setTarih('');
-    setFiyat('');
-    setAciklama('');
-    setGorsel(null);
-    setGorselPreview(null);
-    setMarkerCoords(null); // ✅ Harita marker'ını da sıfırla
-    router.push('/');
-  } catch (error) {
-    logger.error('Etkinlik gönderme hatası:', error.response?.data || error.message);
-    alert('Gönderim sırasında bir hata oluştu.');
-  }
-};
-  
+    if (gorsel) {
+      const fileName = gorsel.split('/').pop();
+      const fileType = fileName.split('.').pop();
+      const mime = `image/${fileType || 'jpeg'}`;
+
+      const fileInfo = await FileSystem.getInfoAsync(gorsel);
+      if (fileInfo.exists) {
+        formData.append('gorsel', {
+          uri: fileInfo.uri,
+          name: fileName,
+          type: mime,
+        });
+      } else {
+        Alert.alert('Hata', 'Görsel dosyası bulunamadı.');
+        return;
+      }
+    }
+
+    try {
+      const res = await axiosClient.post('/etkinlik', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      Alert.alert('Başarılı', 'Etkinlik başarıyla gönderildi!');
+      setBaslik('');
+      setSehir('');
+      setSelectedKategori('');
+      setSelectedTur('');
+      setTarih('');
+      setFiyat('');
+      setAciklama('');
+      setGorsel(null);
+      setGorselPreview(null);
+      setMarkerCoords(null);
+      router.push('/');
+    } catch (error) {
+      logger.error('Etkinlik gönderme hatası:', error.response?.data || error.message);
+      Alert.alert('Hata', 'Gönderim sırasında bir hata oluştu.');
+    }
+  };
+
+  const formatDate = (date) => {
+    const gun = String(date.getDate()).padStart(2, '0');
+    const ay = String(date.getMonth() + 1).padStart(2, '0');
+    const yil = date.getFullYear();
+    return `${yil}-${ay}-${gun}`;
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (selectedDate && selectedDate instanceof Date) {
+      const formatted = formatDate(selectedDate);
+      setTarih(formatted);
+      setSelectedDate(selectedDate);
+      
+      if (Platform.OS === 'ios') {
+        setShowDatePicker(false);
+      }
+    }
+  };
+
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -186,96 +220,87 @@ const handleSubmit = async () => {
         onChangeText={setBaslik}
       />
 
-<View style={styles.pickerWrapper}>
-  <Picker
-    selectedValue={sehir || ''} // ✅ Boş string garantisi
-    onValueChange={(val) => setSehir(val)}
-    style={{ flex: 1 }}
-  >
-    <Picker.Item label="Şehir Seçin" value="" />
-    {[  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın",
-    "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı",
-    "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep",
-    "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars",
-    "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa",
-    "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun",
-    "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van",
-    "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın",
-    "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"].map(city => (
-      <Picker.Item key={city} label={city} value={city} />
-    ))}
-  </Picker>
-</View>
+      {/* Şehir Seçimi */}
+      <View style={styles.pickerContainer}>
+        <Text style={styles.pickerLabel}>Şehir</Text>
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={sehir}
+            onValueChange={(itemValue) => setSehir(itemValue)}
+            style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
+            itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
+          >
+            <Picker.Item label="Şehir Seçin" value="" />
+            {sehirListesi.map((city) => (
+              <Picker.Item key={city} label={city} value={city} />
+            ))}
+          </Picker>
+        </View>
+      </View>
 
-<View style={styles.pickerWrapper}>
-  <Picker
-    selectedValue={selectedKategori || ''} // ✅ Boş string garantisi
-    onValueChange={(itemValue) => {
-      setSelectedKategori(itemValue);
-      setSelectedTur(''); // Tür'ü sıfırla
-    }}
-    style={{ flex: 1 }}
-  >
-    <Picker.Item label="Kategori Seçin" value="" />
-    {Object.keys(kategorilerVeTurler).map((kategori) => (
-      <Picker.Item key={kategori} label={kategori} value={kategori} />
-    ))}
-  </Picker>
-</View>
+      {/* Kategori Seçimi */}
+      <View style={styles.pickerContainer}>
+        <Text style={styles.pickerLabel}>Kategori</Text>
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={selectedKategori}
+            onValueChange={(itemValue) => {
+              setSelectedKategori(itemValue);
+              setSelectedTur('');
+            }}
+            style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
+            itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
+          >
+            <Picker.Item label="Kategori Seçin" value="" />
+            {Object.keys(kategorilerVeTurler).map((kategori) => (
+              <Picker.Item key={kategori} label={kategori} value={kategori} />
+            ))}
+          </Picker>
+        </View>
+      </View>
 
-{selectedKategori !== '' && (
-  <View style={styles.pickerWrapper}>
-    <Picker
-      selectedValue={selectedTur || ''} // ✅ Boş string garantisi
-      onValueChange={(itemValue) => setSelectedTur(itemValue)}
-      style={{ flex: 1 }}
-    >
-      <Picker.Item label="Tür Seçin" value="" />
-      {kategorilerVeTurler[selectedKategori]?.map((tur) => ( // ✅ Optional chaining eklendi
-        <Picker.Item key={tur} label={tur} value={tur} />
-      ))}
-    </Picker>
-  </View>
-)}
-
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDatePicker(true)}
+      {/* Tür Seçimi */}
+      {selectedKategori !== '' && (
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Tür</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={selectedTur}
+              onValueChange={(itemValue) => setSelectedTur(itemValue)}
+              style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
+              itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
             >
-              <Text style={{ color: tarih ? '#000' : '#aaa' }}>
-                {tarih || 'Tarih Seçin'}
-              </Text>
-            </TouchableOpacity>
+              <Picker.Item label="Tür Seçin" value="" />
+              {kategorilerVeTurler[selectedKategori]?.map((tur) => (
+                <Picker.Item key={tur} label={tur} value={tur} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+      )}
 
-{showDatePicker && (
-  <DateTimePicker
-    value={selectedDate}
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      // Android için picker'ı her zaman kapat
-      // iOS için sadece kullanıcı "Done" dediğinde kapat
-      if (Platform.OS === 'android') {
-        setShowDatePicker(false);
-      }
-      
-      // Her iki platform için de: eğer tarih seçildiyse kaydet
-      if (selectedDate && selectedDate instanceof Date) {
-        const gun = String(selectedDate.getDate()).padStart(2, '0');
-        const ay = String(selectedDate.getMonth() + 1).padStart(2, '0');
-        const yil = selectedDate.getFullYear();
-        const formatted = `${yil}-${ay}-${gun}`;
-        setTarih(formatted);
-        setSelectedDate(selectedDate);
-        
-        // iOS için de picker'ı kapat (isteğe bağlı)
-        if (Platform.OS === 'ios') {
-          setShowDatePicker(false);
-        }
-      }
-    }}
-  />
-)}
+      {/* Tarih Seçimi */}
+      <View style={styles.dateContainer}>
+        <Text style={styles.pickerLabel}>Tarih</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={[styles.dateButtonText, { color: tarih ? '#333' : '#999' }]}>
+            {tarih || 'Tarih Seçin'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleDateChange}
+          style={Platform.OS === 'ios' ? styles.datePickerIOS : {}}
+        />
+      )}
 
       <TextInput
         style={styles.input}
@@ -307,33 +332,34 @@ const handleSubmit = async () => {
         multiline
         numberOfLines={6}
       />
-        <Text style={styles.label}>Etkinlik Konumu</Text>
 
-{location ? (
-  <View style={{ height: 250, marginBottom: 16 }}>
-    <MapView
-      style={{ flex: 1, borderRadius: 10 }}
-      initialRegion={location}
-      onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
-    >
-      {markerCoords && (
-        <Marker coordinate={markerCoords} title="Etkinlik Konumu" />
+      <Text style={styles.label}>Etkinlik Konumu</Text>
+
+      {location ? (
+        <View style={{ height: 250, marginBottom: 16 }}>
+          <MapView
+            style={{ flex: 1, borderRadius: 10 }}
+            initialRegion={location}
+            onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
+          >
+            {markerCoords && (
+              <Marker coordinate={markerCoords} title="Etkinlik Konumu" />
+            )}
+          </MapView>
+          <Text style={{ marginTop: 6, fontSize: 14, color: '#666' }}>
+            Haritaya dokunarak etkinliğin yerini seçin.
+          </Text>
+        </View>
+      ) : (
+        <View style={{ height: 250, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: 'gray', marginBottom: 10 }}>Konum yükleniyor...</Text>
+          <ActivityIndicator size="large" color="#7B2CBF" />
+        </View>
       )}
-    </MapView>
-    <Text style={{ marginTop: 6, fontSize: 14, color: '#666' }}>
-      Haritaya dokunarak etkinliğin yerini seçin.
-    </Text>
-  </View>
-) : (
-  <View style={{ height: 250, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ color: 'gray', marginBottom: 10 }}>Konum yükleniyor...</Text>
-    <ActivityIndicator size="large" color="#7B2CBF" />
-  </View>
-)}
 
-<TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-  <Text style={styles.submitButtonText}>Gönder</Text>
-</TouchableOpacity>
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <Text style={styles.submitButtonText}>Gönder</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -343,51 +369,104 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f2f2f2',
   },
-title: {
-  fontSize: 26,
-  fontWeight: '800',
-  color: '#333',
-  marginBottom: 28,
-  textAlign: 'center',
-},
-input: {
-  backgroundColor: '#fff',
-  paddingVertical: 14,
-  paddingHorizontal: 16,
-  fontSize: 16,
-  borderRadius: 10,
-  borderWidth: 1,
-  borderColor: '#ddd',
-  marginBottom: 16,
-},
-label: {
-  fontWeight: '600',
-  color: '#555',
-  marginBottom: 6,
-  marginTop: 6,
-},
-picker: {
-  backgroundColor: '#fff',
-  borderRadius: 10,
-  borderColor: '#ddd',
-  borderWidth: 1,
-  paddingHorizontal: 6,
-  marginBottom: 16,
-},
-imageButton: {
-  backgroundColor: '#7B2CBF',
-  paddingVertical: 12,
-  borderRadius: 10,
-  marginBottom: 14,
-  shadowColor: '#000',
-  shadowOpacity: 0.08,
-  shadowRadius: 4,
-  shadowOffset: { width: 0, height: 2 },
-  elevation: 2,
-},
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#333',
+    marginBottom: 28,
+    textAlign: 'center',
+  },
+  input: {
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 16,
+  },
+  label: {
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 6,
+    marginTop: 6,
+  },
+  // Picker Container ve Label
+  pickerContainer: {
+    marginBottom: 16,
+  },
+  pickerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  pickerWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    ...Platform.select({
+      ios: {
+        height: 120,
+      },
+      android: {
+        height: 52,
+        justifyContent: 'center',
+      },
+    }),
+  },
+  pickerIOS: {
+    height: 180,
+    backgroundColor: 'transparent',
+  },
+  pickerAndroid: {
+    height: 52,
+    backgroundColor: 'transparent',
+  },
+  pickerItemIOS: {
+    fontSize: 16,
+    color: '#333',
+    height: 120,
+  },
+  // Tarih Seçimi
+  dateContainer: {
+    marginBottom: 16,
+  },
+  dateButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    justifyContent: 'center',
+  },
+  dateButtonText: {
+    fontSize: 16,
+  },
+  datePickerIOS: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  imageButton: {
+    backgroundColor: '#7B2CBF',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   imageButtonText: {
     color: '#fff',
     textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
   },
   imagePreview: {
     width: '100%',
@@ -396,27 +475,17 @@ imageButton: {
     marginBottom: 15,
   },
   submitButton: {
-  backgroundColor: '#7B2CBF',
-  paddingVertical: 14,
-  borderRadius: 12,
-  alignItems: 'center',
-  marginTop: 8,
-},
-submitButtonText: {
-  color: 'white',
-  fontSize: 16,
-  fontWeight: '600',
-},
-pickerWrapper: {
-  backgroundColor: '#fff',
-  borderRadius: 10,
-  borderWidth: 1,
-  borderColor: '#ddd',
-  marginBottom: 16,
-  height: 52,
-  justifyContent: 'center',
-},
-
+    backgroundColor: '#7B2CBF',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 export default EtkinlikEkleScreen;
