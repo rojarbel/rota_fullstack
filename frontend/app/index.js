@@ -101,9 +101,6 @@ useEffect(() => {
           etkinlikTarihi.setHours(0, 0, 0, 0);
           return etkinlikTarihi >= today;
         }
-        if (aktifSekme === "populer") {
-          return etk.populer === true || etk.populer === "true";
-        }
         return true;
       })
       .sort((a, b) => {

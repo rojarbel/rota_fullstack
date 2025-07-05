@@ -340,20 +340,31 @@ else if (filter?.toLowerCase() === "yaklasan") {
   });
 }
 if (filter?.toLowerCase() === "populer") {
-  pipeline.push({
-    $addFields: {
-      populerSkor: {
-        $add: [
-          { $ifNull: ["$tiklanmaSayisi", 0] },
-          { $multiply: [{ $ifNull: ["$favoriSayisi", 0] }, 2] }
-        ]
+  pipeline.push(
+    {
+      $lookup: {
+        from: "yorums", // MongoDB'de yorumlar koleksiyon adı, dikkat: lowercase ve çoğul!
+        localField: "_id",
+        foreignField: "etkinlikId",
+        as: "yorumlar"
       }
-    }
-  });
-  pipeline.push({ $sort: { populerSkor: -1 } });
-  console.log("💡 Query pipeline:", JSON.stringify(pipeline, null, 2));
-
+    },
+    {
+      $addFields: {
+        yorumSayisi: { $size: "$yorumlar" },
+        populerSkor: {
+          $add: [
+            { $ifNull: ["$tiklanmaSayisi", 0] }, // 1 puan
+            { $multiply: [{ $ifNull: ["$favoriSayisi", 0] }, 10] }, // 10 puan
+            { $multiply: [{ $size: "$yorumlar" }, 5] } // 5 puan
+          ]
+        }
+      }
+    },
+    { $sort: { populerSkor: -1 } }
+  );
 }
+
 
     const defaultMin = 0;
     const defaultMax = 22104;
