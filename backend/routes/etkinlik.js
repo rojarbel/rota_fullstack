@@ -202,7 +202,10 @@ router.get("/", async (req, res) => {
   try {
     const { kategori, sehir } = req.query;
 
-    const query = { onaylandi: true,gizli: false };
+    const query = { 
+      onaylandi: true,
+      $or: [{ gizli: false }, { gizli: { $exists: false } }]
+    };
 
     if (sehir) {
       query.sehir = new RegExp(`^${sehir}$`, 'i');
@@ -271,7 +274,7 @@ router.get("/tum", async (req, res) => {
 
     const match = {
       onaylandi: true,
-        gizli: false,
+      $or: [{ gizli: false }, { gizli: { $exists: false } }],
       tarihDate: { $gte: now }
     };
 
@@ -343,27 +346,28 @@ if (filter?.toLowerCase() === "populer") {
   pipeline.push(
     {
       $lookup: {
-        from: "yorums", // MongoDB'de yorumlar koleksiyon adı, dikkat: lowercase ve çoğul!
+        from: "yorums",
         localField: "_id",
         foreignField: "etkinlikId",
         as: "yorumlar"
       }
-    },
-    {
-      $addFields: {
-        yorumSayisi: { $size: "$yorumlar" },
-        populerSkor: {
-          $add: [
-            { $ifNull: ["$tiklanmaSayisi", 0] }, // 1 puan
-            { $multiply: [{ $ifNull: ["$favoriSayisi", 0] }, 10] }, // 10 puan
-            { $multiply: [{ $size: "$yorumlar" }, 5] } // 5 puan
-          ]
-        }
-      }
-    },
-    { $sort: { populerSkor: -1 } }
+    }
   );
+  pipeline.push({
+    $addFields: {
+      yorumSayisi: { $size: "$yorumlar" },
+      populerSkor: {
+        $add: [
+          { $ifNull: ["$tiklanmaSayisi", 0] },
+          { $multiply: [{ $ifNull: ["$favoriSayisi", 0] }, 10] },
+          { $multiply: [{ $size: "$yorumlar" }, 5] }
+        ]
+      }
+    }
+  });
+  pipeline.push({ $sort: { populerSkor: -1 } });
 }
+
 
 
     const defaultMin = 0;
@@ -542,7 +546,10 @@ router.get('/yakindaki', async (req, res) => {
           distanceField: 'mesafe',
           maxDistance: finalRadius,
           spherical: true,
-          query: { onaylandi: true, gizli: false }
+          query: { 
+            onaylandi: true,
+            $or: [{ gizli: false }, { gizli: { $exists: false } }]
+          }
         }
       }
     ];
@@ -590,8 +597,9 @@ router.get("/search", async (req, res) => {
   try {
     const query = req.query.q || "";
 
-    const etkinlikler = await Etkinlik.find({
-      onaylandi: true,  gizli: false,
+  const etkinlikler = await Etkinlik.find({
+    onaylandi: true,
+    $or: [{ gizli: false }, { gizli: { $exists: false } }],
       $or: [
         { baslik: { $regex: query, $options: "i" } },
         { kategori: { $regex: query, $options: "i" } },

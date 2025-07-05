@@ -76,42 +76,48 @@ useEffect(() => {
   setHasMore(true);
   setTimeout(() => setPage(1), 0);
 }, [aktifSekme]);
-  const filtrelenmisEtkinlikler = useMemo(() => {
-    const list = etkinlikler
-      .filter((etk) => {
-        if (aktifSekme === "tum") return true;
+const filtrelenmisEtkinlikler = useMemo(() => {
+  const list = etkinlikler
+    .filter((etk) => {
+      if (aktifSekme === "tum") return true;
 
-        if (aktifSekme === "ucretsiz") {
-          const fiyatStr = (etk.fiyat ?? "").toString().toLowerCase().trim();
-          return (
-            fiyatStr === "" ||
-            fiyatStr === "0" ||
-            fiyatStr === "0.0" ||
-            fiyatStr === "0.00" ||
-            fiyatStr === "ücretsiz" ||
-            fiyatStr === "free"
-          );
-        }
-        
-        if (aktifSekme === "yaklasan") {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const etkinlikTarihi = new Date(etk.tarih);
-          if (isNaN(etkinlikTarihi)) return false;
-          etkinlikTarihi.setHours(0, 0, 0, 0);
-          return etkinlikTarihi >= today;
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        if (aktifSekme === "tum") {
-          return a.baslik.localeCompare(b.baslik, "tr", { sensitivity: "base" });
-        } else {
-          return new Date(a.tarih) - new Date(b.tarih);
-        }
-      });
-    return list;
-  }, [etkinlikler, aktifSekme]);
+      if (aktifSekme === "ucretsiz") {
+        const fiyatStr = (etk.fiyat ?? "").toString().toLowerCase().trim();
+        return (
+          fiyatStr === "" ||
+          fiyatStr === "0" ||
+          fiyatStr === "0.0" ||
+          fiyatStr === "0.00" ||
+          fiyatStr === "ücretsiz" ||
+          fiyatStr === "free"
+        );
+      }
+
+      if (aktifSekme === "yaklasan") {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const etkinlikTarihi = new Date(etk.tarih);
+        if (isNaN(etkinlikTarihi)) return false;
+        etkinlikTarihi.setHours(0, 0, 0, 0);
+        return etkinlikTarihi >= today;
+      }
+
+      if (aktifSekme === "populer") return true; // filtreleme yok, sıralama bozulmamalı
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (aktifSekme === "tum") {
+        return a.baslik.localeCompare(b.baslik, "tr", { sensitivity: "base" });
+      } else if (aktifSekme === "yaklasan" || aktifSekme === "ucretsiz") {
+        return new Date(a.tarih) - new Date(b.tarih);
+      }
+      return 0; // populer'de sıralama yapılmaz
+    });
+
+  return list;
+}, [etkinlikler, aktifSekme]);
+
   
 const renderEtkinlik = useCallback(({ item }) => {
   try {

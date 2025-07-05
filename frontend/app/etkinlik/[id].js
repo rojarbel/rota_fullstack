@@ -16,6 +16,12 @@ import CommentCard from '../../src/components/CommentCard';
 import logger from '../../src/utils/logger';
 import formatDate from '../../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../../src/constants';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
+import * as IntentLauncher from 'expo-intent-launcher';
 
 const PRIMARY = '#7B2CBF';
 const ACCENT = '#FFD54F';
@@ -40,6 +46,9 @@ export default function EtkinlikDetay() {
   const [yeniYorum, setYeniYorum] = useState("");
   const [yanitId, setYanitId] = useState(null);
   const [yanitlar, setYanitlar] = useState({});
+
+
+
 
   const fetchFavorileyenler = async () => {
     if (!etkinlik) return;
@@ -70,16 +79,53 @@ export default function EtkinlikDetay() {
     fetchFavorileyenler();
   }, [etkinlik]);
 
-  const paylaş = async (tip) => {
+  const paylas = async (tip) => {
     const url = `https://rota.app/etkinlik/${etkinlik.id}`;
     const mesaj = `${etkinlik.baslik} - ${formatDate(etkinlik.tarih)}\n${url}`;
 
 
     try {
       switch (tip) {
-        case "instagram":
-          await Linking.openURL(`https://www.instagram.com/?url=${encodeURIComponent(url)}`);
+          case "instagram": {
+          try {
+            const permission = await MediaLibrary.requestPermissionsAsync();
+            if (!permission.granted) {
+              Alert.alert("İzin Gerekli", "Paylaşım için galeri izni gerekli.");
+              return;
+            }
+
+            const imageUrl = etkinlik.gorsel?.startsWith('http')
+              ? etkinlik.gorsel
+              : `${IMAGE_BASE_URL}${etkinlik.gorsel}`;
+
+            const localPath = FileSystem.documentDirectory + `story_${Date.now()}.jpg`;
+            const download = FileSystem.createDownloadResumable(imageUrl, localPath);
+            const { uri } = await download.downloadAsync();
+
+            // Görseli galeriye kaydet
+            await MediaLibrary.createAssetAsync(uri);
+            
+            Alert.alert(
+              "Paylaşım Hazır",
+              "Instagram, güvenlik nedenleriyle direkt story paylaşımını kısıtladı. Artık sadece görseli galeriye kaydedip kullanıcının manuel olarak Instagram'da paylaşmasını sağlayabiliyoruz.",
+              [
+                { text: "Tamam", style: "default" },
+                { 
+                  text: "Instagram'ı Aç", 
+                  onPress: () => {
+                    Linking.openURL('instagram://app').catch(() => {
+                      Linking.openURL('https://www.instagram.com');
+                    });
+                  }
+                }
+              ]
+            );
+          } catch (err) {
+            console.error('Instagram paylaşım hatası:', err);
+            Alert.alert("Hata", "Instagram paylaşımı gerçekleştirilemedi.");
+          }
           break;
+        }
         case "facebook":
           await Linking.openURL(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
           break;
@@ -413,39 +459,41 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
               </TouchableOpacity>
             </View>
           )}
-          <View
-            style={{
-              marginTop: 16,
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: 18,
-            }}
-          >
-            {[
-              { tip: 'instagram', icon: '📸' },
-              { tip: 'facebook', icon: '📘' },
-              { tip: 'twitter', icon: '🐦' },
-              { tip: 'whatsapp', icon: '💬' },
-              { tip: 'email', icon: '📧' },
-              { tip: 'kopyala', icon: '🔗' },
-            ].map(({ tip, icon }) => (
-              <TouchableOpacity
-                key={tip}
-                onPress={() => paylaş(tip)}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  backgroundColor: '#fafafa',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 22 }}>{icon}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+
+<View
+  style={{
+    marginTop: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    rowGap: 12,
+    columnGap: 16
+  }}
+>
+  {[
+    { tip: 'instagram', Icon: FontAwesome, name: 'instagram' },
+    { tip: 'facebook', Icon: FontAwesome, name: 'facebook' },
+    { tip: 'twitter', Icon: FontAwesome, name: 'twitter' },
+    { tip: 'whatsapp', Icon: FontAwesome, name: 'whatsapp' },
+    { tip: 'email', Icon: MaterialCommunityIcons, name: 'email-outline' },
+    { tip: 'kopyala', Icon: FontAwesome, name: 'link' },
+  ].map(({ tip, Icon, name }) => (
+    <TouchableOpacity
+      key={tip}
+      onPress={() => paylas(tip)}
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Icon name={name} size={20} color="#444" />
+    </TouchableOpacity>
+  ))}
+</View>
         </View>
 
         <View style={{
