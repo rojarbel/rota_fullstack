@@ -246,7 +246,7 @@ const handleSubmit = async () => {
 
       {/* Şehir Seçimi */}
       <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>Şehir</Text>
+
         <View style={styles.pickerWrapper}>
           <Picker
             selectedValue={sehir}
@@ -264,7 +264,6 @@ const handleSubmit = async () => {
 
       {/* Kategori Seçimi */}
       <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>Kategori</Text>
         <View style={styles.pickerWrapper}>
           <Picker
             selectedValue={selectedKategori}
@@ -305,7 +304,6 @@ const handleSubmit = async () => {
 
       {/* Tarih Seçimi */}
 <View style={styles.dateContainer}>
-  <Text style={styles.pickerLabel}>Tarih</Text>
   <TouchableOpacity
     style={styles.dateButton}
     onPress={() => setShowDatePicker(true)}
@@ -361,7 +359,7 @@ const handleSubmit = async () => {
       />
       
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: '#333', flex: 1 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#5f5f5f', flex: 1 }}>
           Gizli Etkinlik
         </Text>
         <Switch
@@ -371,7 +369,16 @@ const handleSubmit = async () => {
           thumbColor={gizli ? '#fff' : '#f4f3f4'}
         />
       </View>
-      <Text style={styles.label}>Etkinlik Konumu</Text>
+
+      {gizli && (
+        <View style={{ padding: 10, backgroundColor: '#FFF3CD', borderRadius: 8, marginBottom: 16 }}>
+          <Text style={{ color: '#856404', fontSize: 14 }}>
+            Bu etkinlik gizlidir. Sadece bağlantısını bilenler erişebilir. Etkinlik linkini kaydetmeyi veya favorilere eklemeyi unutmayın.
+          </Text>
+        </View>
+      )}
+
+
 
       {location ? (
         <View style={{ height: 250, marginBottom: 16 }}>
@@ -384,7 +391,7 @@ const handleSubmit = async () => {
               <Marker coordinate={markerCoords} title="Etkinlik Konumu" />
             )}
           </MapView>
-          <Text style={{ marginTop: 6, fontSize: 14, color: '#666' }}>
+          <Text style={{ marginTop: 6, fontSize: 14, color: '#5f5f5f' }}>
             Haritaya dokunarak etkinliğin yerini seçin.
           </Text>
         </View>
@@ -408,9 +415,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f2f2',
   },
   title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#333',
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#5f5f5f',
     marginBottom: 28,
     textAlign: 'center',
   },

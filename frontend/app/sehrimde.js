@@ -21,7 +21,7 @@ const cities = [
 
 
 const PRIMARY = '#7B2CBF';
-const TEXT = '#333';
+const TEXT = '#5f5f5f';
 
 export default function Sehrimde() {
   const citiesMemo = useMemo(() => cities, []);
@@ -95,4 +95,5 @@ cityText: {
   fontSize: 16,
   letterSpacing: 0.5,
 },
+
 });

@@ -253,19 +253,21 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
         }}>
           <Text style={styles.dropdownItem}>Profil</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={async () => {
-          await deleteItems(['accessToken', 'refreshToken']);
-          await AsyncStorage.multiRemove(['user', 'image']);
-          setProfilePhoto(null);
-          setCachedToken(null);
-          setIsProfileDropdownOpen(false);
-          auth.setIsLoggedIn(false); 
-          auth.setUsername(null);
-          router.push('/login');
-        }}>
-          <Ionicons name="log-out-outline" size={16} color="#666" style={{ marginRight: 8 }} />
-          <Text style={styles.dropdownItem}>Çıkış Yap</Text>
-        </TouchableOpacity>
+      <TouchableOpacity onPress={async () => {
+        await deleteItems(['accessToken', 'refreshToken']);
+        await AsyncStorage.multiRemove(['user', 'image']);
+        setProfilePhoto(null);
+        setCachedToken(null);
+        setIsProfileDropdownOpen(false);
+        auth.setIsLoggedIn(false); 
+        auth.setUsername(null);
+        router.push('/login');
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 }}>
+          
+          <Text style={{ color: '#333', fontSize: 15, fontWeight: '500' }}>Çıkış Yap</Text>
+        </View>
+      </TouchableOpacity>
       </View>
     )}
   </View>

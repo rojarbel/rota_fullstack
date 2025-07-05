@@ -63,12 +63,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9fb",
   },
 title: {
-  fontSize: 28,
+  fontSize: 24,
   fontWeight: "800",
-  color: "#333",
+  color: "#5f5f5f",
   letterSpacing: 0.3,
   textAlign: "center",
-  marginBottom: 28,
+  marginBottom: 24,
 },
   label: {
     fontSize: 14,
