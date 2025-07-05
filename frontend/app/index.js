@@ -77,6 +77,8 @@ useEffect(() => {
   setTimeout(() => setPage(1), 0);
 }, [aktifSekme]);
 const filtrelenmisEtkinlikler = useMemo(() => {
+
+  
     if (aktifSekme === "populer") {
     return etkinlikler;
   }

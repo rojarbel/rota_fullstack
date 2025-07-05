@@ -451,7 +451,9 @@ if (bitis) {
 }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    pipeline.push({ $sort: { tarih: 1 } });
+    if (filter?.toLowerCase() !== "populer") {
+      pipeline.push({ $sort: { tarih: 1 } });
+    }
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: parseInt(limit) });
 
