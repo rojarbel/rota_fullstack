@@ -144,66 +144,82 @@ const EtkinlikEkleScreen = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!markerCoords) {
-      Alert.alert('Uyarı', 'Lütfen haritada etkinliğin konumunu seçin.');
+const handleSubmit = async () => {
+  if (!markerCoords) {
+    Alert.alert('Uyarı', 'Lütfen haritada etkinliğin konumunu seçin.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('baslik', baslik);
+  formData.append('sehir', sehir);
+  formData.append('kategori', selectedKategori);
+  formData.append('tur', selectedTur);
+  formData.append('tarih', tarih);
+  formData.append('fiyat', fiyat);
+  formData.append('aciklama', aciklama);
+  formData.append('gizli', gizli); // Gizli durumunu ekle
+
+  if (markerCoords) {
+    formData.append('latitude', markerCoords.latitude);
+    formData.append('longitude', markerCoords.longitude);
+  }
+
+  if (gorsel) {
+    const fileName = gorsel.split('/').pop();
+    const fileType = fileName.split('.').pop();
+    const mime = `image/${fileType || 'jpeg'}`;
+
+    const fileInfo = await FileSystem.getInfoAsync(gorsel);
+    if (fileInfo.exists) {
+      formData.append('gorsel', {
+        uri: fileInfo.uri,
+        name: fileName,
+        type: mime,
+      });
+    } else {
+      Alert.alert('Hata', 'Görsel dosyası bulunamadı.');
       return;
     }
+  }
 
-    const formData = new FormData();
-    formData.append('baslik', baslik);
-    formData.append('sehir', sehir);
-    formData.append('kategori', selectedKategori);
-    formData.append('tur', selectedTur);
-    formData.append('tarih', tarih);
-    formData.append('fiyat', fiyat);
-    formData.append('aciklama', aciklama);
+  try {
+    const res = await axiosClient.post('/etkinlik', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-    if (markerCoords) {
-      formData.append('latitude', markerCoords.latitude);
-      formData.append('longitude', markerCoords.longitude);
-    }
+    // Başarı mesajını gizli etkinlik durumuna göre ayarla
+    const successMessage = gizli 
+      ? 'Gizli etkinlik başarıyla oluşturuldu! Sadece direkt linkle erişilebilir.'
+      : 'Etkinlik başarıyla gönderildi!';
+    
+    Alert.alert('Başarılı', successMessage);
+    
+    // Form alanlarını temizle
+    setBaslik('');
+    setSehir('');
+    setSelectedKategori('');
+    setSelectedTur('');
+    setTarih('');
+    setFiyat('');
+    setAciklama('');
+    setGorsel(null);
+    setGorselPreview(null);
+    setMarkerCoords(null);
+    setGizli(false);
 
-    if (gorsel) {
-      const fileName = gorsel.split('/').pop();
-      const fileType = fileName.split('.').pop();
-      const mime = `image/${fileType || 'jpeg'}`;
-
-      const fileInfo = await FileSystem.getInfoAsync(gorsel);
-      if (fileInfo.exists) {
-        formData.append('gorsel', {
-          uri: fileInfo.uri,
-          name: fileName,
-          type: mime,
-        });
-      } else {
-        Alert.alert('Hata', 'Görsel dosyası bulunamadı.');
-        return;
-      }
-    }
-
-    try {
-      const res = await axiosClient.post('/etkinlik', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      Alert.alert('Başarılı', 'Etkinlik başarıyla gönderildi!');
-      setBaslik('');
-      setSehir('');
-      setSelectedKategori('');
-      setSelectedTur('');
-      setTarih('');
-      setFiyat('');
-      setAciklama('');
-      setGorsel(null);
-      setGorselPreview(null);
-      setMarkerCoords(null);
+    // Etkinlik sayfasına yönlendir (hem gizli hem normal etkinlikler için)
+    if (res.data && res.data._id) {
+      router.push(`/etkinlik/${res.data._id}`);
+    } else {
+      // Eğer ID yoksa ana sayfaya yönlendir
       router.push('/');
-    } catch (error) {
-      logger.error('Etkinlik gönderme hatası:', error.response?.data || error.message);
-      Alert.alert('Hata', 'Gönderim sırasında bir hata oluştu.');
     }
-  };
+  } catch (error) {
+    logger.error('Etkinlik gönderme hatası:', error.response?.data || error.message);
+    Alert.alert('Hata', 'Gönderim sırasında bir hata oluştu.');
+  }
+};
 
 
 

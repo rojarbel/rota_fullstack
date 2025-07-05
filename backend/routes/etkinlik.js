@@ -104,8 +104,7 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
     });
 
     const savedEtkinlik = await yeniEtkinlik.save();
-    
-    res.status(201).json(savedEtkinlik);
+    return res.status(201).json({ _id: yeniEtkinlik._id });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Etkinlik oluşturulurken hata oluştu", error: error.message });
