@@ -362,12 +362,14 @@ const handleSubmit = async () => {
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#5f5f5f', flex: 1 }}>
           Gizli Etkinlik
         </Text>
-        <Switch
-          value={gizli}
-          onValueChange={(value) => setGizli(value)}
-          trackColor={{ false: '#ccc', true: '#7B2CBF' }}
-          thumbColor={gizli ? '#fff' : '#f4f3f4'}
-        />
+        <View style={{ transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] }}>
+          <Switch
+            value={gizli}
+            onValueChange={setGizli}
+            trackColor={{ false: '#ccc', true: '#7B2CBF' }}
+            thumbColor={Platform.OS === 'android' ? (gizli ? '#fff' : '#f4f3f4') : undefined}
+          />
+        </View>
       </View>
 
       {gizli && (
