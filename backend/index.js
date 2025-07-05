@@ -51,6 +51,9 @@ app.use('/api/upload', uploadRoute);
 app.use("/api/yorum", require("./routes/yorum"));
 app.use("/api/bildirim", bildirimRoute);
 
+app.get("/etkinlik/:id", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/deeplink/index.html"));
+});
 
 // Basit test endpoint'i
 app.get('/', (req, res) => {

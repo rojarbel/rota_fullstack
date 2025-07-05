@@ -11,6 +11,7 @@ import * as FileSystem from 'expo-file-system';
 import logger from '../src/utils/logger';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { Switch } from 'react-native';
 
 
 const kategorilerVeTurler = {
@@ -101,6 +102,8 @@ const EtkinlikEkleScreen = () => {
   const [gorselPreview, setGorselPreview] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [gizli, setGizli] = useState(false);
+
 
   const formatDate = (date) => {
     const gun = String(date.getDate()).padStart(2, '0');
@@ -340,7 +343,18 @@ const EtkinlikEkleScreen = () => {
         multiline
         numberOfLines={6}
       />
-
+      
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#333', flex: 1 }}>
+          Gizli Etkinlik
+        </Text>
+        <Switch
+          value={gizli}
+          onValueChange={(value) => setGizli(value)}
+          trackColor={{ false: '#ccc', true: '#7B2CBF' }}
+          thumbColor={gizli ? '#fff' : '#f4f3f4'}
+        />
+      </View>
       <Text style={styles.label}>Etkinlik Konumu</Text>
 
       {location ? (

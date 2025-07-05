@@ -17,14 +17,22 @@ export default {
   },
   assetBundlePatterns: ["**/*"],
   ios: {
+    bundleIdentifier: "com.rota.app",
+    associatedDomains: ["applinks:rota.app"],
     supportsTablet: true,
-    bundleIdentifier: "com.roj.rotamobile",
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
     }
   },
   android: {
-    package: "com.roj.rotamobile",
+    package: "com.rota.app",
+    intentFilters: [
+      {
+        action: "VIEW",
+        data: { scheme: "https", host: "rota.app", pathPrefix: "/etkinlik" },
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+    ],
     config: {
       googleMaps: {
         apiKey: process.env.GOOGLE_MAPS_API_KEY
@@ -45,4 +53,5 @@ extra: {
   experiments: {
     typedRoutes: true
   },
+    scheme: "rotamobil",
 };

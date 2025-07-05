@@ -6,11 +6,21 @@ import Header from '../src/components/Header';
 import Menu from '../src/components/Menu';
 import BottomTabBar from '../src/components/BottomTabBar';
 import { AuthProvider } from '../src/context/AuthContext';
+import * as Linking from 'expo-linking';
+import { useEffect } from 'react';
 
 function AppLayoutInner() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
+    useEffect(() => {
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      const { path } = Linking.parse(url);
+      if (path) router.push('/' + path);
+    });
+    return () => sub.remove();
+  }, []);
+  
   const handleSwipeBack = (event) => {
     // Gesture tamamlandığında kontrol et
     if (event.nativeEvent.state === State.END && Platform.OS === 'ios') {

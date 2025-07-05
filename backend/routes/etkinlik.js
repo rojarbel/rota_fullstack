@@ -44,7 +44,8 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
     return res.status(400).json({ message: "Geçersiz görsel formatı" });
   }
   try {
-    const { baslik, sehir, tarih, fiyat, kategori, aciklama, tur, adres } = req.body;
+    const { baslik, sehir, tarih, fiyat, kategori, aciklama, tur, adres, gizli } = req.body;
+
 
     let latitude = req.body.latitude ?? null;
     let longitude = req.body.longitude ?? null;
@@ -99,6 +100,7 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
         type: 'Point',
         coordinates: [parseFloat(latitude), parseFloat(longitude)]
       } : undefined,
+      gizli: gizli === "true" || gizli === true ? true : false,
     });
 
     const savedEtkinlik = await yeniEtkinlik.save();
@@ -152,7 +154,7 @@ router.put("/onayla/:id", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const etkinlik = await Etkinlik.findByIdAndUpdate(
       req.params.id,
-      { onaylandi: true },
+      { onaylandi: true, gizli: false },
       { new: true }
     );
 
@@ -201,7 +203,7 @@ router.get("/", async (req, res) => {
   try {
     const { kategori, sehir } = req.query;
 
-    const query = { onaylandi: true };
+    const query = { onaylandi: true,gizli: false };
 
     if (sehir) {
       query.sehir = new RegExp(`^${sehir}$`, 'i');
@@ -270,6 +272,7 @@ router.get("/tum", async (req, res) => {
 
     const match = {
       onaylandi: true,
+        gizli: false,
       tarihDate: { $gte: now }
     };
 
@@ -529,7 +532,7 @@ router.get('/yakindaki', async (req, res) => {
           distanceField: 'mesafe',
           maxDistance: finalRadius,
           spherical: true,
-          query: { onaylandi: true }
+          query: { onaylandi: true, gizli: false }
         }
       }
     ];
@@ -578,7 +581,7 @@ router.get("/search", async (req, res) => {
     const query = req.query.q || "";
 
     const etkinlikler = await Etkinlik.find({
-      onaylandi: true,
+      onaylandi: true,  gizli: false,
       $or: [
         { baslik: { $regex: query, $options: "i" } },
         { kategori: { $regex: query, $options: "i" } },
@@ -661,7 +664,7 @@ router.get("/:id", async (req, res) => {
 // Tüm etkinlikleri onayla (admin route gibi düşünebilirsin)
 router.put("/onaylaHepsini", async (req, res) => {
   try {
-    const result = await Etkinlik.updateMany({}, { $set: { onaylandi: true } });
+    const result = await Etkinlik.updateMany({}, { $set: { onaylandi: true,gizli: false } });
     res.json({ message: "Tüm etkinlikler onaylandı", modifiedCount: result.modifiedCount });
   } catch (err) {
     console.error(err);

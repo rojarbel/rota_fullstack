@@ -1,0 +1,14 @@
+<script>
+  const iosUrl = 'APP_STORE_URL';      // TODO: set when available
+  const androidUrl = 'PLAY_STORE_URL'; // TODO: set when available
+  const schemeUrl = 'rotamobil://etkinlik/' + location.pathname.split('/').pop();
+
+  function openApp() {
+    location.href = schemeUrl;
+    setTimeout(() => {
+      const store = /iphone|ipad|ipod/i.test(navigator.userAgent) ? iosUrl : androidUrl;
+      if (store) location.href = store;
+    }, 1500);
+  }
+  openApp();
+</script>

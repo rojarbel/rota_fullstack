@@ -23,6 +23,7 @@ const EtkinlikSchema = new mongoose.Schema(
     onaylandi: { type: Boolean, default: false },
     tiklanmaSayisi: { type: Number, default: 0 },
     favoriSayisi: { type: Number, default: 0 },
+    gizli: { type: Boolean, default: false },
   },
   {
     timestamps: true
