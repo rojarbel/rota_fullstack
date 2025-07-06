@@ -207,14 +207,16 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
 }}
     style={styles.notificationButton}
   >
-    <Ionicons name="notifications-outline" style={styles.bell} />
-    {bildirimler.some(b => !b.okunduMu) && (
-      <View style={styles.notificationBadge}>
-        <Text style={styles.notificationCount}>
-          {bildirimler.filter(b => !b.okunduMu).length}
-        </Text>
-      </View>
-    )}
+<View style={styles.notificationIconWrapper}>
+  <Ionicons name="notifications-outline" style={styles.bell} />
+  {bildirimler.some(b => !b.okunduMu) && (
+    <View style={styles.notificationBadge}>
+      <Text style={styles.notificationCount}>
+        {bildirimler.filter(b => !b.okunduMu).length}
+      </Text>
+    </View>
+  )}
+</View>
   </TouchableOpacity>
 )}
 
@@ -564,20 +566,24 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
       shadowOpacity: 0.06,
       shadowRadius: 6,
       elevation: 4,
+        position: 'relative',
+
     },
     bell: {
       fontSize: 20,
     },
     notificationBadge: {
-      top: -6,
-      right: -6,
+      position: 'absolute',
+      top: 0,
+      right: 0,
       backgroundColor: '#ff3b30',
-      borderRadius: 9,
-      height: 18,
+      borderRadius: 10,
       minWidth: 18,
+      height: 18,
       paddingHorizontal: 4,
       justifyContent: 'center',
       alignItems: 'center',
+      transform: [{ translateX: 6 }, { translateY: -6 }],
     },
     notificationCount: {
       color: '#fff',
@@ -735,7 +741,14 @@ panelEventTitle: {
 panelEventText: {
   fontSize: 13,
   color: '#444',
-}
+},
+notificationIconWrapper: {
+  position: 'relative',
+  width: 24,
+  height: 24,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
 
   });
   export default Header;

@@ -270,7 +270,7 @@ tab: {
   backgroundColor: '#F4F4F4',
   paddingVertical: 10,
   paddingHorizontal: 18,
-  borderRadius: 24,
+  borderRadius: 12,
   marginHorizontal: 6,
   marginBottom: 10,
   borderWidth: 1,
