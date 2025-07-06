@@ -360,7 +360,7 @@ const handleSubmit = async () => {
       
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#5f5f5f', flex: 1 }}>
-          Gizli Etkinlik
+          Özel Etkinlik
         </Text>
         <View style={{ transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] }}>
           <Switch
