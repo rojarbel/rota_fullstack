@@ -439,8 +439,8 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
       alignItems: 'center',
     },
     logo: {
-      width: 50,
-      height: 50,
+      width: 80,
+      height: 40,
       resizeMode: 'contain',
     },
     tagline: {
