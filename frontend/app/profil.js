@@ -216,9 +216,11 @@ const handleDeleteAccount = () => {
         <Text style={styles.linkButtonText}>İletişim / Destek</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-        <Text style={styles.deleteButtonText}>Hesabımı Sil</Text>
-      </TouchableOpacity>
+<TouchableOpacity onPress={handleDeleteAccount}>
+  <Text style={{ color: 'red', textAlign: 'center', marginTop: 20, fontSize: 12 }}>
+    Hesabımı silmek istiyorum
+  </Text>
+</TouchableOpacity>
     </ScrollView>
   );
 }
