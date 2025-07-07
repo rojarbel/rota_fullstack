@@ -4,7 +4,9 @@ import axiosClient from '../src/api/axiosClient';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Linking } from 'react-native';
+import { deleteItems } from '../src/utils/storage';
+import { setCachedToken } from '../src/api/axiosClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getItem as getSecureItem } from '../src/utils/storage';
 import logger from '../src/utils/logger';
@@ -127,7 +129,43 @@ if (updatedUser._id) await AsyncStorage.setItem("userId", updatedUser._id);
     Alert.alert("Hata", err.response?.data?.message || err.message);
   }
 };
+const handleContact = () => {
+  Linking.openURL('mailto:rotaolusturofficial@gmail.com');
+};
 
+const handleDeleteAccount = () => {
+  Alert.alert('Hesabımı Sil', 'Hesabınızı kalıcı olarak silmek istiyor musunuz?', [
+    { text: 'Vazgeç', style: 'cancel' },
+    {
+      text: 'Evet, Sil',
+      style: 'destructive',
+      onPress: async () => {
+        try {
+          const token = await getSecureItem('accessToken');
+          await axiosClient.delete('/users/me', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          await deleteItems(['accessToken', 'refreshToken']);
+          await AsyncStorage.multiRemove([
+            'username',
+            'email',
+            'role',
+            'fullname',
+            'birthDate',
+            'city',
+            'image',
+            'userId',
+          ]);
+          setCachedToken(null);
+          router.push('/login');
+        } catch (err) {
+          logger.error('Hesap silme hatası:', err?.response || err);
+          Alert.alert('Hata', err.response?.data?.message || err.message);
+        }
+      },
+    },
+  ]);
+};
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -170,9 +208,16 @@ if (updatedUser._id) await AsyncStorage.setItem("userId", updatedUser._id);
         <Text style={styles.saveButtonText}>Bilgileri Güncelle</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.linkButton} 
+      <TouchableOpacity style={styles.linkButton}
             onPress={() => router.push('/change-password')}>
         <Text style={styles.linkButtonText}>Şifreyi Değiştir</Text>
+      </TouchableOpacity>
+            <TouchableOpacity style={styles.linkButton} onPress={handleContact}>
+        <Text style={styles.linkButtonText}>İletişim / Destek</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+        <Text style={styles.deleteButtonText}>Hesabımı Sil</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -261,11 +306,23 @@ linkButton: {
   borderColor: PRIMARY,
   alignItems: 'center',
 },
-linkButtonText: {
-  color: PRIMARY,
-  fontWeight: '600',
-  fontSize: 15,
-}
+  linkButtonText: {
+    color: PRIMARY,
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  deleteButton: {
+    backgroundColor: '#d63031',
+    padding: 14,
+    borderRadius: 8,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+  }
 });
 
 export default Profil;

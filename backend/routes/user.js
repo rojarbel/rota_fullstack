@@ -132,6 +132,18 @@ router.put("/change-password", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Sunucu hatası.", error: err.message });
   }
 });
+// Hesabını sil (giriş yapan kullanıcı)
+router.delete('/me', verifyToken, async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.user.id);
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+    }
+    res.status(200).json({ message: 'Kullanıcı silindi' });
+  } catch (err) {
+    res.status(500).json({ message: 'Kullanıcı silinemedi', error: err.message });
+  }
+});
 
 // Rol değiştir (sadece admin)
 router.put("/change-role/:id", verifyToken, verifyAdmin, async (req, res) => {
