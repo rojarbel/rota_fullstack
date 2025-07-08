@@ -26,6 +26,7 @@ export default {
   },
   android: {
     package: "com.rota.app",
+    permissions: [],
     intentFilters: [
       {
         action: "VIEW",
