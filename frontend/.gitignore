@@ -12,3 +12,4 @@ node_modules/
 
 expo-env.d.ts
 # @end expo-cli
+android/app/src/main/res/values/google_maps_api.xml
