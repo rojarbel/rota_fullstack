@@ -1,4 +1,4 @@
-package com.roj.routemobile
+package com.rota.app
 
 import android.app.Application
 import android.content.res.Configuration

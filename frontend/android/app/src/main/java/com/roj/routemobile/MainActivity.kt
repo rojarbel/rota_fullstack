@@ -1,4 +1,4 @@
-package com.roj.routemobile
+package com.rota.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
