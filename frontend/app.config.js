@@ -51,7 +51,8 @@ export default {
   plugins: [
     "expo-router",
     "expo-splash-screen",
-        "./plugins/withGoogleMapsString",
+    "expo-fast-image",
+    "./plugins/withGoogleMapsString",
   ],
   experiments: {
     typedRoutes: true
