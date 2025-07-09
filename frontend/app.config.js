@@ -50,7 +50,8 @@ export default {
   },
   plugins: [
     "expo-router",
-    "expo-splash-screen"
+    "expo-splash-screen",
+    "expo-fast-image"
   ],
   experiments: {
     typedRoutes: true
