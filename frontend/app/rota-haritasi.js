@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
 import polyline from '@mapbox/polyline';
+import Constants from 'expo-constants';
 
 export default function RotaHaritasi() {
   const { lat, lng, baslik } = useLocalSearchParams();
   const [konum, setKonum] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
 
-  const GOOGLE_API_KEY = 'AIzaSyBScQ90t460MjP_e8cUDzRtY9dXPl4davI'; // 🔒 Buraya kendi API key'ini yaz
+  const GOOGLE_API_KEY =
+    Constants?.expoConfig?.extra?.googleMapsApiKey ||
+    process.env.GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     (async () => {

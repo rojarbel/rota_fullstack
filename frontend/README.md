@@ -64,5 +64,5 @@ When using EAS Build you can also store the key as a secret:
 eas secret:create --name GOOGLE_MAPS_API_KEY --value <your-key>
 ```
 
-The `app.config.js` file reads this environment variable and configures the
-native projects automatically.
+The `app.config.js` file reads this environment variable and exposes it via
+`Constants.expoConfig.extra.googleMapsApiKey` at runtime.
