@@ -14,10 +14,6 @@ export default function RotaHaritasi() {
   const GOOGLE_API_KEY =
     Constants?.expoConfig?.extra?.googleMapsApiKey ||
     process.env.GOOGLE_MAPS_API_KEY;
-  if (!GOOGLE_API_KEY) {
-    console.warn('Google Maps API key not provided');
-    return <Text>Harita yapılandırılmamış</Text>;
-  }
 
   useEffect(() => {
     (async () => {
