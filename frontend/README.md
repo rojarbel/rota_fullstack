@@ -49,3 +49,20 @@ Join our community of developers creating universal apps.
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
+## Google Maps API key
+
+Map features require a Google Maps API key. Create a `.env` file in this
+directory and add
+
+```bash
+GOOGLE_MAPS_API_KEY=your-key-here
+```
+
+When using EAS Build you can also store the key as a secret:
+
+```bash
+eas secret:create --name GOOGLE_MAPS_API_KEY --value <your-key>
+```
+
+The `app.config.js` file reads this environment variable and configures the
+native projects automatically.
