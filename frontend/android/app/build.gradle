@@ -182,4 +182,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    
+}
+configurations.all {
+    exclude group: 'com.google.android.gms', module: 'play-services-auth-api-phone'
 }
