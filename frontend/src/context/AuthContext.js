@@ -1,12 +1,18 @@
 // src/context/AuthContext.js
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getItem as getSecureItem, deleteItem as deleteSecureItem } from '../utils/storage';
+import {
+  getItem as getSecureItem,
+  setItem as setSecureItem,
+  deleteItem as deleteSecureItem,
+} from '../utils/storage';
+import jwtDecode from 'jwt-decode';
+import axiosClient, { setCachedToken } from '../api/axiosClient';
 
 const isTokenExpired = (jwt) => {
   try {
-    const [, payload] = jwt.split('.');
-    const { exp } = JSON.parse(atob(payload));
+
+    const { exp } = jwtDecode(jwt);
     return exp * 1000 < Date.now();
   } catch {
     return true;
@@ -29,21 +35,37 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadAuth = async () => {
       try {
-        const token = await getSecureItem("accessToken");
+
+        let token = await getSecureItem('accessToken');
+        const refreshToken = await getSecureItem('refreshToken');
         const storedUsername = await AsyncStorage.getItem('username');
         const storedRole = await AsyncStorage.getItem('role');
         const storedEmail = await AsyncStorage.getItem('email');
         const storedUserId = await AsyncStorage.getItem('userId');
 
-        if (token && !isTokenExpired(token)) {
-          setIsLoggedIn(true);
-          setUsername(storedUsername);
-          setRole(storedRole);
-          setEmail(storedEmail);
-          setToken(token);
-          setUserId(storedUserId);
-                  } else if (token) {
-          await deleteSecureItem('accessToken');
+
+        if (token) {
+          if (isTokenExpired(token) && refreshToken) {
+            try {
+              const { data } = await axiosClient.post('/auth/refresh', { refreshToken });
+              token = data.accessToken;
+              await setSecureItem('accessToken', token);
+              setCachedToken(token);
+            } catch (refreshError) {
+              await deleteSecureItem('accessToken');
+              await deleteSecureItem('refreshToken');
+              token = null;
+            }
+          }
+
+          if (token && !isTokenExpired(token)) {
+            setIsLoggedIn(true);
+            setUsername(storedUsername);
+            setRole(storedRole);
+            setEmail(storedEmail);
+            setToken(token);
+            setUserId(storedUserId);
+          }
         }
       } catch (err) {
         logger.error('Auth yüklenemedi:', err);
@@ -69,6 +91,7 @@ export const AuthProvider = ({ children }) => {
         setRole,
         setEmail,
         setToken,
+
         setUserId,  
         authLoaded // ✅ eklendi
       }}
