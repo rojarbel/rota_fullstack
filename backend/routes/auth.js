@@ -75,7 +75,7 @@ router.post('/login', async (req, res) => {
     username: user.username,
     avatar: user.image,
     role: user.role, // ✅ EKLE
-  }, process.env.JWT_SECRET, { expiresIn: "1d" });
+  }, process.env.JWT_SECRET, { expiresIn: "365d" });
 
 
     const refreshToken = jwt.sign(
@@ -168,7 +168,7 @@ router.post("/google-check", async (req, res) => {
         username: existingUser.username,
         avatar: existingUser.image,
         role: existingUser.role,
-      }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        }, process.env.JWT_SECRET, { expiresIn: "365d" });
 
       return res.status(200).json({
         token,
@@ -180,6 +180,33 @@ router.post("/google-check", async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+// Access token refresh
+router.post('/refresh', async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return res.status(400).json({ message: 'Refresh token gerekli' });
+  }
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    }
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        avatar: user.image,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '365d' }
+    );
+    res.json({ accessToken: token });
+  } catch (err) {
+    res.status(401).json({ message: 'Geçersiz token' });
   }
 });
 

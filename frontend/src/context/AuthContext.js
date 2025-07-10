@@ -1,7 +1,17 @@
 // src/context/AuthContext.js
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getItem as getSecureItem } from '../utils/storage';
+import { getItem as getSecureItem, deleteItem as deleteSecureItem } from '../utils/storage';
+
+const isTokenExpired = (jwt) => {
+  try {
+    const [, payload] = jwt.split('.');
+    const { exp } = JSON.parse(atob(payload));
+    return exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
 import { createContext, useEffect, useState } from 'react';
 import logger from '../utils/logger';
 export const AuthContext = createContext();
@@ -25,13 +35,15 @@ export const AuthProvider = ({ children }) => {
         const storedEmail = await AsyncStorage.getItem('email');
         const storedUserId = await AsyncStorage.getItem('userId');
 
-        if (token) {
+        if (token && !isTokenExpired(token)) {
           setIsLoggedIn(true);
           setUsername(storedUsername);
           setRole(storedRole);
           setEmail(storedEmail);
           setToken(token);
           setUserId(storedUserId);
+                  } else if (token) {
+          await deleteSecureItem('accessToken');
         }
       } catch (err) {
         logger.error('Auth yüklenemedi:', err);
