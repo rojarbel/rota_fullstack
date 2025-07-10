@@ -39,9 +39,8 @@
       "typedRoutes": true
     },
     "updates": {
-  "fallbackToCacheTimeout": 0,
-  "url": "https://u.expo.dev/YOUR_PROJECT_ID"
-  },
+      "fallbackToCacheTimeout": 0
+    },
   "runtimeVersion": {
     "policy": "appVersion"
   }
