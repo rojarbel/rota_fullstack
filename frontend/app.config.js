@@ -21,7 +21,7 @@ export default {
     associatedDomains: ["applinks:rota.app"],
     supportsTablet: true,
     config: {
-      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS
     }
   },
   android: {
@@ -36,7 +36,7 @@ export default {
     ],
     config: {
       googleMaps: {
-        apiKey: process.env.GOOGLE_MAPS_API_KEY
+        apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID
       }
     }
   },
