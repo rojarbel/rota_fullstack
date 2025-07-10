@@ -10,7 +10,7 @@ export default function RotaHaritasi() {
   const [konum, setKonum] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
 
-  const GOOGLE_API_KEY = 'AIzaSyBScQ90t460MjP_e8cUDzRtY9dXPl4davI'; // 🔒 Buraya kendi API key'ini yaz
+  const GOOGLE_API_KEY = Constants.manifest?.extra?.googleMapsApiKey;
 
   useEffect(() => {
     (async () => {
