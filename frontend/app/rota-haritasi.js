@@ -4,7 +4,7 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
 import polyline from '@mapbox/polyline';
-
+import Constants from 'expo-constants';
 export default function RotaHaritasi() {
   const { lat, lng, baslik } = useLocalSearchParams();
   const [konum, setKonum] = useState(null);

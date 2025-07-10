@@ -15,7 +15,7 @@ module.exports = function withGoogleMapsString(config) {
     'android',
     async (config) => {
       const stringsPath = path.join(config.modRequest.platformProjectRoot, 'app/src/main/res/values/strings.xml');
-      const apiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+      const apiKey = process.env.GOOGLE_MAPS_API_KEY_ANDROID || '';
       if (!fs.existsSync(stringsPath)) {
         return config;
       }

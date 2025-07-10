@@ -34,22 +34,27 @@ export default {
         category: ["BROWSABLE", "DEFAULT"],
       },
     ],
-    config: {
-      googleMaps: {
-        apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID
+      config: {
+        googleMaps: {
+          apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID
+        }
       }
+        },
+  extra: {
+    apiUrl: process.env.API_URL,
+    imageCdnUrl: process.env.IMAGE_CDN_URL,
+    googleMapsApiKey:
+      process.env.GOOGLE_MAPS_API_KEY_ANDROID ||
+      process.env.GOOGLE_MAPS_API_KEY_IOS,
+    eas: {
+      projectId: "3c87c4d6-e8cc-44eb-bd5e-b2fed77ac837"
     }
   },
-extra: {
-  apiUrl: process.env.API_URL,
-  imageCdnUrl: process.env.IMAGE_CDN_URL,
-  eas: {
-    projectId: "3c87c4d6-e8cc-44eb-bd5e-b2fed77ac837"
-  }
-},
+
   plugins: [
     "expo-router",
-    "expo-splash-screen"
+    "expo-splash-screen",
+    "./plugins/withGoogleMapsString"
   ],
   experiments: {
     typedRoutes: true
