@@ -17,7 +17,7 @@ export default {
   },
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "com.rota.app",
+    bundleIdentifier: "com.rojar.urbanrota",
     associatedDomains: ["applinks:rota.app"],
     supportsTablet: true,
     config: {
@@ -25,7 +25,7 @@ export default {
     }
   },
   android: {
-    package: "com.rota.app",
+    package: "com.rojar.urbanrota",
     permissions: [],
     intentFilters: [
       {

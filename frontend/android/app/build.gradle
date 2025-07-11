@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.rota.app'
+    namespace 'com.rojar.urbanrota'
     defaultConfig {
-        applicationId 'com.rota.app'
+        applicationId 'com.rojar.urbanrota'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
