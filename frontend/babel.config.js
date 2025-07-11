@@ -3,6 +3,7 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
+      'expo-router/babel', // 🚨 En başta olmalı
       [
         'module-resolver',
         {
@@ -15,8 +16,7 @@ module.exports = function (api) {
           },
         },
       ],
-            'expo-router/babel',
-      'react-native-reanimated/plugin',
+      'react-native-reanimated/plugin' // 🚨 En sonda olmalı
     ],
   };
 };
