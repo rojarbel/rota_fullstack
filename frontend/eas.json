@@ -30,7 +30,6 @@
     "buildType": "app-bundle"
       },
   "ios": {
-    "simulator": true
       },
   "env": {
     "API_URL": "https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net",
