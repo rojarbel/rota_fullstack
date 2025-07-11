@@ -13,6 +13,7 @@
         "bundleIdentifier": "com.rota.app"
     },
     "android": {
+      "package": "com.rota.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
