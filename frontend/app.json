@@ -10,10 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-        "bundleIdentifier": "com.roj.urbanrota"
+        "bundleIdentifier": "com.rojar.urbanrota"
     },
     "android": {
-      "package": "com.roj.urbanrota",
+      "package": "com.rojar.urbanrota",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
