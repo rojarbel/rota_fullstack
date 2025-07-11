@@ -1,4 +1,4 @@
-package "com.rojar.urbanrota"
+package com.rojar.urbanrota
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

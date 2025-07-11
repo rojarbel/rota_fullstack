@@ -1,8 +1,8 @@
 import 'dotenv/config';
 
 export default {
-  name: "rota-mobil",
-  slug: "rota-mobil",
+  name: "UrbanRota",
+  slug: "urbanrota",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
@@ -47,7 +47,7 @@ export default {
       process.env.GOOGLE_MAPS_API_KEY_ANDROID ||
       process.env.GOOGLE_MAPS_API_KEY_IOS,
     eas: {
-      projectId: "3c87c4d6-e8cc-44eb-bd5e-b2fed77ac837"
+      projectId: "92308120-fad1-43c5-875a-ca78967dbf13"
     }
   },
 
@@ -59,5 +59,5 @@ export default {
   experiments: {
     typedRoutes: true
   },
-    scheme: "rotamobil",
+    scheme: "urbanrota",
 };
