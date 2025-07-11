@@ -27,6 +27,7 @@ export default {
   android: {
     package: "com.rojar.urbanrota",
     permissions: [],
+    newArchEnabled: true,
     intentFilters: [
       {
         action: "VIEW",
