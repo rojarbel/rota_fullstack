@@ -23,6 +23,11 @@ export default {
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS,
     },
+  infoPlist: {
+    NSPhotoLibraryUsageDescription: "Required to upload profile pictures and event images.",
+    NSCameraUsageDescription: "The app does not use the camera.",
+    NSLocationWhenInUseUsageDescription: "Used to show nearby events. Location data is not stored.",
+  },
   },
   android: {
     package: 'com.rojar.urbanrota',
