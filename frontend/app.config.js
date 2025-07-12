@@ -62,6 +62,7 @@ export default {
   plugins: [
     'expo-router',
     'expo-splash-screen',
+        'expo-fast-image',
     './plugins/withGoogleMapsString',
   ],
   experiments: {
