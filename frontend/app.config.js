@@ -31,8 +31,7 @@ export default {
   },
   android: {
     package: 'com.rojar.urbanrota',
-    permissions: ['ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION'],
-    newArchEnabled: false,
+    permissions: ['ACCESS_FINE_LOCATION', "READ_MEDIA_IMAGES", 'ACCESS_COARSE_LOCATION'],
     intentFilters: [
       {
         action: 'VIEW',
@@ -62,7 +61,6 @@ export default {
   plugins: [
     'expo-router',
     'expo-splash-screen',
-        'expo-fast-image',
     './plugins/withGoogleMapsString',
   ],
   experiments: {
