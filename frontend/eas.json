@@ -27,7 +27,9 @@
       "autoIncrement": true,
       "developmentClient": false,
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+                "gradleCommand": ":app:bundleRelease",
+        "versionCode": 9
       },
       "ios": {
         "simulator": false,

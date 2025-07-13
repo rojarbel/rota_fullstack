@@ -20,8 +20,8 @@ export default {
     backgroundColor: '#ffffff',
   },
   updates: {
-    fallbackToCacheTimeout: 0,
-    url: "https://u.expo.dev/92308120-fad1-43c5-875a-ca78967dbf13"
+    fallbackToCacheTimeout: 0
+    // url: "https://u.expo.dev/92308120-fad1-43c5-875a-ca78967dbf13" // ⛔ eski projectId — SİLİNDİ
   },
   runtimeVersion: {
     policy: "appVersion"
@@ -80,8 +80,8 @@ export default {
     googleMapsApiKeyAndroid: process.env.GOOGLE_MAPS_API_KEY_ANDROID || 'YOUR_ANDROID_API_KEY',
     googleMapsApiKeyIos: process.env.GOOGLE_MAPS_API_KEY_IOS || 'YOUR_IOS_API_KEY',
     eas: {
-      projectId: '92308120-fad1-43c5-875a-ca78967dbf13',
-    },
+      projectId: "81fe7a04-a148-44d3-9753-bda2ea2752e6"
+    }
   },
   plugins: [
     'expo-router',
@@ -106,11 +106,10 @@ export default {
         }
       }
     ],
-    // './plugins/withGoogleMapsString', // Bu plugin dosyası yoksa kaldır
+    // './plugins/withGoogleMapsString',
   ],
   experiments: {
     typedRoutes: true,
   },
   scheme: 'urbanrota',
-
 };
