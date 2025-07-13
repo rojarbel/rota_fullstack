@@ -1,44 +1,28 @@
-# Node dependencies
-node_modules/
-npm-debug.log
-yarn-error.log
+# Node & Expo cache'leri
+node_modules
+.expo
+.turbo
+.next
+build
+dist
 
-# Expo
-.expo/
-.expo-shared/
-*.log
+# Android build klasörleri
+android/.gradle
+android/app/build
+android/
 
-# Android build output
-android/.gradle/
-android/app/build/
-android/build/
-android/.idea/
-android/local.properties
+# iOS build klasörleri
+ios/
 
-# iOS build output
-ios/build/
-ios/Pods/
-ios/Podfile.lock
-ios/DerivedData/
+# Paket yöneticisi dosyaları
+yarn.lock
+package-lock.json
+npm-debug.log*
 
-# Test ve coverage dosyaları
-coverage/
-*.test.js
-jest/
-
-# IDE ve OS cache
-*.iml
-.vscode/
-.DS_Store
-
-# Git bilgileri
-.git/
-.gitignore
-
-# Ortam değişkenleri ve hassas bilgiler
+# Ortam dosyaları
 .env
-.env.*
+*.jks
 *.keystore
 
-# Çıkarılabilir asset'ler (CDN kullanıyorsan)
-assets/temp/
+# Log ve hata dosyaları
+*.log

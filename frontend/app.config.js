@@ -112,4 +112,11 @@ export default {
     typedRoutes: true,
   },
   scheme: 'urbanrota',
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
+  }
 };
