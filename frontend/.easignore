@@ -1,9 +1,44 @@
-**/AppData/**
-**/Users/**
-*.tmp
-*.log
-*.lock
+# Node dependencies
 node_modules/
-android/
-ios/
+npm-debug.log
+yarn-error.log
+
+# Expo
+.expo/
+.expo-shared/
+*.log
+
+# Android build output
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+android/local.properties
+
+# iOS build output
+ios/build/
+ios/Pods/
+ios/Podfile.lock
+ios/DerivedData/
+
+# Test ve coverage dosyaları
+coverage/
+*.test.js
+jest/
+
+# IDE ve OS cache
+*.iml
+.vscode/
+.DS_Store
+
+# Git bilgileri
 .git/
+.gitignore
+
+# Ortam değişkenleri ve hassas bilgiler
+.env
+.env.*
+*.keystore
+
+# Çıkarılabilir asset'ler (CDN kullanıyorsan)
+assets/temp/
