@@ -28,7 +28,7 @@ export default {
   },
   assetBundlePatterns: ['**/*'],
   ios: {
-    bundleIdentifier: 'com.rojar.urbanrota',
+    bundleIdentifier: 'com.rojar.rota',
     associatedDomains: ['applinks:rota.app'],
     supportsTablet: true,
     config: {
@@ -42,7 +42,9 @@ export default {
     },
   },
   android: {
-    package: 'com.rojar.urbanrota',
+    versionCode: 9,
+
+    package: 'com.rojar.rota',
     permissions: ['ACCESS_FINE_LOCATION', "READ_MEDIA_IMAGES", 'ACCESS_COARSE_LOCATION'],
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
