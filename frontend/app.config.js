@@ -42,8 +42,6 @@ export default {
     },
   },
   android: {
-    versionCode: 9,
-
     package: 'com.rojar.rota',
     permissions: ['ACCESS_FINE_LOCATION', "READ_MEDIA_IMAGES", 'ACCESS_COARSE_LOCATION'],
     adaptiveIcon: {
