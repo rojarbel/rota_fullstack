@@ -49,9 +49,8 @@ export default {
       backgroundColor: "#ffffff"
     },
     edgeToEdgeEnabled: true,
-    compileSdkVersion: 34,
-    targetSdkVersion: 34,
-    buildToolsVersion: "34.0.0",
+    compileSdkVersion: 35,
+    targetSdkVersion: 35,
     intentFilters: [
       {
         action: 'VIEW',
@@ -100,9 +99,8 @@ export default {
         android: {
           enableProguardInReleaseBuilds: false,
           enableShrinkResourcesInReleaseBuilds: false,
-          compileSdkVersion: 34,
-          targetSdkVersion: 34,
-          buildToolsVersion: "34.0.0"
+          compileSdkVersion: 35,
+          targetSdkVersion: 35
         }
       }
     ],
