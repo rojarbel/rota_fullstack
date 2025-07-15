@@ -22,14 +22,5 @@ export const initializeDeepLinking = () => {
 };
 
 const handleDeepLink = (url) => {
-  if (url.startsWith('urbanrota://reset')) {
-    // Token'i URL'den çıkar
-    const urlObj = new URL(url);
-    const token = urlObj.searchParams.get('token');
-    
-    if (token) {
-      // Reset password sayfasına yönlendir
-      router.push(`/reset-password?token=${token}`);
-    }
-  }
+
 };

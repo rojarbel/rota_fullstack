@@ -29,28 +29,7 @@ router.post('/register', async (req, res) => {
     });
 
     await newUser.save();
-        const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Şifre Sıfırlama',
-    html: `
-      <p>Merhaba,</p>
-      <p>Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:</p>
-      <a href="urbanrota://reset?token=${resetToken}">
-        Şifreyi Sıfırla
-      </a>
-      <p>Bu bağlantı 15 dakika geçerlidir.</p>
-    `
-  };
 
-    await transporter.sendMail(mailOptions);
 
     res.status(201).json({ message: 'Kayıt başarılı, aktivasyon e-postası gönderildi' });
   } catch (err) {
@@ -113,14 +92,15 @@ router.post('/reset-password-request', async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(200).json({ message: "Eğer bu e-posta kayıtlıysa, sıfırlama bağlantısı gönderildi." });
+      return res.status(200).json({ message: "Eğer bu e-posta kayıtlıysa, sıfırlama kodu gönderildi." });
+
     }
 
-    const resetToken = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '15m' }
-    );
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordCode = code;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+    user.resetPasswordAttempts = 0;
+    await user.save();
 
     // 🔥 MAIL GÖNDERME İŞİ BURADA:
     const transporter = nodemailer.createTransport({
@@ -134,26 +114,53 @@ router.post('/reset-password-request', async (req, res) => {
   
 
     const mailOptions = {
-  from: process.env.EMAIL_USER,
-  to: email,
-  subject: 'Şifre Sıfırlama',
-  html: `
-    <p>Merhaba,</p>
-    <p>Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:</p>
-    <a href="urbanrota://reset?token=${resetToken}">
-      Şifreyi Sıfırla
-    </a>
-    <p>Bu bağlantı 15 dakika geçerlidir.</p>
-  `
-};
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Şifre Sıfırlama Kodu',
+      html: `<p>Şifre sıfırlama kodunuz: <b>${code}</b></p>`
+    };
 
     await transporter.sendMail(mailOptions);
 
-    res.status(200).json({ message: "Eğer bu e-posta kayıtlıysa, sıfırlama bağlantısı gönderildi." });
+    res.status(200).json({ message: "Eğer bu e-posta kayıtlıysa, sıfırlama kodu gönderildi." });
+
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Şifre sıfırlama isteği başarısız oldu." });
+  }
+});
+
+router.post('/verify-reset-code', async (req, res) => {
+  const { email, code, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !user.resetPasswordCode) {
+      return res.status(400).json({ message: 'Kod geçersiz veya süresi dolmuş' });
+    }
+
+    if (user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ message: 'Kod geçersiz veya süresi dolmuş' });
+    }
+
+    if (user.resetPasswordCode !== code) {
+      user.resetPasswordAttempts += 1;
+      await user.save();
+      return res.status(400).json({ message: 'Kod geçersiz' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    user.resetPasswordCode = undefined;
+    user.resetPasswordExpires = undefined;
+    user.resetPasswordAttempts = 0;
+    await user.save();
+
+    res.json({ message: 'Şifre başarıyla güncellendi' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Şifre güncellenemedi' });
   }
 });
 

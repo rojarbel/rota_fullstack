@@ -20,9 +20,7 @@ useEffect(() => {
     // console.log('Deep link geldi:', { path, queryParams });
 
     // Şifre sıfırlama deep linki ise:
-    if (path === 'reset' && queryParams.token) {
-      router.push(`/reset-password?token=${queryParams.token}`);
-    } else if (path) {
+    if (path) {
       // Diğer linkler eski gibi çalışsın
       router.push('/' + path);
     }

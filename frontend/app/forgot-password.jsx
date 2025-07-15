@@ -14,7 +14,10 @@ const ForgotPasswordScreen = () => {
     try {
       await axiosClient.post("/auth/reset-password-request", { email });
 
-      setMessage("Eğer bu e-posta kayıtlıysa, sıfırlama bağlantısı gönderildi.");
+      setMessage("Eğer bu e-posta kayıtlıysa, 6 haneli kod gönderildi.");
+      setTimeout(() => {
+        router.push(`/verify-reset-code?email=${encodeURIComponent(email)}`);
+      }, 500);
     } catch (err) {
       setMessage("Bir hata oluştu. Lütfen tekrar deneyin.");
     }
@@ -42,7 +45,7 @@ const ForgotPasswordScreen = () => {
   onPressOut={() => setIsPressed(false)}
   onPress={handleSubmit}
 >
-  <Text style={styles.buttonText}>Şifre Sıfırlama Bağlantısı Gönder</Text>
+  <Text style={styles.buttonText}>Kod Gönder</Text>
 </TouchableOpacity>
 
       {message ? <Text style={styles.message}>{message}</Text> : null}

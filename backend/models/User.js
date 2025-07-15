@@ -37,6 +37,12 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: ''
         },
+            resetPasswordCode: String,
+    resetPasswordExpires: Date,
+    resetPasswordAttempts: {
+      type: Number,
+      default: 0
+    },
     emailConfirmed: {
       type: Boolean,
       default: false
