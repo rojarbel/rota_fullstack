@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/c1ee46b0-80bd-4eca-8148-55c9165a11db/resourceGroups/rotabackend_group/providers/Microsoft.Web/sites/rotabackend",
+    "appService.deploySubpath": "backend"
+}
