@@ -27,26 +27,20 @@ export default {
     policy: "appVersion"
   },
   assetBundlePatterns: ['**/*'],
-ios: {
-  bundleIdentifier: 'com.rojar.rota',
-  associatedDomains: ['applinks:rota.app'],
-  supportsTablet: true,
-  config: {
-    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS || 'YOUR_IOS_API_KEY',
+  ios: {
+    bundleIdentifier: 'com.rojar.rota',
+    associatedDomains: ['applinks:rota.app'],
+    supportsTablet: true,
+    config: {
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS || 'YOUR_IOS_API_KEY',
+    },
+    infoPlist: {
+      NSPhotoLibraryUsageDescription: "Required to upload profile pictures and event images.",
+      NSCameraUsageDescription: "The app does not use the camera.",
+      NSLocationWhenInUseUsageDescription: "Used to show nearby events. Location data is not stored.",
+      NSLocationAlwaysAndWhenInUseUsageDescription: "This app does not track location in the background. Location access is used only while the app is open to show nearby events. The data is not stored or shared.",
+    },
   },
-  infoPlist: {
-    NSPhotoLibraryUsageDescription: "Required to upload profile pictures and event images.",
-    NSCameraUsageDescription: "The app does not use the camera.",
-    NSLocationWhenInUseUsageDescription: "Used to show nearby events. Location data is not stored.",
-    NSLocationAlwaysAndWhenInUseUsageDescription: "This app does not track location in the background. Location access is used only while the app is open to show nearby events. The data is not stored or shared.",
-    CFBundleURLTypes: [
-      {
-        CFBundleURLName: 'com.rojar.rota',
-        CFBundleURLSchemes: ['urbanrota']
-      }
-    ]
-  },
-},
   android: {
     package: 'com.rojar.rota',
     permissions: ['ACCESS_FINE_LOCATION', "READ_MEDIA_IMAGES", 'ACCESS_COARSE_LOCATION'],
