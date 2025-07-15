@@ -8,6 +8,7 @@ import BottomTabBar from '../src/components/BottomTabBar';
 import { AuthProvider } from '../src/context/AuthContext';
 import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
+import { initializeDeepLinking } from '../src/utils/deepLinkHandler';
 
 function AppLayoutInner() {
   const insets = useSafeAreaInsets();
@@ -77,6 +78,11 @@ useEffect(() => {
 }
 
 export default function Layout() {
+  useEffect(() => {
+  const cleanup = initializeDeepLinking();
+  return cleanup;
+}, []);
+
   return (
     <AuthProvider>
       <SafeAreaProvider>

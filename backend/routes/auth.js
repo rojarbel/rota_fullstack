@@ -133,17 +133,44 @@ router.post('/reset-password-request', async (req, res) => {
 
   
 
-    const mailOptions = {
+
+const mailOptions = {
   from: process.env.EMAIL_USER,
   to: email,
   subject: 'Şifre Sıfırlama',
   html: `
-    <p>Merhaba,</p>
-    <p>Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:</p>
-    <a href="urbanrota://reset?token=${resetToken}">
-      Şifreyi Sıfırla
-    </a>
-    <p>Bu bağlantı 15 dakika geçerlidir.</p>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #7B2CBF;">Şifre Sıfırlama</h2>
+      <p>Merhaba,</p>
+      <p>Şifrenizi sıfırlamak için aşağıdaki butona tıklayın:</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="urbanrota://reset?token=${resetToken}" 
+           style="background-color: #7B2CBF; 
+                  color: white; 
+                  padding: 12px 24px; 
+                  text-decoration: none; 
+                  border-radius: 8px; 
+                  display: inline-block; 
+                  font-weight: bold;">
+          Şifreyi Sıfırla
+        </a>
+      </div>
+      
+      <p>Eğer buton çalışmıyorsa, aşağıdaki linki tarayıcınıza kopyalayın:</p>
+      <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
+        urbanrota://reset?token=${resetToken}
+      </p>
+      
+      <p style="color: #666; font-size: 14px;">
+        <strong>Bu bağlantı 15 dakika geçerlidir.</strong>
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+      <p style="color: #999; font-size: 12px;">
+        Bu e-postayı almak istemiyorsanız, lütfen bu mesajı göz ardı edin.
+      </p>
+    </div>
   `
 };
 
@@ -235,6 +262,45 @@ router.get("/activate", async (req, res) => {
     res.json({ message: "Hesap başarıyla aktifleştirildi" });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: 'Token ve yeni şifre gerekli' });
+  }
+
+  try {
+    // Token'i doğrula
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    // Kullanıcıyı bul
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    }
+
+    // Yeni şifreyi hashle
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Şifreyi güncelle
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: 'Şifre başarıyla güncellendi' });
+
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: 'Token süresi dolmuş' });
+    }
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(400).json({ message: 'Geçersiz token' });
+    }
+    
+    console.error(err);
+    res.status(500).json({ message: 'Şifre sıfırlama başarısız' });
   }
 });
 
