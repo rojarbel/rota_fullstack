@@ -1,5 +1,3 @@
-// app/favorilerim.js
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import FastImage from 'expo-fast-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -25,35 +23,21 @@ const Favorilerim = () => {
 
   useEffect(() => {
     const fetchFavoriler = async () => {
-      const kayitli = await AsyncStorage.getItem('favoriler');
-      if (!kayitli) return;
-
-      const parsedFavoriler = JSON.parse(kayitli);
-      const gecerliFavoriler = [];
-
-      for (const etkinlik of parsedFavoriler) {
-        try {
-
-          const { data } = await axiosClient.get(`/etkinlik/${etkinlik.id}`);
-          const item = { ...data };
-          if (item._id && !item.id) item.id = item._id;
-          gecerliFavoriler.push(item);
-
-        } catch (err) {
-          logger.warn(`Etkinlik ${etkinlik.id} getirilemedi, yereldeki veriler kullanılacak.`);
-          gecerliFavoriler.push(etkinlik);
-        }
+      try {
+        // Backend'den doğrudan favorilerim endpointini çağırıyoruz!
+        const { data } = await axiosClient.get('/etkinlik/favorilerim');
+        setFavoriler(data);
+      } catch (err) {
+        logger.warn('Favorilerim çekilemedi:', err);
+        setFavoriler([]); // hata olursa boş göster
       }
-
-      setFavoriler(gecerliFavoriler);
-      await AsyncStorage.setItem('favoriler', JSON.stringify(gecerliFavoriler));
     };
 
     fetchFavoriler();
   }, []);
 
   const detayGoster = (etkinlik) => {
-    router.push(`/etkinlik/${etkinlik.id}`);
+    router.push(`/etkinlik/${etkinlik._id || etkinlik.id}`);
   };
 
   return (
@@ -64,10 +48,10 @@ const Favorilerim = () => {
         <Text style={styles.empty}>Favorilerin henüz boş. Beğendiğin etkinlikleri buradan görebilirsin.</Text>
       ) : (
         favoriler.map((etkinlik) => (
-          <TouchableOpacity key={etkinlik.id} style={styles.card} onPress={() => detayGoster(etkinlik)}>
+          <TouchableOpacity key={etkinlik._id || etkinlik.id} style={styles.card} onPress={() => detayGoster(etkinlik)}>
             <FastImage
               uri={`${IMAGE_BASE_URL}${etkinlik.gorsel}`}
-              cacheKey={etkinlik.id}
+              cacheKey={etkinlik._id || etkinlik.id}
               style={styles.image}
             />
             <View style={styles.cardContent}>

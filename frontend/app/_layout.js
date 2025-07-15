@@ -13,13 +13,31 @@ function AppLayoutInner() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-    useEffect(() => {
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      const { path } = Linking.parse(url);
-      if (path) router.push('/' + path);
-    });
-    return () => sub.remove();
-  }, []);
+useEffect(() => {
+  const handleDeepLink = ({ url }) => {
+    const { path, queryParams } = Linking.parse(url);
+    // Debug:
+    // console.log('Deep link geldi:', { path, queryParams });
+
+    // Şifre sıfırlama deep linki ise:
+    if (path === 'reset' && queryParams.token) {
+      router.push(`/reset-password?token=${queryParams.token}`);
+    } else if (path) {
+      // Diğer linkler eski gibi çalışsın
+      router.push('/' + path);
+    }
+  };
+
+  const sub = Linking.addEventListener('url', handleDeepLink);
+
+  // App ilk açılışta deep link ile açılmış mı kontrolü
+  Linking.getInitialURL().then(url => {
+    if (url) handleDeepLink({ url });
+  });
+
+  return () => sub.remove();
+}, [router]);
+
   
   const handleSwipeBack = (event) => {
     // Gesture tamamlandığında kontrol et

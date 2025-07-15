@@ -36,18 +36,19 @@ router.post('/register', async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
     });
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Hesabınızı Aktive Edin',
-      html: `
-        <p>Merhaba,</p>
-        <p>Hesabınızı aktive etmek için aşağıdaki bağlantıya tıklayın:</p>
-        <a href="${clientUrl}/activate?token=${activationToken}">Hesabı Aktive Et</a>
-        <p>Bu bağlantı 24 saat geçerlidir.</p>
-      `,
-    };
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Şifre Sıfırlama',
+    html: `
+      <p>Merhaba,</p>
+      <p>Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:</p>
+      <a href="urbanrota://reset?token=${resetToken}">
+        Şifreyi Sıfırla
+      </a>
+      <p>Bu bağlantı 15 dakika geçerlidir.</p>
+    `
+  };
 
     await transporter.sendMail(mailOptions);
 
@@ -139,7 +140,7 @@ router.post('/reset-password-request', async (req, res) => {
   html: `
     <p>Merhaba,</p>
     <p>Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:</p>
-    <a href="${clientUrl}/reset-password/${resetToken}">
+    <a href="urbanrota://reset?token=${resetToken}">
       Şifreyi Sıfırla
     </a>
     <p>Bu bağlantı 15 dakika geçerlidir.</p>
