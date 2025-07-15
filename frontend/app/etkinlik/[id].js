@@ -222,59 +222,43 @@ export default function EtkinlikDetay() {
     fetchEtkinlik();
   }, [id]);
 
-  useEffect(() => {
-    const checkFavori = async () => {
-      const favoriler = JSON.parse(await AsyncStorage.getItem('favoriler')) || [];
-      const varMi = favoriler.find(e => e.id === etkinlik?.id);
-      setFavorideMi(!!varMi);
-    };
-    if (etkinlik) checkFavori();
-  }, [etkinlik]);
+    useEffect(() => {
+      if (etkinlik) checkFavori();
+    }, [etkinlik]);
 
-  const favoriToggle = async () => {
-    const token = await getSecureItem('accessToken');
-    if (!token) {
-      router.replace('/login');
-      return;
-    }
-
-    try {
-      const favoriler = JSON.parse(await AsyncStorage.getItem('favoriler')) || [];
-      let guncelFavoriler = [...favoriler];
-
-      if (favorideMi) {
-        await axiosClient.delete(`/etkinlik/favori/${etkinlik.id}`);
-        guncelFavoriler = favoriler.filter(e => e.id !== etkinlik.id);
-      } else {
-        await axiosClient.post('/etkinlik/favori', { etkinlikId: etkinlik.id });
-        guncelFavoriler.push(etkinlik);
+    const favoriToggle = async () => {
+      const token = await getSecureItem('accessToken');
+      if (!token) {
+        router.replace('/login');
+        return;
       }
+      try {
+        if (favorideMi) {
+          await axiosClient.delete(`/etkinlik/favori/${etkinlik.id}`);
+        } else {
+          await axiosClient.post('/etkinlik/favori', { etkinlikId: etkinlik.id });
+        }
+        await checkFavori();
+        await fetchFavorileyenler();
+      } catch (err) {
+        if (err?.response?.status === 409) {
+          setFavorideMi(true);
+        } else {
+          Alert.alert("Hata", "Favori işlemi başarısız oldu.");
+        }
+      }
+    };
 
-      await AsyncStorage.setItem('favoriler', JSON.stringify(guncelFavoriler));
-      setFavorideMi(!favorideMi);
-
-      await fetchFavorileyenler();
-    } catch (err) {
-      Alert.alert("Hata", "Favori işlemi başarısız oldu.");
-    }
-  };
-
-  const checkFavori = async () => {
-    try {
-      const favoriler = JSON.parse(await AsyncStorage.getItem('favoriler')) || [];
-      const varMi = favoriler.find(e => e.id === etkinlik?.id);
-
-      if (varMi) {
-        setFavorideMi(true);
-      } else {
+    const checkFavori = async () => {
+      if (!etkinlik) return;
+      try {
         const { data } = await axiosClient.get(`/etkinlik/${etkinlik.id}/favorileyenler`);
         const mevcut = data.users?.some(u => u.id === auth.userId);
         setFavorideMi(mevcut);
+      } catch (err) {
+        setFavorideMi(false);
       }
-    } catch {
-      setFavorideMi(false);
-    }
-  };
+    };
 
   const etkinlikSil = async () => {
     Alert.alert('Sil?', 'Etkinliği silmek istiyor musun?', [

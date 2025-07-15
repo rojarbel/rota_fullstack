@@ -9,31 +9,27 @@ import { IMAGE_BASE_URL } from '../src/constants';
 
 const Favorilerim = () => {
   const [favoriler, setFavoriler] = useState([]);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const checkLogin = async () => {
+    const checkLoginAndFetch = async () => {
       const token = await getSecureItem('accessToken');
       if (!token) {
         router.replace('/login');
+        return;
       }
-    };
-    checkLogin();
-  }, []);
-
-  useEffect(() => {
-    const fetchFavoriler = async () => {
       try {
-        // Backend'den doğrudan favorilerim endpointini çağırıyoruz!
         const { data } = await axiosClient.get('/etkinlik/favorilerim');
+        console.log("Favorilerim API dönüşü:", data); // <-- Debug için
         setFavoriler(data);
       } catch (err) {
         logger.warn('Favorilerim çekilemedi:', err);
-        setFavoriler([]); // hata olursa boş göster
+        setFavoriler([]);
+        setError("Favorilerim listesi çekilemedi! Lütfen bağlantınızı ve giriş durumunuzu kontrol edin.");
       }
     };
-
-    fetchFavoriler();
+    checkLoginAndFetch();
   }, []);
 
   const detayGoster = (etkinlik) => {
@@ -44,8 +40,12 @@ const Favorilerim = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Favori Etkinliklerim</Text>
 
-      {favoriler.length === 0 ? (
-        <Text style={styles.empty}>Favorilerin henüz boş. Beğendiğin etkinlikleri buradan görebilirsin.</Text>
+      {error !== "" ? (
+        <Text style={[styles.empty, { color: 'red' }]}>{error}</Text>
+      ) : favoriler.length === 0 ? (
+        <Text style={styles.empty}>
+          Favorilerin henüz boş. Beğendiğin etkinlikleri buradan görebilirsin.
+        </Text>
       ) : (
         favoriler.map((etkinlik) => (
           <TouchableOpacity key={etkinlik._id || etkinlik.id} style={styles.card} onPress={() => detayGoster(etkinlik)}>
@@ -72,6 +72,7 @@ const Favorilerim = () => {
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

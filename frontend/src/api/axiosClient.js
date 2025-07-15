@@ -5,7 +5,7 @@ import qs from 'qs';
 import logger from '../utils/logger';
 import Constants from 'expo-constants';
 
-let cachedToken = null;
+
 
 // ✅ API URL artık runtime'da expoConfig.extra üzerinden okunuyor
 const API_BASE_URL = `${
@@ -20,11 +20,10 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use(async (config) => {
-  if (!cachedToken) {
-    cachedToken = await getSecureItem('accessToken');
-  }
-  if (cachedToken) {
-    config.headers.Authorization = `Bearer ${cachedToken}`;
+  // HER ZAMAN storage'dan oku, cachedToken kullanma!
+  const token = await getSecureItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -42,7 +41,7 @@ if (error.response?.status === 401 && !originalRequest._retry) {
           { refreshToken }
         );
         await setSecureItem('accessToken', data.accessToken);
-        cachedToken = data.accessToken;
+
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return axiosClient(originalRequest);
       } catch (refreshError) {
@@ -62,9 +61,7 @@ if (error.response?.status === 401 && !originalRequest._retry) {
   }
 );
 
-export const setCachedToken = (newToken) => {
-  cachedToken = newToken;
-};
+
 export const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export async function getWithCache(url, options = {}, ttl = DEFAULT_CACHE_TTL) {

@@ -638,7 +638,30 @@ router.get("/search", async (req, res) => {
 
 
 
+router.get('/favorilerim', verifyToken, async (req, res) => {
+  try {
+    const favoriler = await Favori.find({ kullaniciId: req.user.id })
+      .populate({
+        path: "etkinlikId",
+        match: {
+          onaylandi: true,
+          gizli: { $ne: true },
+          // Tarihi geçmiş ve silinmiş etkinlikler filtrelensin:
+          tarih: { $gte: new Date() }
+        }
+      });
 
+    // Etkinlik silinmişse veya tarihi geçmişse populate null olur, onları filtrele:
+    const etkinlikler = favoriler
+      .map(f => f.etkinlikId)
+      .filter(e => e); // null olmayanlar
+
+    res.json(etkinlikler);
+  } catch (error) {
+    console.error('Favorilerim getirilemedi:', error);
+    res.status(500).json({ message: 'Favorilerim alınırken hata oluştu' });
+  }
+});
 
 // Tekil etkinlik getir
 router.get("/:id", async (req, res) => {
@@ -752,30 +775,7 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
 });
 
 // Kullanıcının favori etkinliklerini döndür
-router.get('/favorilerim', verifyToken, async (req, res) => {
-  try {
-    const favoriler = await Favori.find({ kullaniciId: req.user.id })
-      .populate({
-        path: "etkinlikId",
-        match: {
-          onaylandi: true,
-          gizli: { $ne: true },
-          // Tarihi geçmiş ve silinmiş etkinlikler filtrelensin:
-          tarih: { $gte: new Date() }
-        }
-      });
 
-    // Etkinlik silinmişse veya tarihi geçmişse populate null olur, onları filtrele:
-    const etkinlikler = favoriler
-      .map(f => f.etkinlikId)
-      .filter(e => e); // null olmayanlar
-
-    res.json(etkinlikler);
-  } catch (error) {
-    console.error('Favorilerim getirilemedi:', error);
-    res.status(500).json({ message: 'Favorilerim alınırken hata oluştu' });
-  }
-});
 
 
 module.exports = router;
