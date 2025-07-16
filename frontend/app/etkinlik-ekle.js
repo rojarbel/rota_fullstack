@@ -14,6 +14,8 @@ import * as Location from 'expo-location';
 import { Switch } from 'react-native';
 
 
+
+
 const kategorilerVeTurler = {
   Aktivizm: [
     'Hayvan Hakları', 'İklim ve Ekoloji', 'İşçi Hakları', 'Kadın Hakları',
@@ -49,45 +51,39 @@ const EtkinlikEkleScreen = () => {
   const router = useRouter();
   const { isLoggedIn, authLoaded } = useAuth();
 
-  useEffect(() => {
-    if (authLoaded && !isLoggedIn) {
-      router.replace('/login');
-    }
-  }, [authLoaded, isLoggedIn]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchLocation = async (retries = 3) => {
+
+// Giriş değilse login'e yönlendir
+useEffect(() => {
+  if (authLoaded && !isLoggedIn) {
+    router.replace('/login');
+  }
+}, [authLoaded, isLoggedIn]);
+
+// Giriş yaptıktan sonra konum çek
+useEffect(() => {
+  if (authLoaded && isLoggedIn) {
+    (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Uyarı', 'Konum izni reddedildi');
+          Alert.alert('Uyarı', 'Konum izni verilmedi.');
           return;
         }
-
         const loc = await Location.getCurrentPositionAsync({});
-        if (isMounted) {
-          setLocation({
-            latitude: loc.coords.latitude,
-            longitude: loc.coords.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          });
-        }
-      } catch (error) {
-        if (retries > 0) {
-          setTimeout(() => fetchLocation(retries - 1), 1500);
-        } else {
-          Alert.alert('Hata', 'Konum alınamadı, lütfen tekrar deneyin.');
-        }
+        setLocation({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+      } catch (e) {
+        Alert.alert('Hata', 'Konum alınamadı. Tekrar deneyin.');
       }
-    };
+    })();
+  }
+}, [authLoaded, isLoggedIn]);
 
-    fetchLocation();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const [location, setLocation] = useState(null);
   const [markerCoords, setMarkerCoords] = useState(null);

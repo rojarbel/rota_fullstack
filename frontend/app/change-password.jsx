@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import axiosClient from '../src/api/axiosClient';
 import { router } from 'expo-router';
+import useAuth from '../src/hooks/useAuth';
 
 const ChangePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
-
+  const { userId } = useAuth();
   const handleSubmit = async () => {
     try {
-      await axiosClient.post('/auth/change-password', {
-        currentPassword,
-        newPassword,
-      });
+await axiosClient.put('/users/change-password', {
+  userId,
+  currentPassword,
+  newPassword,
+}); 
       setMessage('Şifre başarıyla güncellendi.');
     } catch (err) {
       setMessage('Şifre güncellenemedi. Lütfen tekrar deneyin.');

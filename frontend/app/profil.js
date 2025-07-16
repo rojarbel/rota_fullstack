@@ -17,7 +17,7 @@ const BG = '#FFFFFF';
 
 
 function Profil() {
-  const { username: authUsername, email: authEmail, userId, token } = useAuth();
+  const { username: authUsername, email: authEmail, userId, token, image: authImage, setImage: setAuthImage } = useAuth();
     const [showDatePicker, setShowDatePicker] = useState(false);
   const [formData, setFormData] = useState({
     userId: '',
@@ -118,7 +118,10 @@ if (updatedUser.email) await AsyncStorage.setItem("email", updatedUser.email);
 if (updatedUser.fullname) await AsyncStorage.setItem("fullname", updatedUser.fullname);
 if (updatedUser.city) await AsyncStorage.setItem("city", updatedUser.city);
 if (updatedUser.birthDate) await AsyncStorage.setItem("birthDate", updatedUser.birthDate);
-if (updatedUser.image?.startsWith("http")) await AsyncStorage.setItem("image", updatedUser.image);
+if (updatedUser.image?.startsWith("http")) {
+  await AsyncStorage.setItem("image", updatedUser.image);
+  setAuthImage(updatedUser.image);
+}
 if (updatedUser._id) await AsyncStorage.setItem("userId", updatedUser._id);
 
 
@@ -157,6 +160,7 @@ const handleDeleteAccount = () => {
             'userId',
           ]);
           setCachedToken(null);
+                    setAuthImage('');
           router.push('/login');
         } catch (err) {
           logger.error('Hesap silme hatası:', err?.response || err);
@@ -194,14 +198,7 @@ const handleDeleteAccount = () => {
         />
       </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Şehir</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.city}
-          onChangeText={(text) => handleChange('city', text)}
-        />
-      </View>
+
 
 
       <TouchableOpacity style={styles.saveButton} onPress={handleUpdate}>

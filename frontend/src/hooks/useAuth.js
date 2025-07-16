@@ -14,12 +14,16 @@ const useAuth = () => {
     email: context.email,
     token: context.token,
     userId: context.userId,
+        image: context.image,
+
     setIsLoggedIn: context.setIsLoggedIn,
     setUsername: context.setUsername,
     setRole: context.setRole,
     setEmail: context.setEmail,
     setToken: context.setToken,
     setUserId: context.setUserId,
+        setImage: context.setImage,
+
     authLoaded: context.authLoaded,
   };
 };

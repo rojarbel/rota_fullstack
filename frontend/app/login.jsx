@@ -15,7 +15,8 @@ const ACCENT = '#FFD54F';
 const TEXT = '#333';
 
 const LoginScreen = () => {
-const { setIsLoggedIn, setUsername, setRole, setEmail: setAuthEmail,setToken } = useContext(AuthContext);
+const { setIsLoggedIn, setUsername, setRole, setEmail: setAuthEmail, setToken, setImage: setAuthImage } = useContext(AuthContext);
+
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,6 +54,7 @@ setUsername(user.username);
 setRole(user.role);
 setAuthEmail(user.email);
 setToken(accessToken);
+setAuthImage(user.image || '');
 
       Alert.alert("Başarılı", "Giriş başarılı!", [
         {

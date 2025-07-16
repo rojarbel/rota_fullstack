@@ -26,7 +26,9 @@ import { TouchableWithoutFeedback, Keyboard } from 'react-native';
 
 
 const Header = ({ onHamburgerClick, onSearchChange }) => {
-const [profilePhoto, setProfilePhoto] = useState(null);
+  const auth = useAuth();
+  const { isLoggedIn, username, role } = auth || {};
+  const [profilePhoto, setProfilePhoto] = useState(auth.image || null);
 
   // 📦 STATE TANIMLARI (tam liste)
   const [selectedCity, setSelectedCity] = useState('');
@@ -39,8 +41,6 @@ const [profilePhoto, setProfilePhoto] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [bekleyenSayisi, setBekleyenSayisi] = useState(0);
   const [bekleyenEtkinlikler, setBekleyenEtkinlikler] = useState([]);
-  const auth = useAuth();
-  const { isLoggedIn, username, role } = auth || {};
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [bildirimler, setBildirimler] = useState([]);
   const [bildirimPanelAcik, setBildirimPanelAcik] = useState(false);
@@ -103,16 +103,8 @@ const [profilePhoto, setProfilePhoto] = useState(null);
   }, [role]);
 
 useEffect(() => {
-  if (isLoggedIn) {
-    const fetchProfilePhoto = async () => {
-      const image = await AsyncStorage.getItem('image');
-      setProfilePhoto(image);
-    };
-    fetchProfilePhoto();
-  } else {
-    setProfilePhoto(null); // 🔥 Kullanıcı çıkış yaptıysa sıfırla
-  }
-}, [isLoggedIn]); // sadece giriş durumu değişince çalışır
+  setProfilePhoto(auth.image || null);
+}, [auth.image, auth.isLoggedIn]);
 
 useEffect(() => {
   if (bildirimPanelAcik) {
@@ -255,16 +247,19 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
         }}>
           <Text style={styles.dropdownItem}>Profil</Text>
         </TouchableOpacity>
-      <TouchableOpacity onPress={async () => {
-        await deleteItems(['accessToken', 'refreshToken']);
-        await AsyncStorage.multiRemove(['user', 'image']);
-        setProfilePhoto(null);
-        setCachedToken(null);
-        setIsProfileDropdownOpen(false);
-        auth.setIsLoggedIn(false); 
-        auth.setUsername(null);
-        router.push('/login');
-      }}>
+        <TouchableOpacity onPress={async () => {
+          await deleteItems(['accessToken', 'refreshToken']);
+          await AsyncStorage.multiRemove(['user', 'image']);
+          auth.setIsLoggedIn(false); 
+          auth.setUsername(null);
+          auth.setImage(null);           // Burası: null olacak!
+          setProfilePhoto(null);
+          setCachedToken(null);
+          setIsProfileDropdownOpen(false);
+
+          // Router'ı push yerine replace yap, stackten sıyrılsın:
+          router.replace('/login');
+        }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 }}>
           
           <Text style={{ color: '#333', fontSize: 15, fontWeight: '500' }}>Çıkış Yap</Text>

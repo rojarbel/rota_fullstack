@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState('');
   const [authLoaded, setAuthLoaded] = useState(false); // ✅ eklendi
   const [userId, setUserId] = useState('');
+  const [image, setImage] = useState('');
 
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export const AuthProvider = ({ children }) => {
         const storedRole = await AsyncStorage.getItem('role');
         const storedEmail = await AsyncStorage.getItem('email');
         const storedUserId = await AsyncStorage.getItem('userId');
+        const storedImage = await AsyncStorage.getItem('image');
 
 
         if (token) {
@@ -65,6 +67,8 @@ export const AuthProvider = ({ children }) => {
             setEmail(storedEmail);
             setToken(token);
             setUserId(storedUserId);
+                        setImage(storedImage);
+
           }
         }
       } catch (err) {
@@ -85,14 +89,16 @@ export const AuthProvider = ({ children }) => {
         role,
         email,
         token,
-        userId, 
+        userId,
+        image,
         setIsLoggedIn,
         setUsername,
         setRole,
         setEmail,
         setToken,
 
-        setUserId,  
+        setUserId,
+        setImage,
         authLoaded // ✅ eklendi
       }}
     >

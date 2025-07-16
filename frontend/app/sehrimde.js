@@ -25,15 +25,7 @@ const TEXT = '#5f5f5f';
 
 export default function Sehrimde() {
   const citiesMemo = useMemo(() => cities, []);
-  useEffect(() => {
-  const checkLogin = async () => {
-    const token = await getSecureItem('accessToken');
-    if (!token) {
-      router.replace('/login');
-    }
-  };
-  checkLogin();
-}, []);
+
   const handleCitySelect = (city) => {
     router.push({ pathname: '/arama-sonuclari', params: { sehir: city } });
   };

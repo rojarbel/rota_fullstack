@@ -8,10 +8,12 @@ import BottomTabBar from '../src/components/BottomTabBar';
 import { AuthProvider } from '../src/context/AuthContext';
 import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
+import useAuth from '../src/hooks/useAuth';
 
 function AppLayoutInner() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const auth = useAuth();
 
 useEffect(() => {
   const handleDeepLink = ({ url }) => {
@@ -55,7 +57,8 @@ useEffect(() => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: insets.top }}>
         <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-        <Header />
+        <Header key={auth.isLoggedIn ? 'user' : 'guest'} />
+
         <Menu />
         <PanGestureHandler
           onHandlerStateChange={handleSwipeBack}

@@ -8,6 +8,8 @@ const IMAGE_BASE_URL = 'https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azu
 import { useRouter } from 'expo-router';
 import { getItem as getSecureItem } from '../src/utils/storage'; 
 
+
+
 const PRIMARY = '#7B2CBF';
 const BLUE = '#3498db';
 const DEFAULT_RADIUS = 50; // km
@@ -21,7 +23,7 @@ export default function Yakindaki() {
   const [radius, setRadius] = useState(DEFAULT_RADIUS);
   const [permissionStatus, setPermissionStatus] = useState('undetermined');
   const [error, setError] = useState(null);
-
+  const [isLoginChecked, setIsLoginChecked] = useState(false);
   // Koordinat doğrulama fonksiyonu - daha esnek
   const isValidCoordinate = useCallback((lat, lng) => {
     const latitude = parseFloat(lat);
@@ -187,18 +189,21 @@ export default function Yakindaki() {
     }
   }, [isValidCoordinate]); // fetchNearbyEvents dependency'lerini minimal tutun
 
-      useEffect(() => {
-        const checkLogin = async () => {
-          const token = await getSecureItem('accessToken');
-          if (!token) {
-            router.replace('/login');
-          }
-        };
-        checkLogin();
-      }, []);
+    useEffect(() => {
+      const checkLogin = async () => {
+        const token = await getSecureItem('accessToken');
+        if (!token) {
+          router.replace('/login');
+        } else {
+          setIsLoginChecked(true); // Login kontrolü başarılıysa TRUE yap
+        }
+      };
+      checkLogin();
+    }, []);
       
   // Konum izni alma ve kullanıcı konumunu belirleme
   useEffect(() => {
+    if (!isLoginChecked) return;
 const requestLocationAndFetch = async (retryCount = 3) => {
   try {
     setLoading(true);
@@ -254,7 +259,7 @@ const requestLocationAndFetch = async (retryCount = 3) => {
 };
 
     requestLocationAndFetch();
-  }, []); // Sadece mount'ta çalışsın
+}, [isLoginChecked]);
 
   // Radius değişikliklerini dinle - fetchNearbyEvents dependency'sini kaldırdık
   useEffect(() => {
