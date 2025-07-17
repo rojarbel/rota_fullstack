@@ -77,8 +77,10 @@ export default {
   extra: {
     apiUrl: process.env.API_URL || 'https://your-api-url.com',
     imageCdnUrl: process.env.IMAGE_CDN_URL || 'https://your-cdn-url.com',
-    googleMapsApiKeyAndroid: process.env.GOOGLE_MAPS_API_KEY_ANDROID || 'YOUR_ANDROID_API_KEY',
-    googleMapsApiKeyIos: process.env.GOOGLE_MAPS_API_KEY_IOS || 'YOUR_IOS_API_KEY',
+    googleMapsApiKey:
+      process.env.GOOGLE_MAPS_API_KEY_ANDROID ||
+      process.env.GOOGLE_MAPS_API_KEY_IOS ||
+      'YOUR_API_KEY',
     eas: {
       projectId: "81fe7a04-a148-44d3-9753-bda2ea2752e6"
     }
@@ -105,6 +107,7 @@ export default {
         }
       }
     ],
+        'react-native-maps',
     './plugins/withGoogleMapsString',
   ],
   experiments: {

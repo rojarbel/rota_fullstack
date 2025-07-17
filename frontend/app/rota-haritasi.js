@@ -10,9 +10,7 @@ export default function RotaHaritasi() {
   const [konum, setKonum] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
 
-  const GOOGLE_API_KEY =
-    Constants.expoConfig?.extra?.googleMapsApiKey ||
-    Constants.manifest?.extra?.googleMapsApiKey;
+
 
   useEffect(() => {
     (async () => {
@@ -30,7 +28,11 @@ export default function RotaHaritasi() {
 
       const originStr = `${origin.latitude},${origin.longitude}`;
       const destinationStr = `${destination.latitude},${destination.longitude}`;
-
+      const GOOGLE_API_KEY =
+        Constants.expoConfig?.extra?.googleMapsApiKey ||
+        Constants.expoConfig?.extra?.googleMapsApiKeyAndroid ||
+        Constants.expoConfig?.extra?.googleMapsApiKeyIos ||
+        '';
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&mode=walking&key=${GOOGLE_API_KEY}`;
 
       try {
