@@ -88,7 +88,6 @@ const handleUpdate = async () => {
     formDataToSend.append("city", String(formData.city));
     formDataToSend.append("birthDate", String(formData.birthDate));
 
-
     if (formData.image && !formData.image.startsWith("http")) {
       const uriParts = formData.image.split(".");
       const fileType = uriParts[uriParts.length - 1];
@@ -100,38 +99,44 @@ const handleUpdate = async () => {
       });
     }
 
-const res = await axiosClient.put(
-  "/users/update",
-      formDataToSend,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const res = await axiosClient.put("/users/update", formDataToSend, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     const updatedUser = res.data.user;
 
-if (updatedUser.username) await AsyncStorage.setItem("username", updatedUser.username);
-if (updatedUser.email) await AsyncStorage.setItem("email", updatedUser.email);
-if (updatedUser.fullname) await AsyncStorage.setItem("fullname", updatedUser.fullname);
-if (updatedUser.city) await AsyncStorage.setItem("city", updatedUser.city);
-if (updatedUser.birthDate) await AsyncStorage.setItem("birthDate", updatedUser.birthDate);
-if (updatedUser.image?.startsWith("http")) {
-  await AsyncStorage.setItem("image", updatedUser.image);
-  setAuthImage(updatedUser.image);
-}
-if (updatedUser._id) await AsyncStorage.setItem("userId", updatedUser._id);
+    // AsyncStorage güncellemeleri
+    if (updatedUser.username) await AsyncStorage.setItem("username", updatedUser.username);
+    if (updatedUser.email) await AsyncStorage.setItem("email", updatedUser.email);
+    if (updatedUser.fullname) await AsyncStorage.setItem("fullname", updatedUser.fullname);
+    if (updatedUser.city) await AsyncStorage.setItem("city", updatedUser.city);
+    if (updatedUser.birthDate) await AsyncStorage.setItem("birthDate", updatedUser.birthDate);
+    if (updatedUser._id) await AsyncStorage.setItem("userId", updatedUser._id);
 
+    // 🔥 KRİTİK: Hem HTTP hem yerel URI'ler için setAuthImage çağır
+    if (updatedUser.image) {
+      await AsyncStorage.setItem("image", updatedUser.image);
+      setAuthImage(updatedUser.image); // Bu satır her durumda çalışmalı
+      
+      // Yerel state'i de güncelle
+      setFormData(prev => ({ ...prev, image: updatedUser.image }));
+    }
 
     Alert.alert("Başarılı", "Bilgiler başarıyla güncellendi!");
+    
+    // 🔥 EK: Profil verilerini yeniden yükle
     await loadUser();
+    
   } catch (err) {
     logger.error('Güncelleme hatası:', err?.response || err);
     Alert.alert("Hata", err.response?.data?.message || err.message);
   }
 };
+
+
 const handleContact = () => {
   Linking.openURL('mailto:rotaolusturofficial@gmail.com');
 };

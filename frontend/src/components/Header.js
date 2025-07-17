@@ -22,6 +22,7 @@ import FastImage from 'expo-fast-image';
 import handleApiError from '../utils/handleApiError';
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 
@@ -103,7 +104,27 @@ const Header = ({ onHamburgerClick, onSearchChange }) => {
   }, [role]);
 
 useEffect(() => {
-  setProfilePhoto(auth.image || null);
+  const refreshProfilePhoto = async () => {
+    try {
+      // AsyncStorage'dan direkt oku
+      const storedImage = await AsyncStorage.getItem('image');
+      
+      // Önce auth.image'i kontrol et, yoksa AsyncStorage'dan al
+      const finalImage = auth.image || storedImage || null;
+      
+      setProfilePhoto(finalImage);
+      
+      // Eğer auth.image ile AsyncStorage farklıysa, auth'u güncelle
+      if (storedImage && storedImage !== auth.image && auth.setImage) {
+        auth.setImage(storedImage);
+      }
+    } catch (error) {
+      console.error('Profil fotoğrafı yüklenemedi:', error);
+      setProfilePhoto(null);
+    }
+  };
+
+  refreshProfilePhoto();
 }, [auth.image, auth.isLoggedIn]);
 
 useEffect(() => {
@@ -132,6 +153,19 @@ useEffect(() => {
 
   if (isLoggedIn) fetchBildirimler();
 }, [isLoggedIn]);
+
+useFocusEffect(
+  React.useCallback(() => {
+    const refreshOnFocus = async () => {
+      const storedImage = await AsyncStorage.getItem('image');
+      if (storedImage) {
+        setProfilePhoto(storedImage);
+      }
+    };
+    
+    refreshOnFocus();
+  }, [])
+);
 
 const handleBildirimTikla = async (bildirim) => {
 if ((bildirim.tip === 'yanit' || bildirim.tip === 'begeni') && bildirim.yorumId) {

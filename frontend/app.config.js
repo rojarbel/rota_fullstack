@@ -10,7 +10,7 @@ try {
 export default {
   name: 'Rota',
   slug: 'urbanrota',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   userInterfaceStyle: 'automatic',
@@ -29,6 +29,7 @@ export default {
   assetBundlePatterns: ['**/*'],
   ios: {
     bundleIdentifier: 'com.rojar.rota',
+    buildNumber: '2',
     associatedDomains: ['applinks:rota.app'],
     supportsTablet: true,
     config: {
