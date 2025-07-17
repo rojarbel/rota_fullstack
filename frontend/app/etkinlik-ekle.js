@@ -133,7 +133,8 @@ useEffect(() => {
       quality: 1,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && !result.cancelled) {
+
       const uri = result.assets[0].uri;
       setGorsel(uri);
       setGorselPreview(uri);

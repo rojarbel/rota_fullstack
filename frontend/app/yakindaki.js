@@ -41,15 +41,12 @@ export default function Yakindaki() {
   // Görsel URL'ini güvenli şekilde oluştur
   const getImageUrl = useCallback((gorsel) => {
     if (!gorsel || typeof gorsel !== 'string') {
-      return 'https://via.placeholder.com/40x40/cccccc/666666?text=E';
+      return `${IMAGE_BASE_URL}/placeholder.png`;
     }
     
     if (gorsel.startsWith('http')) return gorsel;
-    if (gorsel.startsWith('/')) {
-      return `${IMAGE_BASE_URL}${gorsel}`;
-    }
-    
-    return gorsel;
+    const normalized = gorsel.startsWith('/') ? gorsel : `/${gorsel}`;
+    return `${IMAGE_BASE_URL}${normalized}`;
   }, []);
 
   // Yakındaki etkinlikleri getir - iyileştirilmiş
