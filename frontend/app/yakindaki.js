@@ -3,10 +3,10 @@ import { ActivityIndicator, View, Text, Image, StyleSheet, TouchableOpacity, Ale
 import * as Location from 'expo-location';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import axiosClient from '../src/api/axiosClient';
-// IMAGE_BASE_URL yerine doğrudan tanımlayın veya constants dosyasını kontrol edin
-const IMAGE_BASE_URL = 'https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net';
+import { IMAGE_BASE_URL } from '../src/constants';
 import { useRouter } from 'expo-router';
-import { getItem as getSecureItem } from '../src/utils/storage'; 
+import { getItem as getSecureItem } from '../src/utils/storage';
+
 
 
 

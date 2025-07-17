@@ -127,13 +127,14 @@ useEffect(() => {
       return;
     }
 
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
+
       allowsEditing: true,
       quality: 1,
     });
 
-    if (!pickerResult.cancelled) {
-      const uri = pickerResult.assets[0].uri;
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
       setGorsel(uri);
       setGorselPreview(uri);
     }
