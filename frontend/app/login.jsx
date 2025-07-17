@@ -63,7 +63,22 @@ setAuthImage(user.image || '');
         },
       ]);
     } catch (err) {
-      Alert.alert("Hata", err.response?.data?.message || "Giriş başarısız");
+  const rawMsg = err.response?.data?.message || "";
+  let displayMsg = rawMsg;
+
+  if (rawMsg.toLowerCase().includes("refresh token")) {
+    displayMsg = "E-posta veya şifre yanlış!";
+  } else if (
+    rawMsg.toLowerCase().includes("şifre") ||
+    rawMsg.toLowerCase().includes("password") ||
+    rawMsg.toLowerCase().includes("hatalı")
+  ) {
+    displayMsg = "E-posta veya şifre yanlış!";
+  } else if (rawMsg === "") {
+    displayMsg = "Bir hata oluştu. İnternet bağlantınızı kontrol edin.";
+  }
+
+  Alert.alert("Hata", displayMsg);
     }
   };
 

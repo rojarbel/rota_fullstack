@@ -94,9 +94,9 @@ router.put("/update", verifyToken, uploadProfile.single("image"), async (req, re
 
 let fullImageUrl = updatedUser.image;
 if (image) {
-  fullImageUrl = `${req.protocol}://${req.get("host")}${image}`;
+  fullImageUrl = `https://${req.get("host")}${image}`;
 } else if (updatedUser.image && !updatedUser.image.startsWith("http")) {
-  fullImageUrl = `${req.protocol}://${req.get("host")}${updatedUser.image}`;
+  fullImageUrl = `https://${req.get("host")}${updatedUser.image}`;
 }
 
 res.status(200).json({

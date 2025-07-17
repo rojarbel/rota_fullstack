@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Platform, Alert, Modal, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axiosClient from '../src/api/axiosClient';
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import useAuth from '../src/hooks/useAuth';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -12,7 +11,7 @@ import logger from '../src/utils/logger';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Switch } from 'react-native';
-
+import CustomPicker from './CustomPicker';
 
 
 
@@ -239,63 +238,39 @@ const handleSubmit = async () => {
         value={baslik}
         onChangeText={setBaslik}
       />
+{/* Şehir Seçimi */}
+<CustomPicker
+  selectedValue={sehir}
+  onValueChange={setSehir}
+  placeholder="Şehir Seçin"
+  items={sehirListesi.map(city => ({ label: city, value: city }))}
+/>
 
-      {/* Şehir Seçimi */}
-      <View style={styles.pickerContainer}>
+{/* Kategori Seçimi */}
+<CustomPicker
+  selectedValue={selectedKategori}
+  onValueChange={(itemValue) => {
+    setSelectedKategori(itemValue);
+    setSelectedTur('');
+  }}
+  placeholder="Kategori Seçin"
+  items={Object.keys(kategorilerVeTurler).map(kategori => ({ 
+    label: kategori, 
+    value: kategori 
+  }))}
+/>
 
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={sehir}
-            onValueChange={(itemValue) => setSehir(itemValue)}
-            style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
-            itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
-          >
-            <Picker.Item label="Şehir Seçin" value="" />
-            {sehirListesi.map((city) => (
-              <Picker.Item key={city} label={city} value={city} />
-            ))}
-          </Picker>
-        </View>
-      </View>
-
-      {/* Kategori Seçimi */}
-      <View style={styles.pickerContainer}>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={selectedKategori}
-            onValueChange={(itemValue) => {
-              setSelectedKategori(itemValue);
-              setSelectedTur('');
-            }}
-            style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
-            itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
-          >
-            <Picker.Item label="Kategori Seçin" value="" />
-            {Object.keys(kategorilerVeTurler).map((kategori) => (
-              <Picker.Item key={kategori} label={kategori} value={kategori} />
-            ))}
-          </Picker>
-        </View>
-      </View>
-
-      {/* Tür Seçimi */}
-      {selectedKategori !== '' && (
-        <View style={styles.pickerContainer}>
-          <Text style={styles.pickerLabel}>Tür</Text>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={selectedTur}
-              onValueChange={(itemValue) => setSelectedTur(itemValue)}
-              style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
-              itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
-            >
-              <Picker.Item label="Tür Seçin" value="" />
-              {kategorilerVeTurler[selectedKategori]?.map((tur) => (
-                <Picker.Item key={tur} label={tur} value={tur} />
-              ))}
-            </Picker>
-          </View>
-        </View>
+{/* Tür Seçimi */}
+{selectedKategori !== '' && (
+  <CustomPicker
+    selectedValue={selectedTur}
+    onValueChange={setSelectedTur}
+    placeholder="Tür Seçin"
+    items={(kategorilerVeTurler[selectedKategori] || []).map(tur => ({ 
+      label: tur, 
+      value: tur 
+    }))}
+  />
       )}
 
       {/* Tarih Seçimi */}
@@ -435,38 +410,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 6,
   },
-  pickerContainer: {
-    marginBottom: 16,
-  },
+
   pickerLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
   },
-  pickerWrapper: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    ...Platform.select({
-      ios: { height: 120 },
-      android: { height: 52, justifyContent: 'center' },
-    }),
-  },
-  pickerIOS: {
-    height: 180,
-    backgroundColor: 'transparent',
-  },
-  pickerAndroid: {
-    height: 52,
-    backgroundColor: 'transparent',
-  },
-  pickerItemIOS: {
-    fontSize: 16,
-    color: '#333',
-    height: 120,
-  },
+
+
+
   dateContainer: {
     marginBottom: 16,
   },

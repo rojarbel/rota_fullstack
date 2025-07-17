@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
         city: user.city || '',
         image: user.image?.startsWith('http')
           ? user.image
-          : `${req.protocol}://${req.get("host")}${user.image || ''}`
+          : `https://${req.get("host")}${user.image || ''}`
       }
     });
   } catch (err) {
