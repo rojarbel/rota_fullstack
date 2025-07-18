@@ -109,7 +109,6 @@ export default {
         }
       }
     ],
-        'react-native-maps',
     './plugins/withGoogleMapsString',
   ],
   experiments: {
