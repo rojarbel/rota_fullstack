@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { ActivityIndicator, View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import * as Location from 'expo-location';
-import MapView, { Marker, Circle } from 'react-native-maps';
+import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import axiosClient from '../src/api/axiosClient';
 import { IMAGE_BASE_URL } from '../src/constants';
 import { useRouter } from 'expo-router';
@@ -482,6 +482,7 @@ const requestLocationAndFetch = async (retryCount = 3) => {
       {/* Harita */}
       {region ? (
         <MapView
+                  provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFillObject}
           initialRegion={region}
           showsUserLocation={true}

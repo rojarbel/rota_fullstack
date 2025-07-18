@@ -81,6 +81,8 @@ export default {
       process.env.GOOGLE_MAPS_API_KEY_ANDROID ||
       process.env.GOOGLE_MAPS_API_KEY_IOS ||
       'YOUR_API_KEY',
+          googleMapsApiKeyAndroid: process.env.GOOGLE_MAPS_API_KEY_ANDROID || 'YOUR_ANDROID_API_KEY',
+    googleMapsApiKeyIos: process.env.GOOGLE_MAPS_API_KEY_IOS || 'YOUR_IOS_API_KEY',
     eas: {
       projectId: "81fe7a04-a148-44d3-9753-bda2ea2752e6"
     }

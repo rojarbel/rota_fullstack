@@ -1,4 +1,4 @@
-const { withDangerousMod } = require('@expo/config-plugins');
+const { withDangerousMod, withAndroidManifest, AndroidConfig } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -9,17 +9,30 @@ function ensureGoogleMapsString(contents, apiKey) {
   }
   return contents.replace('</resources>', `  ${line}\n</resources>`);
 }
-
+function setGoogleMapsMetaData(androidManifest, apiKey) {
+  const mainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
+  AndroidConfig.Manifest.addMetaDataItemToMainApplication(
+    mainApplication,
+    'com.google.android.geo.API_KEY',
+    apiKey
+  );
+  return androidManifest;
+}
 module.exports = function withGoogleMapsString(config) {
+    const apiKey =
+    config?.extra?.googleMapsApiKey ||
+    process.env.GOOGLE_MAPS_API_KEY_ANDROID ||
+    '';
+
+  config = withAndroidManifest(config, (config) => {
+    config.modResults = setGoogleMapsMetaData(config.modResults, apiKey);
+    return config;
+  });
+
   return withDangerousMod(config, [
     'android',
     async (config) => {
       const stringsPath = path.join(config.modRequest.platformProjectRoot, 'app/src/main/res/values/strings.xml');
-      const apiKey =
-        config?.extra?.googleMapsApiKey ||
-        process.env.GOOGLE_MAPS_API_KEY_ANDROID ||
-        '';
-        
       if (!fs.existsSync(stringsPath)) {
         return config;
       }

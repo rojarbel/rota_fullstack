@@ -8,7 +8,7 @@ import useAuth from '../src/hooks/useAuth';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import * as FileSystem from 'expo-file-system';
 import logger from '../src/utils/logger';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Switch } from 'react-native';
 import CustomPicker from './CustomPicker';
@@ -358,6 +358,7 @@ const handleSubmit = async () => {
       {location ? (
         <View style={{ height: 250, marginBottom: 16 }}>
           <MapView
+                      provider={PROVIDER_GOOGLE}
             style={{ flex: 1, borderRadius: 10 }}
             initialRegion={location}
             onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
