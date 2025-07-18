@@ -1,6 +1,7 @@
-// CustomPicker.js dosyasını oluşturun
+// CustomPicker.js - İyileştirilmiş versiyon
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, Platform, Keyboard } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CustomPicker = ({ 
   selectedValue, 
@@ -10,19 +11,34 @@ const CustomPicker = ({
   style 
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const handleSelect = (value) => {
+    Keyboard.dismiss(); // Klavyeyi kapat
     onValueChange(value);
     setModalVisible(false);
   };
 
+  const handleModalOpen = () => {
+    Keyboard.dismiss(); // Modal açılırken klavyeyi kapat
+    setModalVisible(true);
+  };
+
   const selectedItem = items.find(item => item.value === selectedValue);
+
+  // Safe area ile uyumlu modal container
+  const modalContainerStyle = {
+    ...styles.modalContainer,
+    paddingTop: Platform.OS === 'ios' ? Math.max(insets.top, 20) : 20,
+    paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 20) : 20,
+  };
 
   return (
     <View style={[styles.container, style]}>
       <TouchableOpacity
         style={styles.selector}
-        onPress={() => setModalVisible(true)}
+        onPress={handleModalOpen}
+        activeOpacity={0.7}
       >
         <Text style={[
           styles.selectorText,
@@ -38,14 +54,16 @@ const CustomPicker = ({
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
+        statusBarTranslucent={Platform.OS === 'android'}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+          <View style={modalContainerStyle}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{placeholder}</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setModalVisible(false)}
+                activeOpacity={0.7}
               >
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
@@ -54,6 +72,7 @@ const CustomPicker = ({
             <FlatList
               data={items}
               keyExtractor={(item) => item.value}
+              showsVerticalScrollIndicator={true}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
@@ -61,6 +80,7 @@ const CustomPicker = ({
                     selectedValue === item.value && styles.selectedItem
                   ]}
                   onPress={() => handleSelect(item.value)}
+                  activeOpacity={0.7}
                 >
                   <Text style={[
                     styles.modalItemText,
@@ -92,6 +112,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    // Gölge efekti ekleyin
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   selectorText: {
     fontSize: 16,
@@ -109,9 +138,18 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 15,
     width: '90%',
     maxHeight: '70%',
+    // Gölge efekti
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -127,11 +165,13 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    borderRadius: 20,
   },
   closeButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#999',
+    fontWeight: 'bold',
   },
   modalItem: {
     padding: 16,
