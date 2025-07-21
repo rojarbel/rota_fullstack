@@ -75,13 +75,14 @@ android: {
     output: "static",
     favicon: "./assets/images/favicon.png"
   },
-  extra: {
-    googleMapsApiKeyAndroid: process.env.GOOGLE_MAPS_API_KEY_ANDROID,
-    googleMapsApiKeyIos: process.env.GOOGLE_MAPS_API_KEY_IOS,
-    apiUrl: process.env.API_URL,
-    imageCdnUrl: process.env.IMAGE_CDN_URL,
-    eas: {
-      projectId: '81fe7a04-a148-44d3-9753-bda2ea2752e6',
+extra: {
+  googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID,
+  googleMapsApiKeyAndroid: process.env.GOOGLE_MAPS_API_KEY_ANDROID,
+  googleMapsApiKeyIos: process.env.GOOGLE_MAPS_API_KEY_IOS,
+  apiUrl: process.env.API_URL,
+  imageCdnUrl: process.env.IMAGE_CDN_URL,
+  eas: {
+    projectId: '81fe7a04-a148-44d3-9753-bda2ea2752e6',
     },
   },
   plugins: [

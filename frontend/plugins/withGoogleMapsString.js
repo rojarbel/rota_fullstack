@@ -19,10 +19,8 @@ function setGoogleMapsMetaData(androidManifest, apiKey) {
   return androidManifest;
 }
 module.exports = function withGoogleMapsString(config) {
-    const apiKey =
-    config?.extra?.googleMapsApiKey ||
-    process.env.GOOGLE_MAPS_API_KEY_ANDROID ||
-    '';
+const apiKey = config.extra.googleMapsApiKeyAndroid || config.extra.googleMapsApiKey || '';
+
 
   config = withAndroidManifest(config, (config) => {
     config.modResults = setGoogleMapsMetaData(config.modResults, apiKey);
