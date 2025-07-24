@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import * as Location from 'expo-location';
@@ -65,6 +65,11 @@ export default function RotaHaritasi() {
     <MapView
           provider={PROVIDER_GOOGLE}
       style={{ flex: 1 }}
+            googleMapsApiKey={
+        Platform.OS === 'ios'
+          ? Constants.expoConfig?.extra?.googleMapsApiKeyIos
+          : Constants.expoConfig?.extra?.googleMapsApiKeyAndroid
+      }
       initialRegion={{
         latitude: konum.latitude,
         longitude: konum.longitude,

@@ -12,7 +12,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Switch } from 'react-native';
 import CustomPicker from './CustomPicker';
-
+import Constants from 'expo-constants';
 
 
 const kategorilerVeTurler = {
@@ -360,6 +360,11 @@ const handleSubmit = async () => {
           <MapView
                       provider={PROVIDER_GOOGLE}
             style={{ flex: 1, borderRadius: 10 }}
+                        googleMapsApiKey={
+              Platform.OS === 'ios'
+                ? Constants.expoConfig?.extra?.googleMapsApiKeyIos
+                : Constants.expoConfig?.extra?.googleMapsApiKeyAndroid
+            }
             initialRegion={location}
             onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
           >

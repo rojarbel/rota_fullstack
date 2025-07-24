@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { ActivityIndicator, View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { ActivityIndicator, View, Text, Image, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+
 import * as Location from 'expo-location';
 import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
+import Constants from 'expo-constants';
 import axiosClient from '../src/api/axiosClient';
 import { IMAGE_BASE_URL } from '../src/constants';
 import { useRouter } from 'expo-router';
@@ -484,6 +486,11 @@ const requestLocationAndFetch = async (retryCount = 3) => {
         <MapView
                   provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFillObject}
+                    googleMapsApiKey={
+            Platform.OS === 'ios'
+              ? Constants.expoConfig?.extra?.googleMapsApiKeyIos
+              : Constants.expoConfig?.extra?.googleMapsApiKeyAndroid
+          }
           initialRegion={region}
           showsUserLocation={true}
           showsMyLocationButton={true}
