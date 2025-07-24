@@ -10,7 +10,6 @@ const BottomTabBar = () => {
   const tabs = [
     { name: 'Ana Sayfa', icon: 'home-outline', path: '/' },
     { name: 'Şehrimde', icon: 'location-outline', path: '/sehrimde' },
-    { name: 'Yakınımdaki', icon: 'map-outline', path: '/yakindaki' },
     { name: 'Favorilerim', icon: 'heart-outline', path: '/favorilerim' },
     { name: 'Etkinlik Ekle', icon: 'add-circle-outline', path: '/etkinlik-ekle' },
   ];

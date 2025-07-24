@@ -371,32 +371,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
               {favorideMi ? 'Favoriden Çıkar' : 'Favorilere Ekle'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              if (etkinlik?.latitude && etkinlik?.longitude) {
-                router.push({
-                  pathname: '/rota-haritasi',
-                  params: {
-                    lat: etkinlik.latitude,
-                    lng: etkinlik.longitude,
-                    baslik: etkinlik.baslik
-                  }
-                });
-              } else {
-                Alert.alert("Konum bilgisi eksik", "Etkinliğe ait konum bilgileri mevcut değil.");
-              }
-            }}
-            style={{
-              marginTop: 12,
-              paddingVertical: 12,
-              borderRadius: 8,
-              backgroundColor:  '#FFAC38',
-            }}
-          >
-            <Text style={{ textAlign: 'center', color: '#fff', fontWeight: '600' }}>
-              Rota Oluştur
-            </Text>
-          </TouchableOpacity>   
+
           {isAdmin && (
             <View style={{ marginTop: 24, gap: 12 }}>
               <TouchableOpacity
@@ -465,8 +440,8 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
       key={tip}
       onPress={() => paylas(tip)}
       style={{
-        width: 40,
-        height: 40,
+        width: 39,
+        height: 39,
         borderRadius: 10,
         backgroundColor: '#f0f0f0',
         justifyContent: 'center',
