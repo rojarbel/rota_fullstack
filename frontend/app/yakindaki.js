@@ -3,14 +3,12 @@ import { ActivityIndicator, View, Text, Image, StyleSheet, TouchableOpacity, Ale
 
 import * as Location from 'expo-location';
 import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
+
 import Constants from 'expo-constants';
 import axiosClient from '../src/api/axiosClient';
 import { IMAGE_BASE_URL } from '../src/constants';
 import { useRouter } from 'expo-router';
 import { getItem as getSecureItem } from '../src/utils/storage';
-
-
-
 
 const PRIMARY = '#7B2CBF';
 const BLUE = '#3498db';
@@ -26,7 +24,8 @@ export default function Yakindaki() {
   const [permissionStatus, setPermissionStatus] = useState('undetermined');
   const [error, setError] = useState(null);
   const [isLoginChecked, setIsLoginChecked] = useState(false);
-  // Koordinat doğrulama fonksiyonu - daha esnek
+
+  // Koordinat doğrulama fonksiyonu
   const isValidCoordinate = useCallback((lat, lng) => {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
@@ -36,7 +35,7 @@ export default function Yakindaki() {
       !isNaN(longitude) &&
       latitude >= -90 && latitude <= 90 &&
       longitude >= -180 && longitude <= 180 &&
-      latitude !== 0 && longitude !== 0 // 0,0 koordinatını geçersiz say
+      latitude !== 0 && longitude !== 0
     );
   }, []);
 
@@ -51,7 +50,49 @@ export default function Yakindaki() {
     return `${IMAGE_BASE_URL}${normalized}`;
   }, []);
 
-  // Yakındaki etkinlikleri getir - iyileştirilmiş
+  // Çakışan markerları offset ile ayır - İYİLEŞTİRİLMİŞ VERSİYON
+  const offsetMarkers = useCallback((markers) => {
+    const offset = 0.0005; // Offset değeri artırıldı (yaklaşık 50 metre)
+    const grouped = {};
+
+    // Aynı koordinattaki markerları grupla (daha hassas tespit için toFixed(4) kullan)
+    markers.forEach(marker => {
+      const key = `${marker.lat.toFixed(4)}_${marker.lon.toFixed(4)}`;
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+      grouped[key].push(marker);
+    });
+
+    const adjustedMarkers = [];
+
+    // Her grup için markerları daire şeklinde dağıt
+    Object.values(grouped).forEach(group => {
+      if (group.length === 1) {
+        // Tek marker varsa olduğu gibi bırak
+        adjustedMarkers.push(group[0]);
+      } else {
+        // Çoklu marker varsa daire şeklinde dağıt
+        console.log(`🎯 ${group.length} adet çakışan marker tespit edildi, dağıtılıyor...`);
+        
+        group.forEach((marker, index) => {
+          const angle = (index / group.length) * 2 * Math.PI; // 360 derece eşit dağılım
+          const distance = offset * (1 + Math.floor(index / 8) * 0.5); // 8'den fazlaysa daha uzağa yerleştir
+          
+          adjustedMarkers.push({
+            ...marker,
+            lat: marker.lat + distance * Math.cos(angle),
+            lon: marker.lon + distance * Math.sin(angle),
+          });
+        });
+      }
+    });
+
+    console.log(`📍 ${markers.length} marker işlendi, ${adjustedMarkers.length} marker döndürülüyor`);
+    return adjustedMarkers;
+  }, []);
+
+  // Yakındaki etkinlikleri getir
   const fetchNearbyEvents = useCallback(async (lat, lon, radiusKm) => {
     try {
       setLoading(true);
@@ -59,12 +100,11 @@ export default function Yakindaki() {
       
       console.log(`🔍 API çağrısı başlıyor: lat=${lat}, lng=${lon}, radius=${radiusKm}km`);
       
-      // API çağrısı - düzeltilmiş parametreler
       const response = await axiosClient.get('/etkinlik/yakindaki', {
         params: { 
           lat: lat.toString(),
-          lng: lon.toString(),  // ✅ DÜZELTİLDİ: Backend 'lng' parametresi bekliyor
-          radius: (radiusKm * 1000).toString() // ✅ DÜZELTİLDİ: km'yi metreye çevir
+          lng: lon.toString(),
+          radius: (radiusKm * 1000).toString()
         },
         timeout: 8000
       });
@@ -75,7 +115,6 @@ export default function Yakindaki() {
         radius: (radiusKm * 1000).toString()
       });
 
-      // Backend'den gelen veri yapısını kontrol et
       const data = response.data;
       let eventList = [];
 
@@ -92,23 +131,15 @@ export default function Yakindaki() {
 
       // Etkinlikleri işle ve filtrele
       const processedEvents = eventList
-        .map((event, index) => {
-          const processedEvent = {
-            ...event,
-            // ID'yi normalize et
-            id: event.id || event._id?.toString?.() || event._id || `event_${index}`,
-            // Koordinatları güvenli parse et - Backend'deki field isimleriyle uyumlu
-            lat: parseFloat(event.latitude) || null,
-            lon: parseFloat(event.longitude) || null,
-            // Diğer alanları temizle
-            baslik: event.baslik || 'İsimsiz Etkinlik',
-            sehir: event.sehir || 'Bilinmeyen Şehir',
-            mesafe: event.mesafe ? parseFloat(event.mesafe) : null
-          };
-
-          console.log(`📍 Etkinlik ${index + 1}: ${processedEvent.baslik} - Koordinat: ${processedEvent.lat}, ${processedEvent.lon}`);
-          return processedEvent;
-        })
+        .map((event, index) => ({
+          ...event,
+          id: event.id || event._id?.toString?.() || event._id || `event_${index}`,
+          lat: parseFloat(event.latitude) || null,
+          lon: parseFloat(event.longitude) || null,
+          baslik: event.baslik || 'İsimsiz Etkinlik',
+          sehir: event.sehir || 'Bilinmeyen Şehir',
+          mesafe: event.mesafe ? parseFloat(event.mesafe) : null
+        }))
         .filter(event => {
           const isValid = event.lat !== null && event.lon !== null && 
                           isValidCoordinate(event.lat, event.lon);
@@ -122,29 +153,25 @@ export default function Yakindaki() {
 
       console.log(`✅ ${processedEvents.length} geçerli etkinlik işlendi`);
 
-      // Aynı koordinatlarda birden fazla etkinlik varsa offset uygula
-      const coordCounter = {};
-      const finalEvents = processedEvents.map(event => {
-        const key = `${event.lat.toFixed(4)},${event.lon.toFixed(4)}`;
-        const count = coordCounter[key] || 0;
-        coordCounter[key] = count + 1;
+      // Offset uygula ve clustering bilgisi ekle
+      const offsetEvents = offsetMarkers(processedEvents);
+      
+      // Clustering bilgisi ekle (aynı yerde kaç etkinlik var)
+      const eventsWithClustering = offsetEvents.map(event => {
+        const sameLocationEvents = processedEvents.filter(e => 
+          Math.abs(e.lat - event.lat) < 0.001 && Math.abs(e.lon - event.lon) < 0.001
+        );
         
-        if (count > 0) {
-          const offset = 0.001 * count;
-          const angle = (count * 45) * (Math.PI / 180);
-          return { 
-            ...event, 
-            lat: event.lat + (Math.cos(angle) * offset), 
-            lon: event.lon + (Math.sin(angle) * offset),
-            offsetApplied: true
-          };
-        }
-        return event;
+        return {
+          ...event,
+          location: { latitude: event.lat, longitude: event.lon },
+          clusterCount: sameLocationEvents.length > 1 ? sameLocationEvents.length : null
+        };
       });
 
-      setEvents(finalEvents);
+      setEvents(eventsWithClustering);
 
-      if (finalEvents.length === 0) {
+      if (eventsWithClustering.length === 0) {
         setError(`${radiusKm}km yarıçapında koordinatı olan etkinlik bulunamadı`);
       }
 
@@ -154,7 +181,6 @@ export default function Yakindaki() {
       let errorMessage = 'Bilinmeyen hata';
       
       if (error.response) {
-        // HTTP hata kodu
         const status = error.response.status;
         const data = error.response.data;
         
@@ -177,7 +203,6 @@ export default function Yakindaki() {
       
       setError(errorMessage);
       
-      // Kullanıcıya uygun alert göster
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         Alert.alert('Zaman Aşımı', 'İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.');
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
@@ -186,88 +211,88 @@ export default function Yakindaki() {
     } finally {
       setLoading(false);
     }
-  }, [isValidCoordinate]); // fetchNearbyEvents dependency'lerini minimal tutun
+  }, [isValidCoordinate, offsetMarkers]);
 
-    useEffect(() => {
-      const checkLogin = async () => {
-        const token = await getSecureItem('accessToken');
-        if (!token) {
-          router.replace('/login');
-        } else {
-          setIsLoginChecked(true); // Login kontrolü başarılıysa TRUE yap
-        }
-      };
-      checkLogin();
-    }, []);
+  // Login kontrolü
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await getSecureItem('accessToken');
+      if (!token) {
+        router.replace('/login');
+      } else {
+        setIsLoginChecked(true);
+      }
+    };
+    checkLogin();
+  }, [router]);
       
   // Konum izni alma ve kullanıcı konumunu belirleme
   useEffect(() => {
     if (!isLoginChecked) return;
-const requestLocationAndFetch = async (retryCount = 3) => {
-  try {
-    setLoading(true);
-    setError(null);
 
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    setPermissionStatus(status);
+    const requestLocationAndFetch = async (retryCount = 3) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    if (status !== 'granted') {
-      setError('Konum izni verilmedi');
-      setLoading(false);
-      return;
-    }
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        setPermissionStatus(status);
 
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High,
-      timeout: 10000,
-      maximumAge: 10000,
-    });
+        if (status !== 'granted') {
+          setError('Konum izni verilmedi');
+          setLoading(false);
+          return;
+        }
 
-    const userCoords = {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+          timeout: 10000,
+          maximumAge: 10000,
+        });
+
+        const userCoords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+
+        if (!isValidCoordinate(userCoords.latitude, userCoords.longitude)) {
+          throw new Error('Geçersiz koordinat');
+        }
+
+        setUserLocation(userCoords);
+        setRegion({
+          latitude: userCoords.latitude,
+          longitude: userCoords.longitude,
+          latitudeDelta: 0.1,
+          longitudeDelta: 0.1,
+        });
+
+        await fetchNearbyEvents(userCoords.latitude, userCoords.longitude, DEFAULT_RADIUS);
+
+      } catch (error) {
+        console.error('❌ Konum hatası:', error.message);
+
+        if (retryCount > 0) {
+          console.log(`🔁 Yeniden denenecek... Kalan: ${retryCount}`);
+          setTimeout(() => requestLocationAndFetch(retryCount - 1), 1500);
+        } else {
+          setError('Konum alınamadı. Lütfen tekrar deneyin.');
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (!isValidCoordinate(userCoords.latitude, userCoords.longitude)) {
-      throw new Error('Geçersiz koordinat');
-    }
-
-    setUserLocation(userCoords);
-    setRegion({
-      latitude: userCoords.latitude,
-      longitude: userCoords.longitude,
-      latitudeDelta: 0.1,
-      longitudeDelta: 0.1,
-    });
-
-    await fetchNearbyEvents(userCoords.latitude, userCoords.longitude, DEFAULT_RADIUS);
-
-  } catch (error) {
-    console.error('❌ Konum hatası:', error.message);
-
-    if (retryCount > 0) {
-      console.log(`🔁 Yeniden denenecek... Kalan: ${retryCount}`);
-      setTimeout(() => requestLocationAndFetch(retryCount - 1), 1500);
-    } else {
-      setError('Konum alınamadı. Lütfen tekrar deneyin.');
-    }
-
-  } finally {
-    setLoading(false);
-  }
-};
-
     requestLocationAndFetch();
-}, [isLoginChecked]);
+  }, [isLoginChecked, isValidCoordinate, fetchNearbyEvents]);
 
-  // Radius değişikliklerini dinle - fetchNearbyEvents dependency'sini kaldırdık
+  // Radius değişikliklerini dinle
   useEffect(() => {
     if (userLocation && radius && !loading && permissionStatus === 'granted') {
       console.log(`🔄 Radius değişti: ${radius}km`);
-      // Doğrudan çağır, dependency olarak ekleme
       fetchNearbyEvents(userLocation.latitude, userLocation.longitude, radius);
     }
-  }, [radius]); // Sadece radius değişikliklerini dinle
+  }, [radius, userLocation, loading, permissionStatus, fetchNearbyEvents]);
 
   // Yarıçapı değiştir
   const changeRadius = useCallback((newRadius) => {
@@ -316,7 +341,7 @@ const requestLocationAndFetch = async (retryCount = 3) => {
         setLoading(false);
       }
     }
-  }, [permissionStatus, radius, isValidCoordinate]);
+  }, [permissionStatus, radius, isValidCoordinate, fetchNearbyEvents]);
 
   // Etkinlik detayına git
   const goToEventDetail = useCallback((event) => {
@@ -333,56 +358,56 @@ const requestLocationAndFetch = async (retryCount = 3) => {
     }
   }, [router]);
 
-  // Memoized marker components
-  const eventMarkers = useMemo(() => {
-    console.log(`🗺️ ${events.length} marker oluşturuluyor`);
-    
-    return events.map((event, index) => {
-      // Tarih formatlama
-      let formattedDate = 'Tarih Bilinmiyor';
-      if (event.tarih) {
-        try {
-          const date = new Date(event.tarih);
-          if (!isNaN(date.getTime())) {
-            formattedDate = date.toLocaleDateString('tr-TR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            });
-          }
-        } catch (e) {
-          console.warn('⚠️ Tarih formatlanamadı:', event.tarih);
+  // Event marker render fonksiyonu - Clustering desteği ile
+  const renderEventMarker = useCallback((event, index) => {
+    let formattedDate = 'Tarih Bilinmiyor';
+    if (event.tarih) {
+      try {
+        const date = new Date(event.tarih);
+        if (!isNaN(date.getTime())) {
+          formattedDate = date.toLocaleDateString('tr-TR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
         }
+      } catch (e) {
+        console.warn('⚠️ Tarih formatlanamadı:', event.tarih);
       }
+    }
 
-      const description = [
-        `📅 ${formattedDate}`,
-        `📍 ${event.sehir || 'Şehir Bilinmiyor'}`,
-        event.mesafe ? `🚶 ${event.mesafe} km uzaklıkta` : null
-      ].filter(Boolean).join('\n');
+    const description = [
+      `📅 ${formattedDate}`,
+      `📍 ${event.sehir || 'Şehir Bilinmiyor'}`,
+      event.mesafe ? `🚶 ${event.mesafe} km uzaklıkta` : null
+    ].filter(Boolean).join('\n');
 
-      return (
-        <Marker
-          key={`${event.id}-${index}`}
-          coordinate={{ latitude: event.lat, longitude: event.lon }}
-          title={event.baslik || 'Etkinlik'}
-          description={description}
-          onCalloutPress={() => goToEventDetail(event)}
-        >
-          <View style={styles.markerWrapper}>
-            <Image
-              source={{ uri: getImageUrl(event.gorsel) }}
-              style={styles.markerImage}
-              onError={(e) => {
-                console.warn('⚠️ Marker görseli yüklenemedi:', event.gorsel);
-              }}
-            />
-
-          </View>
-        </Marker>
-      );
-    });
-  }, [events, getImageUrl, goToEventDetail]);
+    return (
+      <Marker
+        key={`${event.id}_${index}`} // Unique key için index ekle
+        coordinate={{ latitude: event.lat, longitude: event.lon }}
+        title={event.baslik || 'Etkinlik'}
+        description={description}
+        onCalloutPress={() => goToEventDetail(event)}
+      >
+        <View style={styles.markerWrapper}>
+          <Image
+            source={{ uri: getImageUrl(event.gorsel) }}
+            style={styles.markerImage}
+            onError={() => {
+              console.warn('⚠️ Marker görseli yüklenemedi:', event.gorsel);
+            }}
+          />
+          {/* Eğer aynı yerde birden fazla etkinlik varsa sayıyı göster */}
+          {event.clusterCount && event.clusterCount > 1 && (
+            <View style={styles.clusterBadge}>
+              <Text style={styles.clusterBadgeText}>{event.clusterCount}</Text>
+            </View>
+          )}
+        </View>
+      </Marker>
+    );
+  }, [getImageUrl, goToEventDetail]);
 
   // İzin verilmemişse
   if (permissionStatus === 'denied') {
@@ -397,7 +422,6 @@ const requestLocationAndFetch = async (retryCount = 3) => {
           onPress={() => {
             setError(null);
             setPermissionStatus('undetermined');
-            // Konum iznini tekrar iste
             Location.requestForegroundPermissionsAsync();
           }}
         >
@@ -439,9 +463,6 @@ const requestLocationAndFetch = async (retryCount = 3) => {
   // Ana görünüm
   return (
     <View style={{ flex: 1 }}>
-
-
-
       {/* Kontrol Paneli */}
       <View style={styles.controlPanel}>
         <View style={styles.radiusControls}>
@@ -467,7 +488,14 @@ const requestLocationAndFetch = async (retryCount = 3) => {
           </View>
         </View>
         
-
+        {/* Yenileme butonu */}
+        <TouchableOpacity
+          style={[styles.refreshButton, loading && styles.refreshButtonDisabled]}
+          onPress={refreshLocation}
+          disabled={loading}
+        >
+          <Text style={styles.refreshButtonText}>🔄</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Etkinlik Sayısı ve Hata Mesajı */}
@@ -484,9 +512,9 @@ const requestLocationAndFetch = async (retryCount = 3) => {
       {/* Harita */}
       {region ? (
         <MapView
-                  provider={PROVIDER_GOOGLE}
+          provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFillObject}
-                    googleMapsApiKey={
+          googleMapsApiKey={
             Platform.OS === 'ios'
               ? Constants.expoConfig?.extra?.googleMapsApiKeyIos
               : Constants.expoConfig?.extra?.googleMapsApiKeyAndroid
@@ -503,7 +531,7 @@ const requestLocationAndFetch = async (retryCount = 3) => {
           {userLocation && (
             <Circle
               center={userLocation}
-              radius={radius * 1000} // km'yi metre'ye çevir
+              radius={radius * 1000}
               strokeColor="rgba(123, 44, 191, 0.5)"
               fillColor="rgba(123, 44, 191, 0.1)"
               strokeWidth={2}
@@ -511,7 +539,7 @@ const requestLocationAndFetch = async (retryCount = 3) => {
           )}
 
           {/* Etkinlik işaretleri */}
-          {eventMarkers}
+          {events.map((event, index) => renderEventMarker(event, index))}
         </MapView>
       ) : (
         <View style={styles.center}>
@@ -574,29 +602,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-  debugInfo: {
-    position: 'absolute',
-    top: 20,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    padding: 8,
-    borderRadius: 4,
-    zIndex: 2000,
-  },
-  debugText: {
-    color: '#fff',
-    fontSize: 10,
-    fontFamily: 'monospace',
-  },
   controlPanel: {
     position: 'absolute',
     top: 12,
     left: 16,
-    right: 64,
+    right: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
-    padding: 5,
+    padding: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -611,12 +624,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  radiusLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 6,
-    fontWeight: '500',
-  },
   radiusButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -625,14 +632,14 @@ const styles = StyleSheet.create({
   },
   radiusButton: {
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 8,
     borderRadius: 6,
     backgroundColor: '#f0f0f0',
     borderWidth: 1,
     borderColor: '#ddd',
-    minWidth: 9,
+    minWidth: 50,
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
   },
   radiusButtonActive: {
     backgroundColor: PRIMARY,
@@ -642,6 +649,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
+    color: '#333',
   },
   radiusButtonTextActive: {
     color: '#fff',
@@ -652,13 +660,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     marginLeft: 12,
+    minWidth: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   refreshButtonDisabled: {
     backgroundColor: '#ccc',
   },
   refreshButtonText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: '600',
   },
   eventCount: {
@@ -687,24 +698,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 1,
+    position: 'relative', // Badge positioning için
   },
-markerImage: {
-  width: 36,
-  height: 36,
-  borderRadius: 18, // Tam çember için width/height'ın yarısı
-  resizeMode: 'cover',
-  backgroundColor: '#f0f0f0',
-  overflow: 'hidden', // ✅ Bu satırı tekrar ekleyin - önemli!
-  borderWidth: 1, // Border kalınlığını artırabilirsiniz
-  borderColor: '#fff',
-  // Gölge efekti
-  shadowColor: '#000',
-  shadowOffset: {
-    width: 0,
-    height: 2,
+  markerImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    resizeMode: 'cover',
+    backgroundColor: '#f0f0f0',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  shadowOpacity: 0.25,
-  shadowRadius: 3.84,
-  elevation: 5,
-},
+  clusterBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  clusterBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
 });
