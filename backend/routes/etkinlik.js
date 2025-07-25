@@ -301,13 +301,14 @@ if (filter?.toLowerCase() === "ucretsiz") {
     }
   });
 }
-else if (filter?.toLowerCase() === "yaklasan") {
+else 
+if (filter?.toLowerCase() === "yaklasan") {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const nextWeek = new Date(today);
+  nextWeek.setDate(today.getDate() + 7); // Gelecek 7 gün
 
   pipeline.push({
-
-    
     $addFields: {
       tarihDate: {
         $cond: [
@@ -321,7 +322,10 @@ else if (filter?.toLowerCase() === "yaklasan") {
 
   pipeline.push({
     $match: {
-      tarihDate: { $gte: today }
+      tarihDate: { 
+        $gte: today,
+        $lte: nextWeek 
+      }
     }
   });
 }
@@ -334,20 +338,38 @@ if (filter?.toLowerCase() === "populer") {
         foreignField: "etkinlikId",
         as: "yorumlar"
       }
+    },
+    {
+      $lookup: {
+        from: "favoris",
+        localField: "_id",
+        foreignField: "etkinlikId", 
+        as: "favoriler"
+      }
     }
   );
+  
   pipeline.push({
     $addFields: {
       yorumSayisi: { $size: "$yorumlar" },
+      gercekFavoriSayisi: { $size: "$favoriler" },
       populerSkor: {
         $add: [
-          { $ifNull: ["$tiklanmaSayisi", 0] },
-          { $multiply: [{ $ifNull: ["$favoriSayisi", 0] }, 10] },
+          { $ifNull: ["$tiklanmaSayisi", 1] },
+          { $multiply: [{ $size: "$favoriler" }, 10] },
           { $multiply: [{ $size: "$yorumlar" }, 5] }
         ]
       }
     }
   });
+  
+  // Popüler skor sıfırdan büyük olanları al
+  pipeline.push({
+    $match: {
+      populerSkor: { $gt: 0 }
+    }
+  });
+  
   pipeline.push({ $sort: { populerSkor: -1 } });
 }
 
@@ -666,6 +688,10 @@ router.post("/favori", verifyToken, async (req, res) => {
   if (mevcut) return res.status(409).json({ message: "Zaten favoride" });
 
   await new Favori({ etkinlikId, kullaniciId }).save();
+  
+  // 👇 Bu satırı ekleyin
+  await Etkinlik.findByIdAndUpdate(etkinlikId, { $inc: { favoriSayisi: 1 } });
+  
   res.status(201).json({ message: "Favoriye eklendi" });
 });
 
@@ -673,7 +699,14 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
   const { etkinlikId } = req.params;
   const kullaniciId = req.user.id;
 
-  await Favori.findOneAndDelete({ etkinlikId, kullaniciId });
+  // 👇 Silinen kaydı kontrol et
+  const silinen = await Favori.findOneAndDelete({ etkinlikId, kullaniciId });
+  
+  // 👇 Bu kısmı ekleyin
+  if (silinen) {
+    await Etkinlik.findByIdAndUpdate(etkinlikId, { $inc: { favoriSayisi: -1 } });
+  }
+  
   res.json({ message: "Favoriden çıkarıldı" });
 });
 
