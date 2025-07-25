@@ -47,20 +47,9 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
     const { baslik, sehir, tarih, fiyat, kategori, aciklama, tur, adres, gizli } = req.body;
 
 
-    let latitude = req.body.latitude ?? null;
-    let longitude = req.body.longitude ?? null;
 
-    if (!latitude || !longitude) {
-      try {
-        const coords = await geocode(adres || sehir);
-        if (coords) {
-          latitude = coords.lat;
-          longitude = coords.lng;
-        }
-      } catch (err) {
-        console.warn("📍 Konum bilgisi alınamadı:", err.message);
-      }
-    }
+
+
 
     let gorselPath = req.file ? `/img/${req.file.filename}` : null;
 
@@ -94,12 +83,6 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
       gorsel: gorselPath,
       onaylandi: false,
       adres, // Yeni etkinlikler başlangıçta onaysız olur
-      latitude,
-      longitude,
-      location: latitude && longitude ? {
-        type: 'Point',
-        coordinates: [parseFloat(latitude), parseFloat(longitude)]
-      } : undefined,
       gizli: gizli === "true" || gizli === true ? true : false,
     });
 
@@ -513,87 +496,7 @@ const bugunkuler = favoriler.filter(f => {
 
 
 // Etkinlik arama (başlık, kategori veya şehir bazlı)
-router.get('/yakindaki', async (req, res) => {
-  try {
-    const { lat, lng, lon, radius = 50000 } = req.query;
-    
-    // lat/lng veya lat/lon parametrelerini destekle
-    const userLat = parseFloat(lat);
-    const userLng = parseFloat(lng || lon);
-    const radiusMeters = parseInt(radius);
 
-    // Parametre kontrolü
-    if (isNaN(userLat) || isNaN(userLng)) {
-      return res.status(400).json({
-        message: 'Ge\u00e7ersiz konum parametreleri',
-        error: 'lat ve lng/lon parametreleri gerekli ve say\u0131sal olmal\u0131'
-      });
-    }
-
-    if (isNaN(radiusMeters) || radiusMeters <= 0) {
-      return res.status(400).json({
-        message: 'Ge\u00e7ersiz yar\u0131\u00e7ap',
-        error: 'radius parametresi pozitif bir say\u0131 olmal\u0131 (metre cinsinden)'
-      });
-    }
-
-    // Maksimum yarıçap sınırı (performans için)
-    const maxRadiusMeters = 200000;
-    const finalRadius = Math.min(radiusMeters, maxRadiusMeters);
-
-    const pipeline = [
-      {
-        $geoNear: {
-          near: { type: 'Point', coordinates: [userLng, userLat] },
-          distanceField: 'mesafe',
-          maxDistance: finalRadius,
-          spherical: true,
-          query: { 
-            onaylandi: true,
-            $or: [{ gizli: false }, { gizli: { $exists: false } }]
-          }
-        }
-      }
-    ];
-
-    // Mesafeye göre sırala (yakından uzağa)
-    const etkinlikler = await Etkinlik.aggregate(pipeline);
-
-    const sonuc = etkinlikler.map(e => ({
-      id: e._id.toString(),
-      baslik: e.baslik,
-      sehir: e.sehir,
-      tarih: e.tarih,
-      fiyat: e.fiyat,
-      kategori: e.kategori,
-      tur: e.tur,
-      gorsel: typeof e.gorsel === 'string' && e.gorsel.startsWith('data:image') ? null : e.gorsel,
-      aciklama: e.aciklama,
-      latitude: e.latitude,
-      longitude: e.longitude,
-      adres: e.adres,
-      mesafe: Math.round(e.mesafe / 10) / 100 // m to km, 2 decimals
-    }));
-
-    res.json({
-      etkinlikler: sonuc,
-      toplam: sonuc.length,
-      arama: {
-        latitude: userLat,
-        longitude: userLng,
-        yar\u0131cap: finalRadius,
-        yar\u0131capKm: finalRadius / 1000
-      }
-    });
-
-  } catch (error) {
-    console.error('\u274c Yak\u0131ndaki etkinlikler hatas\u0131:', error);
-    res.status(500).json({
-      message: 'Yak\u0131ndaki etkinlikler al\u0131n\u0131rken hata olu\u015ftu',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Sunucu hatas\u0131'
-    });
-  }
-});
 
 router.get("/search", async (req, res) => {
   try {
