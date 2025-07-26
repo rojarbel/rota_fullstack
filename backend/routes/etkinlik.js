@@ -565,14 +565,16 @@ router.get("/search", async (req, res) => {
 
 router.get('/favorilerim', verifyToken, async (req, res) => {
   try {
+    const bugun = new Date();           // ← BU 2 SATIRI EKLE
+    bugun.setHours(0, 0, 0, 0);        // ← BU 2 SATIRI EKLE
+    
     const favoriler = await Favori.find({ kullaniciId: req.user.id })
       .populate({
         path: "etkinlikId",
         match: {
           onaylandi: true,
           gizli: { $ne: true },
-          // Tarihi geçmiş ve silinmiş etkinlikler filtrelensin:
-          tarih: { $gte: new Date() }
+          tarih: { $gte: bugun } // ← new Date() yerine bugun yaz
         }
       });
 
