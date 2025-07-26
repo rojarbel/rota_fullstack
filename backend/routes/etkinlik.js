@@ -1,3 +1,6 @@
+// backend/routes/etkinlik.js
+
+
 const multer = require("multer");
 const verifyToken = require("../middleware/verifyToken");
 const verifyAdmin = require("../middleware/verifyAdmin");
