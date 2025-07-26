@@ -1,6 +1,3 @@
-// backend/routes/etkinlik.js
-
-
 const multer = require("multer");
 const verifyToken = require("../middleware/verifyToken");
 const verifyAdmin = require("../middleware/verifyAdmin");
@@ -565,24 +562,23 @@ router.get("/search", async (req, res) => {
 
 router.get('/favorilerim', verifyToken, async (req, res) => {
   try {
-    const favoriler = await Favori.find({ kullaniciId: req.user.id }).lean();
-    
-    const etkinlikIds = favoriler.map(f => f.etkinlikId);
-    
-    const etkinlikler = await Etkinlik.find({
-      _id: { $in: etkinlikIds },
-      onaylandi: true,
-      $or: [{ gizli: false }, { gizli: { $exists: false } }]
-    }).lean();
+    const favoriler = await Favori.find({ kullaniciId: req.user.id })
+      .populate({
+        path: "etkinlikId",
+        match: {
+          onaylandi: true,
+          gizli: { $ne: true },
+          // Tarihi geçmiş ve silinmiş etkinlikler filtrelensin:
+          tarih: { $gte: new Date() }
+        }
+      });
 
-    // ID'leri normalize et
-    const normalizedEtkinlikler = etkinlikler.map(e => ({
-      ...e,
-      id: e._id.toString(),
-      _id: e._id.toString()
-    }));
+    // Etkinlik silinmişse veya tarihi geçmişse populate null olur, onları filtrele:
+    const etkinlikler = favoriler
+      .map(f => f.etkinlikId)
+      .filter(e => e); // null olmayanlar
 
-    res.json(normalizedEtkinlikler);
+    res.json(etkinlikler);
   } catch (error) {
     console.error('Favorilerim getirilemedi:', error);
     res.status(500).json({ message: 'Favorilerim alınırken hata oluştu' });
@@ -682,36 +678,18 @@ router.get('/:id/favorileyenler', async (req, res) => {
 });
 
 router.post("/favori", verifyToken, async (req, res) => {
-  try {
-    const { etkinlikId } = req.body;
-    const kullaniciId = req.user.id;
+  const { etkinlikId } = req.body;
+  const kullaniciId = req.user.id;
 
-    // ID formatını normalize et
-    const normalizedEtkinlikId = mongoose.Types.ObjectId.isValid(etkinlikId) 
-      ? etkinlikId 
-      : etkinlikId;
+  const mevcut = await Favori.findOne({ etkinlikId, kullaniciId });
+  if (mevcut) return res.status(409).json({ message: "Zaten favoride" });
 
-    const mevcut = await Favori.findOne({ 
-      etkinlikId: normalizedEtkinlikId, 
-      kullaniciId 
-    });
-    
-    if (mevcut) return res.status(409).json({ message: "Zaten favoride" });
-
-    await new Favori({ 
-      etkinlikId: normalizedEtkinlikId, 
-      kullaniciId 
-    }).save();
-    
-    await Etkinlik.findByIdAndUpdate(normalizedEtkinlikId, { 
-      $inc: { favoriSayisi: 1 } 
-    });
-    
-    res.status(201).json({ message: "Favoriye eklendi" });
-  } catch (error) {
-    console.error('Favori ekleme hatası:', error);
-    res.status(500).json({ message: "Favori eklenirken hata oluştu" });
-  }
+  await new Favori({ etkinlikId, kullaniciId }).save();
+  
+  // 👇 Bu satırı ekleyin
+  await Etkinlik.findByIdAndUpdate(etkinlikId, { $inc: { favoriSayisi: 1 } });
+  
+  res.status(201).json({ message: "Favoriye eklendi" });
 });
 
 router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
@@ -734,4 +712,3 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
 
 
 module.exports = router;
-a
