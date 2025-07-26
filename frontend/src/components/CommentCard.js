@@ -20,17 +20,17 @@ const zamanFarki = (tarih) => {
   return `${gun} gün önce`;
 };
 
-const touchableIcon = (liked, onPress, count, tarih) => (
+const touchableIcon = (liked, onPress, count, tarih, disabled = false) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-    <TouchableOpacity onPress={onPress}>
-<Ionicons
-  name={liked ? 'heart' : 'heart-outline'}
-  size={18}
-  color={liked ? PRIMARY : '#999'}
-  onPress={onPress}
-/>
+    <TouchableOpacity onPress={onPress} disabled={disabled}>
+      <Ionicons
+        name={liked ? 'heart' : 'heart-outline'}
+        size={18}
+        color={disabled ? '#ccc' : (liked ? PRIMARY : '#999')}
+        onPress={onPress}
+      />
     </TouchableOpacity>
-    <Text style={{ fontSize: 12, color: '#888' }}>{count}</Text>
+    <Text style={{ fontSize: 12, color: disabled ? '#ccc' : '#888' }}>{count}</Text>
     <Text style={{ fontSize: 12, color: '#aaa' }}>· {zamanFarki(tarih)}</Text>
   </View>
 );
@@ -97,8 +97,12 @@ function CommentCard({
   };
 
   return (
-    <View key={yorum._id} style={{ marginBottom: 12 }}>
-      <View style={{ flexDirection: 'row', paddingLeft: isAltYorum ? 48 : 0 }}>
+  <View key={yorum._id} style={{ 
+    marginBottom: 12,
+    opacity: yorum.tempYorum ? 0.7 : 1,
+    backgroundColor: yorum.tempYorum ? '#f8f8f8' : 'transparent'
+  }}>
+    <View style={{ flexDirection: 'row', paddingLeft: isAltYorum ? 48 : 0 }}>
         <Image source={{ uri: yorum.avatarUrl || `https://ui-avatars.com/api/?name=${yorum.kullanici}` }} style={{
   width: 40,
   height: 40,
@@ -112,9 +116,24 @@ function CommentCard({
   elevation: 2,
 }} />
         <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text style={{ fontWeight: '600' }}>{yorum.kullanici}</Text>
+          {yorum.tempYorum && (
+            <Text style={{ 
+              fontSize: 11, 
+              color: '#999', 
+              fontStyle: 'italic',
+              backgroundColor: '#e8e8e8',
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+              borderRadius: 8
+            }}>
+              Gönderiliyor...
+            </Text>
+          )}
+        </View>
 
-          {duzenleModu ? (
+        {duzenleModu ? (
             <>
               <TextInput
                 value={duzenlenenMetin}
@@ -131,37 +150,42 @@ function CommentCard({
 
           )}
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            {touchableIcon(
-              yorum.begendinMi,
-              async () => {
-                try {
-                  const { data: updated } = await axiosClient.put(`/yorum/begen/${yorum._id}`);
-                  setYorumlar(prev => prev.map(item => (item._id === updated._id ? updated : item)));
-                } catch (err) {
-                  handleApiError(err, 'Beğenme işlemi başarısız');
-                }
-              },
-              yorum.begeni || 0,
-              yorum.tarih
-            )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          {touchableIcon(
+            yorum.begendinMi,
+            yorum.tempYorum ? () => {} : async () => {
+              try {
+                const { data: updated } = await axiosClient.put(`/yorum/begen/${yorum._id}`);
+                setYorumlar(prev => prev.map(item => (item._id === updated._id ? updated : item)));
+              } catch (err) {
+                handleApiError(err, 'Beğenme işlemi başarısız');
+              }
+            },
+            yorum.begeni || 0,
+            yorum.tarih
+          )}
 
-            <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity
+              disabled={yorum.tempYorum}
               style={{
                 paddingVertical: 6,
                 paddingHorizontal: 14,
-                backgroundColor: '#f5f5f5',
+                backgroundColor: yorum.tempYorum ? '#e8e8e8' : '#f5f5f5',
                 borderRadius: 10,
                 borderWidth: 1,
                 borderColor: '#e0e0e0',
+                opacity: yorum.tempYorum ? 0.5 : 1,
               }}
-              onPress={() => setYanitId(yorum._id)}
+              onPress={() => !yorum.tempYorum && setYanitId(yorum._id)}
             >
-              <Text style={{ color: PRIMARY, fontWeight: '500' }}>Yanıtla</Text>
+              <Text style={{ color: yorum.tempYorum ? '#999' : PRIMARY, fontWeight: '500' }}>
+                Yanıtla
+              </Text>
             </TouchableOpacity>
-            </View>
           </View>
+        </View>
+
           <View style={{ marginTop: 8, display: String(yanitId) === String(yorum._id) ? 'flex' : 'none' }}>
             <TextInput
               ref={inputRef}

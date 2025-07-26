@@ -152,28 +152,49 @@ export default function EtkinlikDetay() {
 
 
 
-  const yanitGonder = async (yorumId) => {
-    const metin = yanitlar[yorumId]?.trim();
-    if (!metin) return;
+const yanitGonder = async (yorumId) => {
+  const metin = yanitlar[yorumId]?.trim();
+  if (!metin) return;
 
-    try {
-      const token = await getSecureItem('accessToken'); 
-      const image = await AsyncStorage.getItem('image');
-
-      const { data } = await axiosClient.post('/yorum', {
-        etkinlikId: etkinlik.id,
-        yorum: metin,
-        yanitId: yorumId,
-        avatarUrl: image,
-      });
-
-      setYorumlar(prev => [...prev, data]);
-      setYanitlar(prev => ({ ...prev, [yorumId]: '' }));
-      setYanitId(null);
-    } catch (err) {
-      Alert.alert("Hata", "Yanıt gönderilemedi.");
-    }
+  // Optimistic UI - hemen yanıt ekle
+  const tempYanit = {
+    _id: `temp-yanit-${Date.now()}`,
+    yorum: metin,
+    kullanici: auth?.username || 'Kullanıcı',
+    avatarUrl: await AsyncStorage.getItem('image') || '',
+    tarih: new Date().toISOString(),
+    ustYorumId: yorumId,
+    tempYorum: true
   };
+  
+  setYorumlar(prev => [...prev, tempYanit]);
+  const eskiMetin = metin;
+  setYanitlar(prev => ({ ...prev, [yorumId]: '' }));
+  setYanitId(null);
+
+  try {
+    const token = await getSecureItem('accessToken'); 
+    const image = await AsyncStorage.getItem('image');
+
+    const { data } = await axiosClient.post('/yorum', {
+      etkinlikId: etkinlik.id,
+      yorum: eskiMetin,
+      yanitId: yorumId,
+      avatarUrl: image,
+    });
+
+    // Geçici yanıtı gerçek yanıtla değiştir
+    setYorumlar(prev => prev.map(y => 
+      y._id === tempYanit._id ? data : y
+    ));
+  } catch (err) {
+    // Hata durumunda geçici yanıtı kaldır
+    setYorumlar(prev => prev.filter(y => y._id !== tempYanit._id));
+    setYanitlar(prev => ({ ...prev, [yorumId]: eskiMetin }));
+    setYanitId(yorumId);
+    Alert.alert("Hata", "Yanıt gönderilemedi.");
+  }
+};
 
 
 
@@ -189,24 +210,43 @@ export default function EtkinlikDetay() {
     if (etkinlik) yorumlariGetir();
   }, [etkinlik]);
 
-  const yorumGonder = async () => {
-    if (!yeniYorum.trim()) return;
+const yorumGonder = async () => {
+  if (!yeniYorum.trim()) return;
 
-    try {
-      const token = await getSecureItem('accessToken');
-      const image = await AsyncStorage.getItem('image');
-      const { data } = await axiosClient.post('/yorum', {
-        etkinlikId: etkinlik.id,
-        yorum: yeniYorum,
-        avatarUrl: image,
-      });
-
-      setYorumlar(prev => [data, ...prev]);
-      setYeniYorum("");
-    } catch (err) {
-      Alert.alert("Hata", "Yorum gönderilemedi.");
-    }
+  // Optimistic UI - hemen yorum ekle
+  const tempYorum = {
+    _id: `temp-${Date.now()}`,
+    yorum: yeniYorum,
+    kullanici: auth?.username || 'Kullanıcı',
+    avatarUrl: await AsyncStorage.getItem('image') || '',
+    tarih: new Date().toISOString(),
+    tempYorum: true // geçici yorum işareti
   };
+  
+  setYorumlar(prev => [tempYorum, ...prev]);
+  const eskiYorum = yeniYorum;
+  setYeniYorum("");
+
+  try {
+    const token = await getSecureItem('accessToken');
+    const image = await AsyncStorage.getItem('image');
+    const { data } = await axiosClient.post('/yorum', {
+      etkinlikId: etkinlik.id,
+      yorum: eskiYorum,
+      avatarUrl: image,
+    });
+
+    // Geçici yorumu gerçek yorumla değiştir
+    setYorumlar(prev => prev.map(y => 
+      y._id === tempYorum._id ? data : y
+    ));
+  } catch (err) {
+    // Hata durumunda geçici yorumu kaldır ve input'u geri getir
+    setYorumlar(prev => prev.filter(y => y._id !== tempYorum._id));
+    setYeniYorum(eskiYorum);
+    Alert.alert("Hata", "Yorum gönderilemedi.");
+  }
+};
 
   useEffect(() => {
     const fetchEtkinlik = async () => {
@@ -226,28 +266,49 @@ export default function EtkinlikDetay() {
       if (etkinlik) checkFavori();
     }, [etkinlik]);
 
-    const favoriToggle = async () => {
-      const token = await getSecureItem('accessToken');
-      if (!token) {
-        router.replace('/login');
-        return;
-      }
-      try {
-        if (favorideMi) {
-          await axiosClient.delete(`/etkinlik/favori/${etkinlik.id}`);
-        } else {
-          await axiosClient.post('/etkinlik/favori', { etkinlikId: etkinlik.id });
-        }
-        await checkFavori();
-        await fetchFavorileyenler();
-      } catch (err) {
-        if (err?.response?.status === 409) {
-          setFavorideMi(true);
-        } else {
-          Alert.alert("Hata", "Favori işlemi başarısız oldu.");
-        }
-      }
-    };
+const [favoriLoading, setFavoriLoading] = useState(false); // State tanımlamasına ekle
+
+const favoriToggle = async () => {
+  // Eğer işlem devam ediyorsa, yeni işlem başlatma
+  if (favoriLoading) return;
+  
+  const token = await getSecureItem('accessToken');
+  if (!token) {
+    router.replace('/login');
+    return;
+  }
+  
+  setFavoriLoading(true); // Loading başlat
+  
+  // Optimistic UI - hemen güncelle
+  const eskiFavoriDurumu = favorideMi;
+  const eskiFavoriSayisi = favoriSayisi;
+  
+  setFavorideMi(!favorideMi);
+  setFavoriSayisi(prev => favorideMi ? prev - 1 : prev + 1);
+  
+  try {
+    const etkinlikId = etkinlik._id || etkinlik.id;
+    
+    if (favorideMi) {
+      await axiosClient.delete(`/etkinlik/favori/${etkinlikId}`);
+    } else {
+      await axiosClient.post('/etkinlik/favori', { etkinlikId });
+    }
+    
+    await fetchFavorileyenler();
+    setTimeout(checkFavori, 500);
+    
+  } catch (err) {
+    console.error('Favori toggle hatası:', err);
+    // Hata durumunda eski haline döndür
+    setFavorideMi(eskiFavoriDurumu);
+    setFavoriSayisi(eskiFavoriSayisi);
+    Alert.alert("Hata", "Favori işlemi başarısız oldu. Lütfen tekrar deneyin.");
+  } finally {
+    setFavoriLoading(false); // Loading bitir
+  }
+};
 
     const checkFavori = async () => {
       if (!etkinlik) return;
@@ -350,11 +411,12 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
 
           <TouchableOpacity
             onPress={favoriToggle}
+              disabled={favoriLoading}
             style={{
               marginTop: 24,
               paddingVertical: 12,
               borderRadius: 10,
-              backgroundColor: PRIMARY,
+              backgroundColor: favoriLoading ? '#ccc' : PRIMARY, // Loading sırasında gri
               shadowColor: '#000',
               shadowOpacity: 0.04,
               shadowOffset: { width: 0, height: 1 },

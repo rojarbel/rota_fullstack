@@ -8,8 +8,6 @@ import useAuth from '../src/hooks/useAuth';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import * as FileSystem from 'expo-file-system';
 import logger from '../src/utils/logger';
-
-import * as Location from 'expo-location';
 import { Switch } from 'react-native';
 import CustomPicker from './CustomPicker';
 import Constants from 'expo-constants';
@@ -60,28 +58,7 @@ useEffect(() => {
 }, [authLoaded, isLoggedIn]);
 
 // Giriş yaptıktan sonra konum çek
-useEffect(() => {
-  if (authLoaded && isLoggedIn) {
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Uyarı', 'Konum izni verilmedi.');
-          return;
-        }
-        const loc = await Location.getCurrentPositionAsync({});
-        setLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
-      } catch (e) {
-        Alert.alert('Hata', 'Konum alınamadı. Tekrar deneyin.');
-      }
-    })();
-  }
-}, [authLoaded, isLoggedIn]);
+
 
 
   const [location, setLocation] = useState(null);
@@ -353,19 +330,6 @@ const handleSubmit = async () => {
         </View>
       )}
 
-
-
-      {location ? (
-        <View style={{ height: 250, marginBottom: 16 }}>
-
-
-        </View>
-      ) : (
-        <View style={{ height: 250, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'gray', marginBottom: 10 }}>Konum yükleniyor...</Text>
-          <ActivityIndicator size="large" color="#7B2CBF" />
-        </View>
-      )}
 
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>Gönder</Text>
