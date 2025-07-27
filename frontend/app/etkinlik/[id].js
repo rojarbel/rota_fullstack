@@ -49,7 +49,7 @@ export default function EtkinlikDetay() {
 
 
 
-  const fetchFavorileyenler = async () => {
+  const fetchFavorileyenler = async (isMounted = () => true) => {
     if (!etkinlik) return;
 
     try {
@@ -66,16 +66,27 @@ export default function EtkinlikDetay() {
           }
         })
       );
-      setFavorileyenler(users);
-      setFavoriSayisi(data.toplam || users.length);
+      if (isMounted()) {
+        setFavorileyenler(users);
+        setFavoriSayisi(data.toplam || users.length);
+      }
     } catch {
-      setFavorileyenler([]);
-      setFavoriSayisi(0);
+      if (isMounted()) {
+        setFavorileyenler([]);
+        setFavoriSayisi(0);
+      }
     }
   };
 
   useEffect(() => {
-    fetchFavorileyenler();
+    let isMounted = true;
+    const loadFavorileyenler = async () => {
+      await fetchFavorileyenler(() => isMounted);
+    };
+    loadFavorileyenler();
+    return () => {
+      isMounted = false;
+    };
   }, [etkinlik]);
 
   const paylas = async (tip) => {
@@ -199,15 +210,19 @@ const yanitGonder = async (yorumId) => {
 
 
   useEffect(() => {
+        let isMounted = true;
     const yorumlariGetir = async () => {
       try {
         const { data } = await axiosClient.get(`/yorum/${id}`);
-        setYorumlar(data);
+        if (isMounted) setYorumlar(data);
       } catch (err) {
         logger.log('Yorumlar alınamadı', err);
       }
     };
     if (etkinlik) yorumlariGetir();
+        return () => {
+      isMounted = false;
+    };
   }, [etkinlik]);
 
 const yorumGonder = async () => {
@@ -249,17 +264,21 @@ const yorumGonder = async () => {
 };
 
   useEffect(() => {
+        let isMounted = true;
     const fetchEtkinlik = async () => {
       try {
         const { data } = await axiosClient.get(`/etkinlik/${id}`);
 
         if (data._id && !data.id) data.id = data._id;
-        setEtkinlik(data);
+        if (isMounted) setEtkinlik(data);
       } catch (err) {
         logger.error('Etkinlik verisi alınamadı', err);
       }
     };
     fetchEtkinlik();
+        return () => {
+      isMounted = false;
+    };
   }, [id]);
 
     useEffect(() => {
