@@ -9,14 +9,25 @@ npm start
 
 Copy `.env.example` to `.env` and provide values for the following variables:
 
-- `MONGO_URL` - MongoDB connection string
-- `PORT` - port to run the server (defaults to 5000)
+- `MONGO_URL` - MongoDB connection string used by the server and maintenance scripts
+
+- `PORT` - port to run the server locally (defaults to 5000). In Azure the
+  platform sets this automatically so you can normally omit it in production.
 - `JWT_SECRET` - secret for signing access tokens
 - `JWT_REFRESH_SECRET` - secret for signing refresh tokens
 - `GOOGLE_MAPS_API_KEY` - Google Maps API key
 - `EMAIL_USER` - e-mail account used for sending messages
 - `EMAIL_PASS` - password for the e-mail account
 - `CLIENT_BASE_URL` - base URL of the frontend used in e-mails
+### Azure App Service
+
+When deploying to Azure App Service the platform provides the `PORT`
+environment variable automatically (usually `8080`).
+Do **not** set a different `PORT` value in the production environment or the
+application may fail to start.
+
+Maintenance utilities in `scripts/` such as `fixCoordinates.js` also rely on the
+same `.env` configuration.
 
 ## Scheduled cleanup
 

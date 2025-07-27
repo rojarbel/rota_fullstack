@@ -1,7 +1,7 @@
 // scripts/fixCoordinates.js
 const { MongoClient } = require("mongodb");
-
-const uri = "mongodb+srv://rojarbel:Rojar.21@cluster0.8ha5suh.mongodb.net/rotaDB";
+require("dotenv").config();
+const uri = process.env.MONGO_URL;
 const client = new MongoClient(uri);
 
 async function fixCoords() {
