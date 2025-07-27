@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const clientUrl = process.env.CLIENT_BASE_URL || "https://example.com";
-
+const MAX_RESET_ATTEMPTS = 5;
 const resetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 5,
@@ -150,9 +150,15 @@ router.post('/verify-reset-code', resetLimiter, async (req, res) => {
     }
 
     if (user.resetPasswordExpires < Date.now()) {
+            user.resetPasswordCode = undefined;
+      user.resetPasswordExpires = undefined;
+      user.resetPasswordAttempts = 0;
+      await user.save();
       return res.status(400).json({ message: 'Kod geçersiz veya süresi dolmuş' });
     }
-
+    if (user.resetPasswordAttempts >= MAX_RESET_ATTEMPTS) {
+      return res.status(429).json({ message: 'Çok fazla deneme yapıldı, lütfen yeni bir sıfırlama isteğinde bulunun.' });
+    }
     if (user.resetPasswordCode !== code) {
       user.resetPasswordAttempts += 1;
       await user.save();

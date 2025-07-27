@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useContext } from 'react';
+import React, { useEffect, useRef, useState, useContext, useCallback } from 'react';
 import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import axiosClient from '../api/axiosClient';
 import { AuthContext } from '../context/AuthContext';
@@ -66,6 +66,23 @@ function CommentCard({
   const [duzenleModu, setDuzenleModu] = useState(false);
   const [duzenlenenMetin, setDuzenlenenMetin] = useState(yorum.yorum);
 
+    const likeTimeout = useRef();
+
+  const debouncedLike = useCallback(() => {
+    if (likeTimeout.current) {
+      clearTimeout(likeTimeout.current);
+    }
+    likeTimeout.current = setTimeout(async () => {
+      try {
+        const { data: updated } = await axiosClient.put(`/yorum/begen/${yorum._id}`);
+        setYorumlar(prev => prev.map(item => (item._id === updated._id ? updated : item)));
+      } catch (err) {
+        handleApiError(err, 'Beğenme işlemi başarısız');
+      }
+    }, 300);
+  }, [yorum._id, setYorumlar]);
+
+  useEffect(() => () => clearTimeout(likeTimeout.current), [yorum._id]);
   const yorumuGuncelle = async () => {
     try {
       const { data } = await axiosClient.put(`/yorum/${yorum._id}`, {
@@ -153,14 +170,8 @@ function CommentCard({
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           {touchableIcon(
             yorum.begendinMi,
-            yorum.tempYorum ? () => {} : async () => {
-              try {
-                const { data: updated } = await axiosClient.put(`/yorum/begen/${yorum._id}`);
-                setYorumlar(prev => prev.map(item => (item._id === updated._id ? updated : item)));
-              } catch (err) {
-                handleApiError(err, 'Beğenme işlemi başarısız');
-              }
-            },
+
+                        yorum.tempYorum ? () => {} : debouncedLike,
             yorum.begeni || 0,
             yorum.tarih
           )}
