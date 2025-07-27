@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+const Joi = require('joi');
 const clientUrl = process.env.CLIENT_BASE_URL || "https://example.com";
 const MAX_RESET_ATTEMPTS = 5;
 const resetLimiter = rateLimit({
@@ -17,8 +18,42 @@ const resetLimiter = rateLimit({
     res.status(429).json({ message: 'Too many requests, please try again later.' });
   },
 });
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ message: 'Too many login attempts, please try again later.' });
+  },
+});
+
+const registerSchema = Joi.object({
+  username: Joi.string().required(),
+  email: Joi.string().email().required(),
+  password: Joi.string().required(),
+});
+
+const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().required(),
+});
+
+const resetPasswordRequestSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+const verifyResetCodeSchema = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string().required(),
+  newPassword: Joi.string().required(),
+});
 // Kayıt
 router.post('/register', async (req, res) => {
+    const { error } = registerSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
   const { username, email, password } = req.body;
 
   try {
@@ -48,7 +83,11 @@ router.post('/register', async (req, res) => {
 
 // Giriş
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
+  const { error } = loginSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
   const { email, password } = req.body;
 
   try {
@@ -96,6 +135,10 @@ router.post('/login', async (req, res) => {
 
 // Şifre sıfırlama bağlantısı isteği
 router.post('/reset-password-request', resetLimiter, async (req, res) => {
+    const { error } = resetPasswordRequestSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
   const { email } = req.body;
 
   try {
@@ -141,6 +184,10 @@ router.post('/reset-password-request', resetLimiter, async (req, res) => {
 });
 
 router.post('/verify-reset-code', resetLimiter, async (req, res) => {
+    const { error } = verifyResetCodeSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
   const { email, code, newPassword } = req.body;
 
   try {

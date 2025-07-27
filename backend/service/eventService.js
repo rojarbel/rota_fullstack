@@ -1,8 +1,13 @@
 const NodeCache = require("node-cache");
 const Etkinlik = require("../models/Etkinlik");
 
-const cache = new NodeCache({ stdTTL: 300, checkperiod: 600 });
+// Cache event queries for 5 minutes to reduce database load.
+// The 300 second TTL prevents the in-memory cache from growing indefinitely.
 
+const cache = new NodeCache({ stdTTL: 300, checkperiod: 600 });
+function flushEventsCache() {
+  cache.flushAll();
+}
 async function fetchEvents(query) {
   const {
     page = 1,
@@ -266,4 +271,5 @@ async function fetchEvents(query) {
 
 module.exports = {
   fetchEvents,
+    flushEventsCache,
 };

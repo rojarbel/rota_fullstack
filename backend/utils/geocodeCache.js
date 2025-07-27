@@ -4,7 +4,8 @@ const axios = require("axios");
 
 const cacheFile = path.join(__dirname, "geocode-cache.json");
 let cache = {};
-
+const DEFAULT_TTL_DAYS = 30;
+const ttlMs = DEFAULT_TTL_DAYS * 24 * 60 * 60 * 1000;
 // 📦 Async olarak dosyadan cache oku
 (async () => {
   try {
@@ -19,8 +20,25 @@ let cache = {};
 async function geocode(address) {
   if (!address) return null;
 
-  const cached = cache[address];
-  if (cached) return cached;
+  const now = Date.now();
+  let cached = cache[address];
+
+  if (cached) {
+    // Geçerlilik kontrolü
+    if (!cached.timestamp) {
+      // Eski formatı dönüştür
+      cached = { coords: cached, timestamp: now };
+      cache[address] = cached;
+      await fs.writeFile(cacheFile, JSON.stringify(cache, null, 2));
+      return cached.coords;
+    }
+
+    if (now - cached.timestamp < ttlMs) {
+      return cached.coords;
+    }
+    // Süresi dolmuşsa sil
+    delete cache[address];
+  }
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
@@ -35,7 +53,7 @@ async function geocode(address) {
 
     if (data.status === "OK" && data.results.length > 0) {
       const loc = data.results[0].geometry.location;
-      cache[address] = loc;
+      cache[address] = { coords: loc, timestamp: now };
 
       try {
         await fs.writeFile(cacheFile, JSON.stringify(cache, null, 2));
@@ -52,4 +70,23 @@ async function geocode(address) {
   return null;
 }
 
-module.exports = { geocode };
+async function cleanupCache(maxAgeDays = DEFAULT_TTL_DAYS) {
+  const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+  let changed = false;
+  for (const [key, value] of Object.entries(cache)) {
+    const ts = value.timestamp || 0;
+    if (ts < cutoff) {
+      delete cache[key];
+      changed = true;
+    }
+  }
+  if (changed) {
+    try {
+      await fs.writeFile(cacheFile, JSON.stringify(cache, null, 2));
+    } catch (e) {
+      console.warn("⚠️ Cache dosyası yazılamadı:", e.message);
+    }
+  }
+}
+
+module.exports = { geocode, cleanupCache };

@@ -25,7 +25,10 @@ const profileStorage = multer.diskStorage({
   },
 });
 
-const uploadProfile = multer({ storage: profileStorage });
+const uploadProfile = multer({
+  storage: profileStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 router.get("/", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const users = await User.find({}, "email role createdAt");

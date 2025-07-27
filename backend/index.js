@@ -2,15 +2,19 @@
 
 
 require('dotenv').config();
+const cron = require('node-cron');
 // Zamanlanmış görevi ve fonksiyonunu al
 const { silGecmisEtkinlikler, scheduleDeleteOldEvents } = require("./jobs/deleteOldEvents");
-
+const { cleanupCache } = require("./utils/geocodeCache");
 
 // Uygulama başladığında eski etkinlikleri hemen temizle
 silGecmisEtkinlikler().catch(err =>
   console.error("silGecmisEtkinlikler başlangıç hatası:", err)
 );
-
+cleanupCache().catch(err =>
+  console.error("cleanupCache başlangıç hatası:", err)
+);
+cron.schedule("0 3 * * *", cleanupCache);
 // Paketleri import et
 const express = require('express');
 const mongoose = require('mongoose');

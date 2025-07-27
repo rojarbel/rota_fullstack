@@ -16,7 +16,7 @@ const Yorum = require("../models/Yorum");
 const Bildirim = require("../models/Bildirim");
 const { geocode } = require("../utils/geocodeCache");
 const fsPromises = require("fs/promises");
-const { fetchEvents } = require("../services/eventService");
+const { fetchEvents, flushEventsCache } = require("../services/eventService");  
 function getOptimizedPath(originalPath) {
   return originalPath.replace(".webp", "_optimized.webp");
 }
@@ -32,7 +32,10 @@ const multerStorage = multer.diskStorage({
     cb(null, Date.now() + ".webp");
   },
 });
-const upload = multer({ storage: multerStorage });
+const upload = multer({
+  storage: multerStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 const mongoose = require("mongoose");
 
 
@@ -86,6 +89,7 @@ router.post("/", verifyToken, upload.single("gorsel"), async (req, res) => {
     });
 
     const savedEtkinlik = await yeniEtkinlik.save();
+        flushEventsCache();
     return res.status(201).json({ _id: yeniEtkinlik._id });
   } catch (error) {
     console.error(error);
@@ -123,6 +127,7 @@ router.get("/bekleyen", verifyToken, verifyAdmin, async (req, res) => {
 router.delete("/hepsiniSil", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const result = await Etkinlik.deleteMany({});
+        flushEventsCache();
     res.json({ message: "Tüm etkinlikler silindi", deletedCount: result.deletedCount });
   } catch (err) {
     console.error("[HATA] Etkinlik silinirken:", err);
@@ -142,7 +147,7 @@ router.put("/onayla/:id", verifyToken, verifyAdmin, async (req, res) => {
     if (!etkinlik) {
       return res.status(404).json({ message: "Etkinlik bulunamadı" });
     }
-
+        flushEventsCache();
     res.json({
       id: etkinlik._id.toString(),
       baslik: etkinlik.baslik,
@@ -169,7 +174,7 @@ router.delete("/:id", verifyToken, verifyAdmin, async (req, res) => {
     if (!deletedEtkinlik) {
       return res.status(404).json({ message: "Etkinlik bulunamadı" });
     }
-
+        flushEventsCache();
     res.json({ message: "Etkinlik başarıyla silindi" });
   } catch (error) {
     console.error(error);
@@ -393,6 +398,7 @@ router.get("/:id", async (req, res) => {
 router.put("/onaylaHepsini", async (req, res) => {
   try {
     const result = await Etkinlik.updateMany({}, { $set: { onaylandi: true,gizli: false } });
+        flushEventsCache();
     res.json({ message: "Tüm etkinlikler onaylandı", modifiedCount: result.modifiedCount });
   } catch (err) {
     console.error(err);

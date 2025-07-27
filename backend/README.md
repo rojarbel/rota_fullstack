@@ -33,3 +33,12 @@ flag so browsers can aggressively cache them.
 For even better performance you can upload the contents of `public/img` to a CDN
 (e.g. Amazon CloudFront or Cloudflare) and point your frontend at that URL. The
 server's caching headers work well with most CDNs.
+
+
+## Event query caching
+
+Event listings fetched via `/api/etkinlik/tum` are cached in memory using
+[`node-cache`](https://www.npmjs.com/package/node-cache). Cached entries live
+for **300 seconds** (5&nbsp;minutes) before expiring. This TTL avoids unlimited
+memory growth while keeping database load low. The value can be changed in
+`service/eventService.js`.
