@@ -3,7 +3,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import axiosClient from '../src/api/axiosClient';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Linking } from 'react-native';
 import { deleteItems } from '../src/utils/storage';
 import { setCachedToken } from '../src/api/axiosClient';
@@ -29,7 +29,7 @@ function Profil() {
     image: '',
   });
 
-const loadUser = async () => {
+const loadUser = useCallback(async () => {
   try {
 
     const city = await AsyncStorage.getItem('city') || '';
@@ -54,17 +54,17 @@ const loadUser = async () => {
   } catch (err) {
     logger.error('Profil bilgisi yüklenemedi:', err);
   }
-};
+}, [authUsername, authEmail, userId]);
 
 useEffect(() => {
   loadUser();
+}, [loadUser]);
+
+const handleChange = useCallback((name, value) => {
+  setFormData(prev => ({ ...prev, [name]: value }));
 }, []);
 
-  const handleChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
-  };
-
-const handleImageUpload = async () => {
+const handleImageUpload = useCallback(async () => {
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -75,11 +75,11 @@ const handleImageUpload = async () => {
   if (!result.canceled && !result.cancelled) {
 
     const uri = result.assets[0].uri;
-    setFormData({ ...formData, image: uri }); // artık base64 değil, uri
+    setFormData(prev => ({ ...prev, image: uri }));
   }
-};
+}, []);
 
-const handleUpdate = async () => {
+const handleUpdate = useCallback(async () => {
   try {
     const token = await getSecureItem('accessToken');
 
@@ -135,14 +135,15 @@ const handleUpdate = async () => {
     logger.error('Güncelleme hatası:', err?.response || err);
     Alert.alert("Hata", err.response?.data?.message || err.message);
   }
-};
+}, [loadUser, setAuthImage, formData]);
 
 
-const handleContact = () => {
+
+const handleContact = useCallback(() => {
   Linking.openURL('mailto:rotaolusturofficial@gmail.com');
-};
+}, []);
 
-const handleDeleteAccount = () => {
+const handleDeleteAccount = useCallback(() => {
   Alert.alert('Hesabımı Sil', 'Hesabınızı kalıcı olarak silmek istiyor musunuz?', [
     { text: 'Vazgeç', style: 'cancel' },
     {
@@ -175,7 +176,7 @@ const handleDeleteAccount = () => {
       },
     },
   ]);
-};
+}, [setAuthImage]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -220,7 +221,7 @@ const handleDeleteAccount = () => {
       </TouchableOpacity>
 
 <TouchableOpacity onPress={handleDeleteAccount}>
-  <Text style={{ color: 'red', textAlign: 'center', marginTop: 20, fontSize: 12 }}>
+  <Text style={styles.deleteText}>
     Hesabımı silmek istiyorum
   </Text>
 </TouchableOpacity>
@@ -327,7 +328,13 @@ linkButton: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 15,
-  }
+  },
+  deleteText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 12,
+  },
 });
 
 export default Profil;

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deleteItems } from '../utils/storage';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -46,8 +46,41 @@ const Header = ({ onHamburgerClick, onSearchChange }) => {
   const [bildirimler, setBildirimler] = useState([]);
   const [bildirimPanelAcik, setBildirimPanelAcik] = useState(false);
 
+    const toggleProfileDropdown = useCallback(() => {
+    setIsProfileDropdownOpen(prev => !prev);
+  }, []);
+
+  const closeProfileDropdown = useCallback(() => setIsProfileDropdownOpen(false), []);
+
+  const toggleAuthMenu = useCallback(() => {
+    setIsAuthOpen(prev => !prev);
+  }, []);
+
+  const closeAuthMenu = useCallback(() => setIsAuthOpen(false), []);
+
+  const handleLogout = useCallback(async () => {
+    await deleteItems(['accessToken', 'refreshToken']);
+    await AsyncStorage.multiRemove(['user', 'image']);
+    auth.setIsLoggedIn(false);
+    auth.setUsername(null);
+    auth.setImage(null);
+    setProfilePhoto(null);
+    setCachedToken(null);
+    closeProfileDropdown();
+    router.replace('/login');
+  }, [auth, closeProfileDropdown, router]);
+
+  const handleNotificationPress = useCallback(async () => {
+    setBildirimPanelAcik(prev => !prev);
+    try {
+      await axiosClient.put('/bildirim/okundu');
+      setBildirimler(prev => prev.map(b => ({ ...b, okunduMu: true })));
+    } catch (err) {
+      handleApiError(err, 'Bildirim okundu işaretlenemedi');
+    }
+  }, [bildirimPanelAcik]);
   // 🔍 Etkinlik arama fonksiyonu
-  const fetchSearchResults = async (query) => {
+  const fetchSearchResults = useCallback(async (query) => {
     if (!query || query.trim().length < 2) {
       setSearchResults([]);
       return;
@@ -64,27 +97,26 @@ const Header = ({ onHamburgerClick, onSearchChange }) => {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
 
   // 🌆 Şehir seçimi sonrası yönlendirme
-  const handleShowEvents = () => {
+ const handleShowEvents = useCallback(() => {
     if (!selectedCity) {
       Alert.alert('Lütfen bir şehir seçin!');
       return;
     }
     router.push({ pathname: '/arama-sonuclari', params: { sehir: selectedCity } });
     setIsModalVisible(false);
-  };
+  }, [selectedCity]);
 
   // 🔑 Giriş yapılmadan yönlendirme engeli
-  const handleProtectedClick = (path) => {
+  const handleProtectedClick = useCallback((path) => {
     if (!isLoggedIn) {
       router.push('/login');
     } else {
       router.push(`/${path}`);
     }
-  };
-
+  }, [isLoggedIn]);
 
   // 🧠 Admin bekleyen etkinlik sayısı
   useEffect(() => {
@@ -167,7 +199,7 @@ useFocusEffect(
   }, [])
 );
 
-const handleBildirimTikla = async (bildirim) => {
+const handleBildirimTikla = useCallback(async (bildirim) => {
 if ((bildirim.tip === 'yanit' || bildirim.tip === 'begeni') && bildirim.yorumId) {
   try {
     const res = await axiosClient.get(`/yorum/tek/${bildirim.yorumId}`);
@@ -186,7 +218,7 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
   const id = typeof bildirim.etkinlikId === 'object' ? bildirim.etkinlikId._id : bildirim.etkinlikId;
   if (id) router.push(`/etkinlik/${id}`);
 }
-};
+}, [router]);
 
   return (
     <View>
@@ -220,17 +252,7 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
   />
 {isLoggedIn && (
   <TouchableOpacity
-    onPress={async () => {
-  setBildirimPanelAcik(!bildirimPanelAcik);
-  try {
-    await axiosClient.put('/bildirim/okundu');
-    setBildirimler(prev =>
-      prev.map(b => ({ ...b, okunduMu: true }))
-    );
-  } catch (err) {
-    handleApiError(err, 'Bildirim okundu işaretlenemedi');
-  }
-}}
+    onPress={handleNotificationPress}
     style={styles.notificationButton}
   >
 <View style={styles.notificationIconWrapper}>
@@ -247,9 +269,9 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
 )}
 
 {isLoggedIn && (
-  <View style={{ position: 'relative' }}>
+  <View style={styles.relative}>
       <TouchableOpacity
-        onPress={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+        onPress={toggleProfileDropdown}
         activeOpacity={0.8}
       >
       <View style={styles.avatar}>
@@ -276,27 +298,15 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
     {isProfileDropdownOpen && (
       <View style={styles.dropdownMenu}>
         <TouchableOpacity onPress={() => {
-          setIsProfileDropdownOpen(false);
+          closeProfileDropdown();
           router.push('/profil');
         }}>
           <Text style={styles.dropdownItem}>Profil</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={async () => {
-          await deleteItems(['accessToken', 'refreshToken']);
-          await AsyncStorage.multiRemove(['user', 'image']);
-          auth.setIsLoggedIn(false); 
-          auth.setUsername(null);
-          auth.setImage(null);           // Burası: null olacak!
-          setProfilePhoto(null);
-          setCachedToken(null);
-          setIsProfileDropdownOpen(false);
+        <TouchableOpacity onPress={handleLogout}>
+        <View style={styles.dropdownRow}>
 
-          // Router'ı push yerine replace yap, stackten sıyrılsın:
-          router.replace('/login');
-        }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 }}>
-          
-          <Text style={{ color: '#333', fontSize: 15, fontWeight: '500' }}>Çıkış Yap</Text>
+          <Text style={styles.dropdownText}>Çıkış Yap</Text>
         </View>
       </TouchableOpacity>
       </View>
@@ -306,21 +316,22 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
 
 {!isLoggedIn && (
   <View>
-    <TouchableOpacity onPress={() => setIsAuthOpen(!isAuthOpen)}>
+    <TouchableOpacity onPress={toggleAuthMenu}>
+
       <Text style={styles.loginText}>Giriş Yap</Text>
     </TouchableOpacity>
 
     {isAuthOpen && (
       <View style={styles.dropdownMenu}>
 <TouchableOpacity onPress={() => {
-  setIsAuthOpen(false); // 🔥 sekmeyi kapat
+  closeAuthMenu();
   router.push('/login');
 }}>
   <Text style={styles.dropdownItem}>Giriş Yap</Text>
 </TouchableOpacity>
 
 <TouchableOpacity onPress={() => {
-  setIsAuthOpen(false); // 🔥 sekmeyi kapat
+  closeAuthMenu();
   router.push('/register');
 }}>
   <Text style={styles.dropdownItem}>Üye Ol</Text>
@@ -407,12 +418,12 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
     {bildirimler.length === 0 ? (
       <Text style={styles.panelEmpty}>Henüz bildirimin yok.</Text>
     ) : (
-<View style={{ maxHeight: 220 }}>
+<View style={styles.maxHeight220}>
   <FlatList
     data={bildirimler.slice(0, 12)} 
     keyExtractor={(item, index) => index.toString()}
     showsVerticalScrollIndicator={true}
-    style={{ maxHeight: 220 }}
+    style={styles.maxHeight220}
     contentContainerStyle={{ paddingBottom: 20 }}
     renderItem={({ item, index }) => {
         const etkinlik = item.etkinlikId || item.etkinlik || {};
@@ -430,7 +441,7 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
             cacheKey={`bildirim-${etkinlik._id || etkinlik.id || index}`}
           />
             
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <Text style={styles.panelEventTitle}>
                 {(item.etkinlik?.baslik || item.etkinlikId?.baslik) || "Etkinlik"}
               </Text>
@@ -777,6 +788,26 @@ notificationIconWrapper: {
   height: 24,
   justifyContent: 'center',
   alignItems: 'center',
+},
+relative: {
+  position: 'relative',
+},
+dropdownRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+},
+dropdownText: {
+  color: '#333',
+  fontSize: 15,
+  fontWeight: '500',
+},
+maxHeight220: {
+  maxHeight: 220,
+},
+flex1: {
+  flex: 1,
 },
 
   });

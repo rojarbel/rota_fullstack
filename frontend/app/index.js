@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -11,7 +11,6 @@ import {
 import axiosClient from '../src/api/axiosClient';
 import SafeFlatList from '../src/components/SafeFlatList';
 import FastImage from 'expo-fast-image';
-import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../src/constants';
@@ -26,6 +25,14 @@ const Index = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const handleEndReached = useCallback(() => {
+    try {
+      if (!hasMore || loadingMore || isFetching.current) return;
+      setPage(prev => prev + 1);
+    } catch (e) {
+      logger.warn('onEndReached crash:', e);
+    }
+  }, [hasMore, loadingMore]);
 
   useEffect(() => {
     const fetchEtkinlikler = async () => {
@@ -135,14 +142,14 @@ const Index = () => {
   }, []);
 
   // Sekme değiştirme fonksiyonu
-  const handleTabChange = (newTab) => {
+  const handleTabChange = useCallback((newTab) => {
     if (newTab !== aktifSekme) {
       setAktifSekme(newTab);
     }
-  };
+  }, [aktifSekme]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flex1}>
       <SafeFlatList
         data={filtrelenmisEtkinlikler}
         initialNumToRender={6}
@@ -159,14 +166,7 @@ const Index = () => {
             return `fallback-${index}`;
           }
         }}
-        onEndReached={() => {
-          try {
-            if (!hasMore || loadingMore || isFetching.current) return;
-            setPage(prev => prev + 1);
-          } catch (e) {
-            logger.warn('onEndReached crash:', e);
-          }
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
         ListHeaderComponent={
           <>
@@ -191,14 +191,14 @@ const Index = () => {
               })}
             </View>
             {loading && (
-              <ActivityIndicator size="large" color={PRIMARY} style={{ marginTop: 40 }} />
+              <ActivityIndicator size="large" color={PRIMARY} style={styles.mt40} />
             )}
           </>
         }
         ListFooterComponent={
           <>
             {loadingMore && (
-              <ActivityIndicator size="small" color={PRIMARY} style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="small" color={PRIMARY} style={styles.mv20} />
             )}
           </>
         }
@@ -282,6 +282,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: TEXT,
     lineHeight: 22,
+  },
+    flex1: {
+    flex: 1,
+  },
+  mt40: {
+    marginTop: 40,
+  },
+  mv20: {
+    marginVertical: 20,
   },
 });
 
