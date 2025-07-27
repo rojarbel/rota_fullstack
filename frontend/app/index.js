@@ -80,7 +80,8 @@ const Index = () => {
   useEffect(() => {
     setEtkinlikler([]);
     setHasMore(true);
-    setTimeout(() => setPage(1), 0);
+    const timer = setTimeout(() => setPage(1), 0);
+    return () => clearTimeout(timer);
   }, [aktifSekme]);
 
   // Backend'den gelen sırayı koru, frontend'de ekstra sıralama yapma
