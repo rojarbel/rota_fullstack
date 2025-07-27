@@ -245,7 +245,14 @@ router.get("/tum", async (req, res) => {
       filter,
     } = req.query;
 
-        const cacheKey = `tum:${JSON.stringify(req.query)}`;
+    // Dinamik limit belirleme
+    let dynamicLimit = parseInt(limit);
+    if (filter === 'tum') {
+      // İlk sayfa 12, sonraki sayfalar 6
+      dynamicLimit = page == 1 ? 12 : 6;
+    }
+
+    const cacheKey = `tum:${JSON.stringify({ ...req.query, dynamicLimit })}`;
     const cached = cache.get(cacheKey);
     if (cached) {
       return res.json(cached);
@@ -253,14 +260,13 @@ router.get("/tum", async (req, res) => {
 
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const nowTimestamp = now.getTime(); // ← Burası kritik
+    const nowTimestamp = now.getTime();
 
     const match = {
       onaylandi: true,
       $or: [{ gizli: false }, { gizli: { $exists: false } }],
       tarihDate: { $gte: now }
     };
-
 
     if (kategori) match.kategori = new RegExp(`^${kategori.trim()}$`, "i");
     if (sehir) match.sehir = new RegExp(`^${sehir.trim()}$`, "i");
@@ -271,200 +277,209 @@ router.get("/tum", async (req, res) => {
       }
     }
 
-        const pipeline = [
+    const pipeline = [
+      {
+        $addFields: {
+          tarihDate: {
+            $cond: [
+              { $eq: [{ $type: "$tarih" }, "date"] },
+              "$tarih",
+              { $toDate: "$tarih" }
+            ]
+          }
+        }
+      },
       { $match: match },
     ];
-    pipeline.unshift({
-  $addFields: {
-    tarihDate: {
-      $cond: [
-        { $eq: [{ $type: "$tarih" }, "date"] },
-        "$tarih",
-        { $toDate: "$tarih" }
-      ]
-    }
-  }
-});
 
-
-if (filter?.toLowerCase() === "ucretsiz") {
-  pipeline.push({
-    $match: {
-      fiyat: {
-        $in: [
-          "", " ", null, undefined,
-          0, "0", 0.0, "0.00",
-          "Ücretsiz", "ücretsiz", "ÜCRETSİZ", "ücretsiz ", "Ücretsiz ",
-          "free", "FREE"
-        ]
-      }
+    // Filter'a göre özel işlemler
+    if (filter?.toLowerCase() === "ucretsiz") {
+      pipeline.push({
+        $match: {
+          fiyat: {
+            $in: [
+              "", " ", null, undefined,
+              0, "0", 0.0, "0.00",
+              "Ücretsiz", "ücretsiz", "ÜCRETSİZ", "ücretsiz ", "Ücretsiz ",
+              "free", "FREE"
+            ]
+          }
+        }
+      });
+      
+      // Fiyat sıralaması için sayısal dönüşüm
+      pipeline.push({
+        $addFields: {
+          fiyatSayisal: {
+            $cond: [
+              { 
+                $or: [
+                  { $in: ["$fiyat", ["", " ", null, undefined, "Ücretsiz", "ücretsiz", "ÜCRETSİZ", "free", "FREE"]] },
+                  { $eq: ["$fiyat", 0] },
+                  { $eq: ["$fiyat", "0"] }
+                ]
+              },
+              0,
+              {
+                $toDouble: {
+                  $ifNull: [
+                    {
+                      $arrayElemAt: [
+                        {
+                          $regexFindAll: {
+                            input: { $toString: "$fiyat" },
+                            regex: /\d+(\.\d+)?/
+                          }
+                        }, 0
+                      ]
+                    }.match,
+                    "0"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      });
+      
+      pipeline.push({ $sort: { fiyatSayisal: 1, baslik: 1 } }); // En ucuz önce, sonra alfabetik
     }
-  });
-}
-else 
-if (filter?.toLowerCase() === "yaklasan") {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const nextWeek = new Date(today);
-  nextWeek.setDate(today.getDate() + 7); // Gelecek 7 gün
+    else if (filter?.toLowerCase() === "yaklasan") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
 
-  pipeline.push({
-    $addFields: {
-      tarihDate: {
-        $cond: [
-          { $eq: [{ $type: "$tarih" }, "date"] },
-          "$tarih",
-          { $toDate: "$tarih" }
-        ]
-      }
+      pipeline.push({
+        $match: {
+          tarihDate: { 
+            $gte: today,
+            $lte: nextWeek 
+          }
+        }
+      });
+      
+      pipeline.push({ $sort: { tarihDate: 1, baslik: 1 } }); // En yakın tarih önce
     }
-  });
+    else if (filter?.toLowerCase() === "populer") {
+      pipeline.push(
+        {
+          $lookup: {
+            from: "yorums",
+            localField: "_id",
+            foreignField: "etkinlikId",
+            as: "yorumlar"
+          }
+        },
+        {
+          $lookup: {
+            from: "favoris",
+            localField: "_id",
+            foreignField: "etkinlikId", 
+            as: "favoriler"
+          }
+        }
+      );
+      
+      pipeline.push({
+        $addFields: {
+          yorumSayisi: { $size: "$yorumlar" },
+          gercekFavoriSayisi: { $size: "$favoriler" },
+          populerSkor: {
+            $add: [
+              { $ifNull: ["$tiklanmaSayisi", 1] },
+              { $multiply: [{ $size: "$favoriler" }, 10] },
+              { $multiply: [{ $size: "$yorumlar" }, 5] }
+            ]
+          }
+        }
+      });
+      
+      pipeline.push({
+        $match: {
+          populerSkor: { $gt: 0 }
+        }
+      });
+      
+      // Popüler skor sıfırdan büyük olanları önce, sonra alfabetik
+      pipeline.push({ 
+        $sort: { 
+          populerSkor: -1, 
+          baslik: 1 
+        } 
+      });
+    }
 
-  pipeline.push({
-    $match: {
-      tarihDate: { 
-        $gte: today,
-        $lte: nextWeek 
-      }
-    }
-  });
-}
-if (filter?.toLowerCase() === "populer") {
-  pipeline.push(
-    {
-      $lookup: {
-        from: "yorums",
-        localField: "_id",
-        foreignField: "etkinlikId",
-        as: "yorumlar"
-      }
-    },
-    {
-      $lookup: {
-        from: "favoris",
-        localField: "_id",
-        foreignField: "etkinlikId", 
-        as: "favoriler"
-      }
-    }
-  );
-  
-  pipeline.push({
-    $addFields: {
-      yorumSayisi: { $size: "$yorumlar" },
-      gercekFavoriSayisi: { $size: "$favoriler" },
-      populerSkor: {
-        $add: [
-          { $ifNull: ["$tiklanmaSayisi", 1] },
-          { $multiply: [{ $size: "$favoriler" }, 10] },
-          { $multiply: [{ $size: "$yorumlar" }, 5] }
-        ]
-      }
-    }
-  });
-  
-  // Popüler skor sıfırdan büyük olanları al
-  pipeline.push({
-    $match: {
-      populerSkor: { $gt: 0 }
-    }
-  });
-  
-  pipeline.push({ $sort: { populerSkor: -1 } });
-}
-
-
-
+    // Fiyat filtresi (ücretsiz sekmesi değilse)
     const defaultMin = 0;
     const defaultMax = 22104;
 
-const isFiyatFilterActive =
-  filter?.toLowerCase() !== "ucretsiz" &&
-  ((fiyatMin && parseFloat(fiyatMin) > defaultMin) ||
-  (fiyatMax && parseFloat(fiyatMax) < defaultMax));
+    const isFiyatFilterActive =
+      filter?.toLowerCase() !== "ucretsiz" &&
+      ((fiyatMin && parseFloat(fiyatMin) > defaultMin) ||
+      (fiyatMax && parseFloat(fiyatMax) < defaultMax));
 
-if (isFiyatFilterActive) {
-  pipeline.push({
-    $addFields: {
-      fiyatTemiz: {
-        $ifNull: [
-          {
-            $regexFind: {
-              input: "$fiyat",
-              regex: /\d+(\.\d+)?/
-            }
-          },
-          { match: null }
-        ]
-      }
+    if (isFiyatFilterActive) {
+      pipeline.push({
+        $addFields: {
+          fiyatTemiz: {
+            $ifNull: [
+              {
+                $regexFind: {
+                  input: "$fiyat",
+                  regex: /\d+(\.\d+)?/
+                }
+              },
+              { match: null }
+            ]
+          }
+        }
+      });
+
+      pipeline.push({
+        $addFields: {
+          fiyatSayisal: { $toDouble: "$fiyatTemiz.match" }
+        }
+      });
+
+      const fiyatExpr = { $and: [] };
+      if (fiyatMin) fiyatExpr.$and.push({ $gte: ["$fiyatSayisal", parseFloat(fiyatMin)] });
+      if (fiyatMax) fiyatExpr.$and.push({ $lte: ["$fiyatSayisal", parseFloat(fiyatMax)] });
+
+      pipeline.push({ $match: { $expr: fiyatExpr } });
     }
-  });
 
-  pipeline.push({
-    $addFields: {
-      fiyatSayisal: { $toDouble: "$fiyatTemiz.match" }
+    // Tarih aralığı filtreleri
+    if (baslangic) {
+      pipeline.push({
+        $match: {
+          tarihDate: { $gte: new Date(baslangic) }
+        }
+      });
     }
-  });
 
-  const fiyatExpr = { $and: [] };
-  if (fiyatMin) fiyatExpr.$and.push({ $gte: ["$fiyatSayisal", parseFloat(fiyatMin)] });
-  if (fiyatMax) fiyatExpr.$and.push({ $lte: ["$fiyatSayisal", parseFloat(fiyatMax)] });
-
-  pipeline.push({ $match: { $expr: fiyatExpr } });
-}
-
-
-
-
-if (baslangic) {
-  pipeline.push({
-    $addFields: {
-      tarihDate: {
-        $cond: [
-          { $eq: [{ $type: "$tarih" }, "date"] },
-          "$tarih",
-          { $toDate: "$tarih" }
-        ]
-      }
+    if (bitis) {
+      pipeline.push({
+        $match: {
+          tarihDate: { $lte: new Date(bitis + 'T23:59:59.999Z') }
+        }
+      });
     }
-  });
-  pipeline.push({
-    $match: {
-      tarihDate: { $gte: new Date(baslangic) }
-    }
-  });
-}
 
-
-if (bitis) {
-  pipeline.push({
-    $addFields: {
-      tarihDate: {
-        $cond: [
-          { $eq: [{ $type: "$tarih" }, "date"] },
-          "$tarih",
-          { $toDate: "$tarih" }
-        ]
-      }
+    const skip = (parseInt(page) - 1) * dynamicLimit;
+    
+    // Genel sıralama (özel sıralama yoksa)
+    if (!["populer", "yaklasan", "ucretsiz"].includes(filter?.toLowerCase())) {
+      pipeline.push({ $sort: { tarih: 1, baslik: 1 } }); // Tarih önce, sonra alfabetik
     }
-  });
-  pipeline.push({
-    $match: {
-      tarihDate: { $lte: new Date(bitis + 'T23:59:59.999Z') }
-    }
-  });
-}
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    if (filter?.toLowerCase() !== "populer") {
-      pipeline.push({ $sort: { tarih: 1 } });
-    }
+    
     pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: parseInt(limit) });
+    pipeline.push({ $limit: dynamicLimit });
 
     const etkinlikler = await Etkinlik.aggregate(pipeline);
-    const hasMore = etkinlikler.length === parseInt(limit);
+    const hasMore = etkinlikler.length === dynamicLimit;
     const totalCount = await Etkinlik.countDocuments(match);
+    
     const responseData = {
       data: etkinlikler.map(e => ({
         ...e,
@@ -476,7 +491,6 @@ if (bitis) {
 
     cache.set(cacheKey, responseData);
     res.status(200).json(responseData);
-
 
   } catch (error) {
     console.error("Etkinlik çekme hatası:", error.message);

@@ -35,8 +35,16 @@ const Index = () => {
       try {
         setLoadingMore(true);
 
-        // Backend'e filter parametresi gönder
-        const res = await axiosClient.get(`/etkinlik/tum?page=${page}&limit=12&filter=${aktifSekme}`);
+        // Dinamik limit hesaplama
+        const getLimit = () => {
+          if (aktifSekme === 'tum') {
+            return page === 1 ? 12 : 6;
+          }
+          return 12; // Diğer sekmeler için sabit
+        };
+
+        const limit = getLimit();
+        const res = await axiosClient.get(`/etkinlik/tum?page=${page}&limit=${limit}&filter=${aktifSekme}`);
         const yeniEtkinlikler = res.data?.data || [];
 
         const etkinliklerMaplenmis = yeniEtkinlikler.map(e => ({
@@ -75,18 +83,10 @@ const Index = () => {
     setTimeout(() => setPage(1), 0);
   }, [aktifSekme]);
 
-  // Frontend filtreleme sadece "tum" sekmesi için sıralama yapacak
+  // Backend'den gelen sırayı koru, frontend'de ekstra sıralama yapma
   const filtrelenmisEtkinlikler = useMemo(() => {
-    // Backend zaten doğru filtrelemeyi yapıyor, sadece "tum" için alfabetik sıralama ekle
-    if (aktifSekme === "tum") {
-      return etkinlikler.sort((a, b) =>
-        a.baslik.localeCompare(b.baslik, "tr", { sensitivity: "base" })
-      );
-    }
-
-    // Diğer sekmeler için backend'den gelen sırayı koru
     return etkinlikler;
-  }, [etkinlikler, aktifSekme]);
+  }, [etkinlikler]);
 
   const renderEtkinlik = useCallback(({ item }) => {
     try {
@@ -133,7 +133,7 @@ const Index = () => {
     }
   }, []);
 
-  // Sekme değiştirme fonksiyonu - cache temizleme gereksiz
+  // Sekme değiştirme fonksiyonu
   const handleTabChange = (newTab) => {
     if (newTab !== aktifSekme) {
       setAktifSekme(newTab);
