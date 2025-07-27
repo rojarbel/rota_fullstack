@@ -3,7 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const { Worker } = require('worker_threads');
 const fs = require('fs');
-
+const verifyToken = require("../middleware/verifyToken");
+const verifyAdmin = require("../middleware/verifyAdmin");
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -17,6 +18,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -28,7 +31,7 @@ const upload = multer({
 });
 
 
-router.post('/', upload.single('file'), (req, res) => {
+router.post('/', verifyToken, upload.single('file'), (req, res) => {
   try {
     const originalPath = path.join(__dirname, '../public/img', req.file.filename);
         // İşlemci işini arka planda yapmak için worker kullan

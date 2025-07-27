@@ -17,7 +17,7 @@ const Bildirim = require("../models/Bildirim");
 const { geocode } = require("../utils/geocodeCache");
 const fsPromises = require("fs/promises");
 const NodeCache = require("node-cache");
-const cache = new NodeCache({ stdTTL: 300 });
+const cache = new NodeCache({ stdTTL: 300, checkperiod: 600 });
 function getOptimizedPath(originalPath) {
   return originalPath.replace(".webp", "_optimized.webp");
 }
@@ -503,7 +503,9 @@ router.get("/tum", async (req, res) => {
 router.get("/favori-bildirim", verifyToken, async (req, res) => {
   const bugun = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
 
-  const favoriler = await Favori.find({ kullaniciId: req.user.id }).populate("etkinlikId");
+  const favoriler = await Favori.find({ kullaniciId: req.user.id })
+    .populate("etkinlikId")
+    .lean();
 const bugunkuler = favoriler.filter(f => {
   if (!f.etkinlikId?.tarih) return false;
   const etkinlikTarihi = new Date(f.etkinlikId.tarih).toISOString().split("T")[0];
@@ -590,7 +592,8 @@ router.get('/favorilerim', verifyToken, async (req, res) => {
           gizli: { $ne: true },
           tarih: { $gte: bugun } // ← new Date() yerine bugun yaz
         }
-      });
+      })
+      .lean();
 
     // Etkinlik silinmişse veya tarihi geçmişse populate null olur, onları filtrele:
     const etkinlikler = favoriler

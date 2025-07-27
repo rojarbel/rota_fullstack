@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -7,7 +8,15 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const clientUrl = process.env.CLIENT_BASE_URL || "https://example.com";
 
-
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ message: 'Too many requests, please try again later.' });
+  },
+});
 // Kayıt
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
@@ -86,7 +95,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Şifre sıfırlama bağlantısı isteği
-router.post('/reset-password-request', async (req, res) => {
+router.post('/reset-password-request', resetLimiter, async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -131,7 +140,7 @@ router.post('/reset-password-request', async (req, res) => {
   }
 });
 
-router.post('/verify-reset-code', async (req, res) => {
+router.post('/verify-reset-code', resetLimiter, async (req, res) => {
   const { email, code, newPassword } = req.body;
 
   try {
