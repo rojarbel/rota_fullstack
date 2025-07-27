@@ -70,60 +70,71 @@ async function fetchEvents(query) {
     { $match: match },
   ];
 
-  // Filter'a göre özel işlemler
-  if (filter?.toLowerCase() === "ucretsiz") {
-    // ÜCRETSİZ SEKMESİ: Tüm etkinlikleri ucuzdan pahalıya sırala
-    // Ücretsiz olanlar doğal olarak en başta gelecek
-    
-    pipeline.push({
-      $addFields: {
-        fiyatSayisal: {
-          $cond: [
-            {
-              $or: [
-                { $in: ["$fiyat", ["", " ", null, undefined, "Ücretsiz", "ücretsiz", "ÜCRETSİZ", "ücretsiz ", "Ücretsiz ", "free", "FREE"]] },
-                { $eq: ["$fiyat", 0] },
-                { $eq: ["$fiyat", "0"] },
-                { $eq: ["$fiyat", "0.00"] }
-              ]
-            },
-            0, // Ücretsiz etkinlikler için 0
-            {
-              $toDouble: {
-                $ifNull: [
-                  {
-                    $convert: {
-                      input: {
-                        $arrayElemAt: [
-                          {
-                            $regexFindAll: {
-                              input: { $toString: "$fiyat" },
-                              regex: /\d+(\.\d+)?/
-                            }
-                          }, 0
-                        ]
-                      }.match,
-                      to: "double",
-                      onError: 999999 // Geçersiz fiyatları en sona at
-                    }
-                  },
-                  999999
-                ]
+// Filter'a göre özel işlemler
+if (filter?.toLowerCase() === "ucretsiz") {
+  // ÜCRETSİZ SEKMESİ: Tüm etkinlikleri ucuzdan pahalıya sırala
+  // Ücretsiz olanlar doğal olarak en başta gelecek
+  
+  pipeline.push({
+    $addFields: {
+      fiyatSayisal: {
+        $cond: [
+          {
+            $or: [
+              { $in: ["$fiyat", ["", " ", null, undefined, "Ücretsiz", "ücretsiz", "ÜCRETSİZ", "ücretsiz ", "Ücretsiz ", "free", "FREE"]] },
+              { $eq: ["$fiyat", 0] },
+              { $eq: ["$fiyat", "0"] },
+              { $eq: ["$fiyat", "0.00"] }
+            ]
+          },
+          0, // Ücretsiz etkinlikler için 0
+          {
+            // Ücretli etkinlikler için fiyat çıkarma
+            $let: {
+              vars: {
+                fiyatString: { $toString: "$fiyat" },
+              },
+              in: {
+                $toDouble: {
+                  $ifNull: [
+                    {
+                      $convert: {
+                        input: {
+                          $arrayElemAt: [
+                            {
+                              $regexFindAll: {
+                                input: "$$fiyatString",
+                                regex: /(\d+(?:\.\d+)?)/
+                              }
+                            }, 0
+                          ]
+                        }.match,
+                        to: "double",
+                        onError: 999999 // Geçersiz fiyatları en sona at
+                      }
+                    },
+                    999999
+                  ]
+                }
               }
             }
-          ]
-        }
+          }
+        ]
       }
-    });
+    }
+  });
 
-    // Ucuzdan pahalıya sırala, aynı fiyatta alfabetik
-    pipeline.push({ 
-      $sort: { 
-        fiyatSayisal: 1,  // Ucuzdan pahalıya
-        baslik: 1         // Aynı fiyatta alfabetik
-      } 
-    });
-  }
+  // Ucuzdan pahalıya sırala (önce fiyat, sonra alfabetik)
+  pipeline.push({ 
+    $sort: { 
+      fiyatSayisal: 1,  // Ucuzdan pahalıya (0, 10, 20, 50, ...)
+      baslik: 1         // Aynı fiyatta alfabetik
+    } 
+  });
+}
+
+
+
   else if (filter?.toLowerCase() === "yaklasan") {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
