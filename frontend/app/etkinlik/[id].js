@@ -388,6 +388,8 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
         <FastImage
           uri={gorselSrc}
           cacheKey={etkinlik.id}
+          priority="high"
+          resizeMode="cover"
           style={{
             width: '100%',
             height: 300,

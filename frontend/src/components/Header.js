@@ -49,7 +49,27 @@ const Header = ({ onHamburgerClick, onSearchChange }) => {
     const toggleProfileDropdown = useCallback(() => {
     setIsProfileDropdownOpen(prev => !prev);
   }, []);
+  useEffect(() => {
+    const images = searchResults
+      .map(item => {
+        if (item.gorsel && item.gorsel !== 'null') {
+          return {
+            uri: `${IMAGE_BASE_URL}${item.gorsel}`,
+            cacheKey: item._id || item.id || `search-${item.baslik}`,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
 
+    if (images.length > 0) {
+      try {
+        FastImage.preload(images);
+      } catch (e) {
+        console.warn('preload search results failed', e);
+      }
+    }
+  }, [searchResults]);
   const closeProfileDropdown = useCallback(() => setIsProfileDropdownOpen(false), []);
 
   const toggleAuthMenu = useCallback(() => {
@@ -185,6 +205,29 @@ useEffect(() => {
 
   if (isLoggedIn) fetchBildirimler();
 }, [isLoggedIn]);
+useEffect(() => {
+  const images = bildirimler
+    .map((b, idx) => {
+      const etkinlik = b.etkinlikId || b.etkinlik || {};
+      const gorsel = etkinlik.gorsel;
+      if (gorsel) {
+        return {
+          uri: `${IMAGE_BASE_URL}${gorsel}`,
+          cacheKey: `bildirim-${etkinlik._id || etkinlik.id || idx}`,
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  if (images.length > 0) {
+    try {
+      FastImage.preload(images);
+    } catch (e) {
+      console.warn('preload notifications failed', e);
+    }
+  }
+}, [bildirimler]);
 
 useFocusEffect(
   React.useCallback(() => {
@@ -369,6 +412,8 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
                      ? `${IMAGE_BASE_URL}${item.gorsel}`
                       : 'https://via.placeholder.com/100'}
                     cacheKey={item._id || item.id || `search-${item.baslik}`}
+                    priority="high"
+                    resizeMode="cover"
                     style={styles.eventImage}
                   />
                   <View style={styles.eventTextContainer}>
@@ -439,6 +484,8 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
             }
             style={styles.panelImage}
             cacheKey={`bildirim-${etkinlik._id || etkinlik.id || index}`}
+            priority="high"
+resizeMode="cover"
           />
             
             <View style={styles.flex1}>

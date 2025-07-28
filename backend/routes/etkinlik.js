@@ -475,6 +475,51 @@ router.delete("/favori/:etkinlikId", verifyToken, async (req, res) => {
   
   res.json({ message: "Favoriden çıkarıldı" });
 });
+// Etkinlik güncelleme (admin)
+router.put("/:id", verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      baslik,
+      sehir,
+      tarih,
+      fiyat,
+      kategori,
+      tur,
+      gorsel,
+      aciklama,
+      adres,
+      gizli
+    } = req.body;
+
+    const updated = await Etkinlik.findByIdAndUpdate(
+      id,
+      {
+        baslik,
+        sehir,
+        tarih,
+        fiyat,
+        kategori,
+        tur,
+        gorsel,
+        aciklama,
+        adres,
+        gizli: gizli === "true" || gizli === true ? true : false,
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Etkinlik bulunamadı" });
+    }
+
+    flushEventsCache();
+    res.json({ message: "Etkinlik güncellendi", etkinlik: updated });
+  } catch (error) {
+    console.error("Etkinlik güncelleme hatası:", error);
+    res.status(500).json({ message: "Güncelleme sırasında hata oluştu" });
+  }
+});
 
 // Kullanıcının favori etkinliklerini döndür
 

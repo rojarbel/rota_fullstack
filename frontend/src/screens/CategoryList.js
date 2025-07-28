@@ -128,6 +128,8 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
         <FastImage
           uri={item.gorsel || 'https://via.placeholder.com/150'}
           cacheKey={item._id}
+          priority="high"
+          resizeMode="cover"
           style={{
             width: 80,
             height: 80,

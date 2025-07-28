@@ -91,6 +91,30 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, [aktifSekme]);
 
+      useEffect(() => {
+    const images = etkinlikler
+      .map(item => {
+        if (
+          typeof item.gorsel === 'string' &&
+          item.gorsel.trim().length > 0 &&
+          !item.gorsel.startsWith('data:image') &&
+          item.gorsel.startsWith('/')
+        ) {
+          return { uri: `${IMAGE_BASE_URL}${item.gorsel}`, cacheKey: item._id };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    if (images.length > 0) {
+      try {
+        FastImage.preload(images);
+      } catch (e) {
+        logger.warn('preload crash:', e);
+      }
+    }
+  }, [etkinlikler]);
+
   // Backend'den gelen sırayı koru, frontend'de ekstra sıralama yapma
   const filtrelenmisEtkinlikler = useMemo(() => {
     return etkinlikler;
@@ -117,7 +141,13 @@ const Index = () => {
           }
         >
           {gorselUrl ? (
-            <FastImage uri={gorselUrl} cacheKey={item._id} style={styles.image} />
+            <FastImage
+              uri={gorselUrl}
+              cacheKey={item._id}
+              priority="high"
+              resizeMode="cover"
+              style={styles.image}
+            />
           ) : (
             <Image
               source={require('../assets/placeholder.png')}
