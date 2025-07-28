@@ -95,26 +95,26 @@ if (filter?.toLowerCase() === "ucretsiz") {
                 fiyatString: { $toString: "$fiyat" },
               },
               in: {
-                $toDouble: {
-                  $ifNull: [
-                    {
-                      $convert: {
-                        input: {
-                          $arrayElemAt: [
-                            {
-                              $regexFindAll: {
-                                input: "$$fiyatString",
-                                regex: /(\d+(?:\.\d+)?)/
-                              }
-                            }, 0
-                          ]
-                        }.match,
-                        to: "double",
-                        onError: 999999 // Geçersiz fiyatları en sona at
+                $let: {
+                  vars: {
+                    matches: {
+                      $regexFindAll: {
+                        input: "$$fiyatString",
+                        regex: /(\d+(?:\.\d+)?)/
                       }
-                    },
-                    999999
-                  ]
+                    }
+                  },
+                  in: {
+                    $cond: [
+                      { $gt: [{ $size: "$$matches" }, 0] },
+                      {
+                        $toDouble: {
+                          $arrayElemAt: ["$$matches.match", 0]
+                        }
+                      },
+                      999999 // Geçersiz fiyatları en sona at
+                    ]
+                  }
                 }
               }
             }
