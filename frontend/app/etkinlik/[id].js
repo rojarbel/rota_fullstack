@@ -90,7 +90,9 @@ export default function EtkinlikDetay() {
   }, [etkinlik]);
 
   const paylas = async (tip) => {
-    const url = `https://rota.app/etkinlik/${etkinlik.id}`;
+  const url = `https://rojarbel.github.io/link/?id=${etkinlik.id}`;
+
+
     const mesaj = `${etkinlik.baslik} - ${formatDate(etkinlik.tarih)}\n${url}`;
 
 

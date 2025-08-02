@@ -30,7 +30,6 @@ export default {
   ios: {
     bundleIdentifier: 'com.rojar.rota',
     buildNumber: '7',
-    associatedDomains: ['applinks:rota.app'],
     supportsTablet: true,
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS || 'YOUR_IOS_API_KEY',
@@ -56,9 +55,8 @@ android: {
     {
       action: 'VIEW',
       data: {
-        scheme: 'https',
-        host: 'rota.app',
-        pathPrefix: '/etkinlik',
+        scheme: 'urbanrota',
+        host: 'etkinlik'
       },
       category: ['BROWSABLE', 'DEFAULT'],
     },
