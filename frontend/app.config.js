@@ -105,6 +105,7 @@ extra: {
         }
       }
     ],
+        'expo-ads-admob',
     './plugins/withGoogleMapsString',
   ],
   experiments: {
