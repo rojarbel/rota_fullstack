@@ -21,6 +21,7 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
+import { AdMobBanner } from 'expo-ads-admob';
 
 const PRIMARY = '#7B2CBF';
 const ACCENT = '#FFD54F';
@@ -645,7 +646,18 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
             </Text>
           )}
         </View>
-
+        {!modalVisible && (
+          <AdMobBanner
+            adUnitID={
+              Platform.OS === 'ios'
+                ? "ca-app-pub-1780309959690745/8953851581"       // iOS Banner ID
+                : "ca-app-pub-1780309959690745/8648429943"       // Android Banner ID
+            }
+            servePersonalizedAds={false}
+            onDidFailToReceiveAdWithError={console.log}
+            style={{ alignSelf: 'center', marginVertical: 28 }}
+          />
+        )}
         {modalVisible && (
           <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, right: 0, backgroundColor: '#0008', justifyContent: 'center', alignItems: 'center' }}>
             <View style={{ width: '85%', maxHeight: '70%', backgroundColor: '#fff', borderRadius: 12, padding: 16 }}>

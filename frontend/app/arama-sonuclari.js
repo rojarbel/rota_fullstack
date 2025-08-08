@@ -8,6 +8,9 @@ import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import FastImage from 'expo-fast-image';
+import { AdMobBanner } from 'expo-ads-admob';
+import { Platform } from 'react-native';
+
 export default function AramaSonuclari() {
   const { q, sehir } = useLocalSearchParams();
   const [etkinlikler, setEtkinlikler] = useState([]);
@@ -107,6 +110,18 @@ const renderItem = useCallback(({ item }) => {
         maxToRenderPerBatch={10}
         windowSize={10}
         removeClippedSubviews={true}
+        ListFooterComponent={
+          <AdMobBanner
+            adUnitID={
+              Platform.OS === 'ios'
+                ? "ca-app-pub-1780309959690745/8953851581"
+                : "ca-app-pub-1780309959690745/8648429943"
+            }
+            servePersonalizedAds={false}
+            onDidFailToReceiveAdWithError={console.log}
+            style={{ alignSelf: 'center', marginVertical: 24 }}
+          />
+        }
       />
       )}
     </View>

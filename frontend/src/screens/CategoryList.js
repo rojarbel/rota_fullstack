@@ -7,6 +7,7 @@ import FastImage from 'expo-fast-image';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import qs from 'qs';
 import handleApiError from '../utils/handleApiError';
+import { AdMobBanner } from 'expo-ads-admob';
 
 const PRIMARY = '#7B2CBF';
 const SECONDARY = '#FFD54F';
@@ -423,9 +424,23 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
           )}
         </>
       }
-      ListFooterComponent={loading ? (
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>Yükleniyor...</Text>
-      ) : null}
+      ListFooterComponent={
+        <>
+          {loading ? (
+            <Text style={{ textAlign: 'center', marginTop: 20 }}>Yükleniyor...</Text>
+          ) : null}
+          <AdMobBanner
+            adUnitID={
+              Platform.OS === 'ios'
+                ? "ca-app-pub-1780309959690745/8953851581"
+                : "ca-app-pub-1780309959690745/8648429943"
+            }
+            servePersonalizedAds={false}
+            onDidFailToReceiveAdWithError={console.log}
+            style={{ alignSelf: 'center', marginVertical: 28 }}
+          />
+        </>
+      }
       ListEmptyComponent={!loading && filteredEvents.length === 0 ? (
         <Text style={{ textAlign: 'center', marginTop: 20 }}>{emptyMessage}</Text>
       ) : null}

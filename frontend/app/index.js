@@ -14,6 +14,8 @@ import FastImage from 'expo-fast-image';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../src/constants';
+import { AdMobBanner } from 'expo-ads-admob';
+import { Platform } from 'react-native';
 
 const Index = () => {
   const router = useRouter();
@@ -230,6 +232,16 @@ const Index = () => {
             {loadingMore && (
               <ActivityIndicator size="small" color={PRIMARY} style={styles.mv20} />
             )}
+            <AdMobBanner
+              adUnitID={
+                Platform.OS === 'ios'
+                  ? "ca-app-pub-1780309959690745/8953851581"
+                  : "ca-app-pub-1780309959690745/8648429943"
+              }
+              servePersonalizedAds={false}
+              onDidFailToReceiveAdWithError={console.log}
+              style={{ alignSelf: 'center', marginVertical: 24 }}
+            />
           </>
         }
       />
