@@ -14,7 +14,8 @@ import FastImage from 'expo-fast-image';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../src/constants';
-import { AdMobBanner } from 'expo-ads-admob';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+
 import { Platform } from 'react-native';
 
 const Index = () => {
@@ -232,16 +233,16 @@ const Index = () => {
             {loadingMore && (
               <ActivityIndicator size="small" color={PRIMARY} style={styles.mv20} />
             )}
-            <AdMobBanner
-              adUnitID={
+          <View style={{ alignItems: 'center', marginVertical: 24 }}>
+            <BannerAd
+              unitId={
                 Platform.OS === 'ios'
-                  ? "ca-app-pub-1780309959690745/8953851581"
-                  : "ca-app-pub-1780309959690745/8648429943"
+                  ? 'ca-app-pub-1780309959690745/8953851581'
+                  : 'ca-app-pub-1780309959690745/8648429943'
               }
-              servePersonalizedAds={false}
-              onDidFailToReceiveAdWithError={console.log}
-              style={{ alignSelf: 'center', marginVertical: 24 }}
+              size={BannerAdSize.ADAPTIVE_BANNER}
             />
+          </View>
           </>
         }
       />
