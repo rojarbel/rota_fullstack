@@ -8,11 +8,15 @@ import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import FastImage from 'expo-fast-image';
-import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
-
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { Platform } from 'react-native';
 
 export default function AramaSonuclari() {
+  const BANNER_ID = __DEV__
+  ? TestIds.BANNER
+  : (Platform.OS === 'ios'
+      ? 'ca-app-pub-1780309959690745/8953851581'
+      : 'ca-app-pub-1780309959690745/8648429943');
   const { q, sehir } = useLocalSearchParams();
   const [etkinlikler, setEtkinlikler] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,15 +115,12 @@ const renderItem = useCallback(({ item }) => {
         maxToRenderPerBatch={10}
         windowSize={10}
         removeClippedSubviews={true}
-       ListFooterComponent={
+      ListFooterComponent={
         <View style={{ alignItems: 'center', marginVertical: 24 }}>
           <BannerAd
-            unitId={
-              Platform.OS === 'ios'
-                ? 'ca-app-pub-1780309959690745/8953851581'
-                : 'ca-app-pub-1780309959690745/8648429943'
-            }
-            size={BannerAdSize.ADAPTIVE_BANNER}
+            unitId={BANNER_ID}
+            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+            requestOptions={{ requestNonPersonalizedAdsOnly: true }}
           />
         </View>
       }

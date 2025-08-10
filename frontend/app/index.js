@@ -14,9 +14,14 @@ import FastImage from 'expo-fast-image';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../src/constants';
-import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads'
 
 import { Platform } from 'react-native';
+const BANNER_ID = __DEV__
+  ? TestIds.BANNER
+  : (Platform.OS === 'ios'
+      ? 'ca-app-pub-1780309959690745/8953851581'
+      : 'ca-app-pub-1780309959690745/8648429943');
 
 const Index = () => {
   const router = useRouter();
@@ -228,23 +233,15 @@ const Index = () => {
             )}
           </>
         }
-        ListFooterComponent={
-          <>
-            {loadingMore && (
-              <ActivityIndicator size="small" color={PRIMARY} style={styles.mv20} />
-            )}
-          <View style={{ alignItems: 'center', marginVertical: 24 }}>
+        ListFooterComponent={() => (
+          <View style={{ alignItems: 'center', marginVertical: 16 }}>
             <BannerAd
-              unitId={
-                Platform.OS === 'ios'
-                  ? 'ca-app-pub-1780309959690745/8953851581'
-                  : 'ca-app-pub-1780309959690745/8648429943'
-              }
-              size={BannerAdSize.ADAPTIVE_BANNER}
+              unitId={BANNER_ID}
+              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+              requestOptions={{ requestNonPersonalizedAdsOnly: true }}
             />
           </View>
-          </>
-        }
+        )}
       />
     </View>
   );

@@ -21,9 +21,14 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
-import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 
-
+const BANNER_ID = __DEV__
+  ? TestIds.BANNER
+  : (Platform.OS === 'ios'
+      ? 'ca-app-pub-1780309959690745/8953851581'
+      : 'ca-app-pub-1780309959690745/8648429943');
+      
 const PRIMARY = '#7B2CBF';
 const ACCENT = '#FFD54F';
 const TEXT = '#333';
@@ -647,19 +652,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
             </Text>
           )}
         </View>
-        {!modalVisible && (
-          <View style={{ alignItems: 'center', marginVertical: 24 }}>
-            <BannerAd
-              unitId={
-                Platform.OS === 'ios'
-                  ? 'ca-app-pub-1780309959690745/8953851581'
-                  : 'ca-app-pub-1780309959690745/8648429943'
-              }
-              size={BannerAdSize.ADAPTIVE_BANNER}
-            />
-          </View>
 
-        )}
         {modalVisible && (
           <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, right: 0, backgroundColor: '#0008', justifyContent: 'center', alignItems: 'center' }}>
             <View style={{ width: '85%', maxHeight: '70%', backgroundColor: '#fff', borderRadius: 12, padding: 16 }}>
@@ -687,7 +680,15 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
             </View>
           </View>
         )}
-       </ScrollView>
+      <View style={{ alignItems: 'center', marginTop: 12, marginBottom: 24 }}>
+        <BannerAd
+          unitId={BANNER_ID}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+          requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        />
+      </View>
+      </ScrollView>
+
 </KeyboardAvoidingView>
   );
 }
