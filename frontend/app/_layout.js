@@ -9,7 +9,7 @@ import { AuthProvider } from '../src/context/AuthContext';
 import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
 import useAuth from '../src/hooks/useAuth';
-import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
+
 
 function AppLayoutInner() {
   const insets = useSafeAreaInsets();
@@ -39,17 +39,6 @@ useEffect(() => {
   return () => sub.remove();
 }, [router]);
 
-useEffect(() => {
-  mobileAds()
-    .setRequestConfiguration({
-      // Emülatör ve fiziksel cihaz test ID’leri
-      maxAdContentRating: MaxAdContentRating.PG,
-      tagForChildDirectedTreatment: false,
-      tagForUnderAgeOfConsent: false,
-    })
-    .then(() => mobileAds().initialize());
-}, []);
-  
   const handleSwipeBack = (event) => {
     // Gesture tamamlandığında kontrol et
     if (event.nativeEvent.state === State.END && Platform.OS === 'ios') {
