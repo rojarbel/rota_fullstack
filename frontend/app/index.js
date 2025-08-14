@@ -17,7 +17,8 @@ import { IMAGE_BASE_URL } from '../src/constants';
 import { AdsConsent, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
 
-import { Platform } from 'react-native';
+import { BANNER_ID } from '../src/constants/admob';
+
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
   const [visible, setVisible] = useState(true);
   const [requestOptions, setRequestOptions] = useState();
@@ -47,9 +48,7 @@ function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) 
   );
 }
 
-const BANNER_ID = Platform.OS === 'ios'
-  ? 'ca-app-pub-1780309959690745/8953851581'   // iOS Banner unit
-  : 'ca-app-pub-1780309959690745/8289939937';  // Android Banner unit
+
 
 const Index = () => {
   const router = useRouter();

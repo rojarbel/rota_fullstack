@@ -10,12 +10,10 @@ import formatDate from '../src/utils/formatDate';
 import FastImage from 'expo-fast-image';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
-import { Platform } from 'react-native';
+import { BANNER_ID } from '../src/constants/admob';
 
 export default function AramaSonuclari() {
-const BANNER_ID = Platform.OS === 'ios'
-  ? 'ca-app-pub-1780309959690745/8953851581'
-  : 'ca-app-pub-1780309959690745/8289939937';
+
   const { q, sehir } = useLocalSearchParams();
   const [etkinlikler, setEtkinlikler] = useState([]);
   const [loading, setLoading] = useState(true);

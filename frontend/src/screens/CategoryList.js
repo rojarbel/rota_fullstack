@@ -9,9 +9,7 @@ import qs from 'qs';
 import handleApiError from '../utils/handleApiError';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
-const BANNER_ID = Platform.OS === 'ios'
-  ? 'ca-app-pub-1780309959690745/8953851581'
-  : 'ca-app-pub-1780309959690745/8289939937';
+import { BANNER_ID } from '../constants/admob';
 
   function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
   const [visible, setVisible] = React.useState(true);
