@@ -1,5 +1,6 @@
 import { Slot, ExpoRouterProvider } from 'expo-router';
 import { useEffect } from 'react';
+import NetInfo from '@react-native-community/netinfo';
 import mobileAds, {
   MaxAdContentRating,
   AdsConsent,
@@ -10,6 +11,8 @@ import linking from './linking';
 export default function App() {
   useEffect(() => {
     async function init() {
+            const { isInternetReachable } = await NetInfo.fetch();
+      console.log(isInternetReachable);
       try {
         await AdsConsent.requestInfoUpdate();
         await AdsConsent.loadAndShowConsentFormIfRequired();
