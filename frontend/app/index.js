@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -14,19 +14,29 @@ import FastImage from 'expo-fast-image';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../src/constants';
-import mobileAds, { MaxAdContentRating, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { AdsConsent, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
 
 import { Platform } from 'react-native';
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
-  const [visible, setVisible] = React.useState(true);
-  if (!visible) return null;
+  const [visible, setVisible] = useState(true);
+  const [requestOptions, setRequestOptions] = useState();
+
+  useEffect(() => {
+    AdsConsent.getUserChoices()
+      .then(({ selectPersonalisedAds }) => {
+        setRequestOptions({ requestNonPersonalizedAdsOnly: !selectPersonalisedAds });
+      })
+      .catch(() => setRequestOptions({ requestNonPersonalizedAdsOnly: true }));
+  }, []);
+
+  if (!visible || !requestOptions) return null;
   return (
     <View style={{ alignItems: 'center', marginBottom: 12 }}>
       <BannerAd
         unitId={unitId}
         size={size}
-        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        requestOptions={requestOptions}
         onAdLoaded={() => console.log('banner loaded')}
         onAdFailedToLoad={(e) => {
           console.log('banner error', e);

@@ -1,17 +1,38 @@
 import { Slot, ExpoRouterProvider } from 'expo-router';
 import { useEffect } from 'react';
-import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
+import mobileAds, {
+  MaxAdContentRating,
+  AdsConsent,
+  AdsConsentStatus,
+} from 'react-native-google-mobile-ads';
 import linking from './linking';
 
 export default function App() {
   useEffect(() => {
-    mobileAds()
-      .setRequestConfiguration({
+    async function init() {
+      try {
+        await AdsConsent.requestInfoUpdate();
+        await AdsConsent.loadAndShowConsentFormIfRequired();
+      } catch (e) {
+        // Still attempt to request ads if gathering consent fails
+        console.error('Consent flow failed', e);
+      }
+
+      const { status, canRequestAds } = await AdsConsent.getConsentInfo();
+      const requestConfiguration = {
         maxAdContentRating: MaxAdContentRating.T,
         tagForChildDirectedTreatment: false,
-        tagForUnderAgeOfConsent: false,
-      })
-      .then(() => mobileAds().initialize());
+        tagForUnderAgeOfConsent: status !== AdsConsentStatus.OBTAINED,
+      };
+
+      await mobileAds().setRequestConfiguration(requestConfiguration);
+
+      if (canRequestAds) {
+        await mobileAds().initialize();
+      }
+    }
+
+    init();
   }, []);
 
   return (
