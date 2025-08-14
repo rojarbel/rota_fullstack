@@ -7,13 +7,26 @@ import FastImage from 'expo-fast-image';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import qs from 'qs';
 import handleApiError from '../utils/handleApiError';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
-const BANNER_ID = __DEV__
-  ? TestIds.BANNER
-  : (Platform.OS === 'ios'
-      ? 'ca-app-pub-1780309959690745/8953851581'
-      : 'ca-app-pub-1780309959690745/8648429943');
+const BANNER_ID = Platform.OS === 'ios'
+  ? 'ca-app-pub-1780309959690745/8953851581'
+  : 'ca-app-pub-1780309959690745/8289939937';
+
+  function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
+  const [visible, setVisible] = React.useState(true);
+  if (!visible) return null;
+  return (
+    <View style={{ alignItems: 'center', marginVertical: 12 }}>
+      <BannerAd
+        unitId={unitId}
+        size={size}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdFailedToLoad={() => setVisible(false)}
+      />
+    </View>
+  );
+}
 const PRIMARY = '#7B2CBF';
 const SECONDARY = '#FFD54F';
 
@@ -115,7 +128,8 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
       : events;
   }, [events, selectedFilters.sehir]);
 
-  const renderItem = useCallback(({ item }) => (
+const renderItem = useCallback(({ item, index }) => (
+  <>
     <TouchableOpacity
       onPress={() => router.push({ pathname: '/etkinlik/[id]', params: { id: item._id } })}
       style={{
@@ -158,6 +172,8 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
         </View>
       </View>
     </TouchableOpacity>
+        { ((index + 1) % 8 === 0) && <InlineBanner unitId={BANNER_ID} /> }
+  </>
   ), [router]);
 
   return (
@@ -168,7 +184,7 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
       initialNumToRender={6}
       maxToRenderPerBatch={10}
       windowSize={10}
-      removeClippedSubviews
+      removeClippedSubviews={false}
       onEndReached={() => {
         if (hasMore && !loading) {
           setPage(prev => prev + 1);
@@ -429,18 +445,12 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
           )}
         </>
       }
-        ListFooterComponent={ 
-          <View style={{ alignItems: 'center', marginVertical: 28 }}> 
-            {loading ? ( 
-              <Text style={{ textAlign: 'center', marginBottom: 12 }}>Yükleniyor...</Text> 
-            ) : null} 
-            <BannerAd 
-              unitId={BANNER_ID} 
-              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} 
-              requestOptions={{ requestNonPersonalizedAdsOnly: true }} 
-            /> 
-          </View> 
-        }
+      ListFooterComponent={
+        <>
+          {loading ? <Text style={{ textAlign: 'center', marginBottom: 12 }}>Yükleniyor...</Text> : null}
+          <InlineBanner unitId={BANNER_ID} />
+        </>
+      }
 
       ListEmptyComponent={!loading && filteredEvents.length === 0 ? (
         <Text style={{ textAlign: 'center', marginTop: 20 }}>{emptyMessage}</Text>

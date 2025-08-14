@@ -8,20 +8,32 @@ import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import FastImage from 'expo-fast-image';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+
 import { Platform } from 'react-native';
 
 export default function AramaSonuclari() {
-  const BANNER_ID = __DEV__
-  ? TestIds.BANNER
-  : (Platform.OS === 'ios'
-      ? 'ca-app-pub-1780309959690745/8953851581'
-      : 'ca-app-pub-1780309959690745/8648429943');
+const BANNER_ID = Platform.OS === 'ios'
+  ? 'ca-app-pub-1780309959690745/8953851581'
+  : 'ca-app-pub-1780309959690745/8289939937';
   const { q, sehir } = useLocalSearchParams();
   const [etkinlikler, setEtkinlikler] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
+function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
+  const [visible, setVisible] = React.useState(true);
+  if (!visible) return null;
+  return (
+    <View style={{ alignItems: 'center', marginVertical: 12 }}>
+      <BannerAd
+        unitId={unitId}
+        size={size}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdFailedToLoad={() => setVisible(false)}
+      />
+    </View>
+  );
+}
 useEffect(() => {
   const fetch = async () => {
     try {
@@ -50,7 +62,7 @@ useEffect(() => {
   fetch();
 }, [q, sehir]);
 
-const renderItem = useCallback(({ item }) => {
+const renderItem = useCallback(({ item, index }) => {
   const gorselUrl =
     typeof item.gorsel === 'string' &&
     item.gorsel.trim().length > 0 &&
@@ -59,6 +71,7 @@ const renderItem = useCallback(({ item }) => {
       ? `${IMAGE_BASE_URL}${item.gorsel}`
       : null;
         return (
+             <>
     <TouchableOpacity
       onPress={() => router.push({ pathname: '/etkinlik/[id]', params: { id: item.id } })}
       style={{
@@ -92,6 +105,9 @@ const renderItem = useCallback(({ item }) => {
         {(item.fiyat && item.fiyat !== '0') ? `${item.fiyat} ₺` : 'Ücretsiz'} • {item.kategori}
       </Text>
     </TouchableOpacity>
+    
+      { ((index + 1) % 3 === 0) && <InlineBanner unitId={BANNER_ID} /> }
+    </>
   );
 }, []);
 
@@ -114,16 +130,8 @@ const renderItem = useCallback(({ item }) => {
         initialNumToRender={6}
         maxToRenderPerBatch={10}
         windowSize={10}
-        removeClippedSubviews={true}
-      ListFooterComponent={
-        <View style={{ alignItems: 'center', marginVertical: 24 }}>
-          <BannerAd
-            unitId={BANNER_ID}
-            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-            requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-          />
-        </View>
-      }
+removeClippedSubviews={false}
+ListFooterComponent={<InlineBanner unitId={BANNER_ID} />}
       />
       )}
     </View>

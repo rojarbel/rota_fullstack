@@ -14,14 +14,32 @@ import FastImage from 'expo-fast-image';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../src/constants';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads'
+import mobileAds, { MaxAdContentRating, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+
 
 import { Platform } from 'react-native';
-const BANNER_ID = __DEV__
-  ? TestIds.BANNER
-  : (Platform.OS === 'ios'
-      ? 'ca-app-pub-1780309959690745/8953851581'
-      : 'ca-app-pub-1780309959690745/8648429943');
+function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
+  const [visible, setVisible] = React.useState(true);
+  if (!visible) return null;
+  return (
+    <View style={{ alignItems: 'center', marginBottom: 12 }}>
+      <BannerAd
+        unitId={unitId}
+        size={size}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdLoaded={() => console.log('banner loaded')}
+        onAdFailedToLoad={(e) => {
+          console.log('banner error', e);
+          setVisible(false); // “no fill / error” ise boşluk bırakma
+        }}
+      />
+    </View>
+  );
+}
+
+const BANNER_ID = Platform.OS === 'ios'
+  ? 'ca-app-pub-1780309959690745/8953851581'   // iOS Banner unit
+  : 'ca-app-pub-1780309959690745/8289939937';  // Android Banner unit
 
 const Index = () => {
   const router = useRouter();
@@ -41,6 +59,7 @@ const Index = () => {
       logger.warn('onEndReached crash:', e);
     }
   }, [hasMore, loadingMore]);
+
 
   useEffect(() => {
     const fetchEtkinlikler = async () => {
@@ -128,19 +147,23 @@ const Index = () => {
     return etkinlikler;
   }, [etkinlikler]);
 
-  const renderEtkinlik = useCallback(({ item }) => {
-    try {
-      if (!item || typeof item !== 'object') return null;
+// Kaç öğede bir reklam? 1 = her etkinlikten sonra
+const AD_EVERY = 3;
 
-      const gorselUrl =
-        typeof item.gorsel === 'string' &&
-        item.gorsel.trim().length > 0 &&
-        !item.gorsel.startsWith('data:image') &&
-        item.gorsel.startsWith('/')
-          ? `${IMAGE_BASE_URL}${item.gorsel}`
-          : null;
+const renderEtkinlik = useCallback(({ item, index }) => {
+  try {
+    if (!item || typeof item !== 'object') return null;
 
-      return (
+    const gorselUrl =
+      typeof item.gorsel === 'string' &&
+      item.gorsel.trim().length > 0 &&
+      !item.gorsel.startsWith('data:image') &&
+      item.gorsel.startsWith('/')
+        ? `${IMAGE_BASE_URL}${item.gorsel}`
+        : null;
+
+    return (
+      <>
         <TouchableOpacity
           style={styles.card}
           onPress={() =>
@@ -172,12 +195,19 @@ const Index = () => {
             {item.fiyat && item.fiyat !== '0' ? `${item.fiyat} ₺` : 'Ücretsiz'}
           </Text>
         </TouchableOpacity>
-      );
-    } catch (error) {
-      logger.warn('renderEtkinlik crash:', error);
-      return null;
-    }
-  }, []);
+
+        {/* REKLAM: her N öğede bir (AD_EVERY) */}
+    { ((index + 1) % AD_EVERY === 0) && (
+      <InlineBanner unitId={BANNER_ID} />
+    )}
+      </>
+    );
+  } catch (error) {
+    logger.warn('renderEtkinlik crash:', error);
+    return null;
+  }
+}, []);
+
 
   // Sekme değiştirme fonksiyonu
   const handleTabChange = useCallback((newTab) => {
@@ -193,7 +223,7 @@ const Index = () => {
         initialNumToRender={6}
         maxToRenderPerBatch={10}
         windowSize={10}
-        removeClippedSubviews={true}
+        removeClippedSubviews={false}
         renderItem={renderEtkinlik}
         keyExtractor={(item, index) => {
           try {
@@ -233,15 +263,6 @@ const Index = () => {
             )}
           </>
         }
-        ListFooterComponent={() => (
-          <View style={{ alignItems: 'center', marginVertical: 16 }}>
-            <BannerAd
-              unitId={BANNER_ID}
-              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-              requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-            />
-          </View>
-        )}
       />
     </View>
   );

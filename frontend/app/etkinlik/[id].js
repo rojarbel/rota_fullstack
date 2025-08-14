@@ -21,13 +21,27 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
-const BANNER_ID = __DEV__
-  ? TestIds.BANNER
-  : (Platform.OS === 'ios'
-      ? 'ca-app-pub-1780309959690745/8953851581'
-      : 'ca-app-pub-1780309959690745/8648429943');
+const BANNER_ID = Platform.OS === 'ios'
+  ? 'ca-app-pub-1780309959690745/8953851581'
+  : 'ca-app-pub-1780309959690745/8289939937';
+
+  function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
+  const [visible, setVisible] = React.useState(true);
+  if (!visible) return null;
+  return (
+    <View style={{ alignItems: 'center', marginVertical: 12 }}>
+      <BannerAd
+        unitId={unitId}
+        size={size}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdFailedToLoad={() => setVisible(false)}
+      />
+    </View>
+  );
+}
+
       
 const PRIMARY = '#7B2CBF';
 const ACCENT = '#FFD54F';
@@ -545,6 +559,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
   ))}
 </View>
         </View>
+<InlineBanner unitId={BANNER_ID} />
 
         <View style={{
           backgroundColor: '#fff',
@@ -680,13 +695,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
             </View>
           </View>
         )}
-      <View style={{ alignItems: 'center', marginTop: 12, marginBottom: 24 }}>
-        <BannerAd
-          unitId={BANNER_ID}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-          requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-        />
-      </View>
+      <InlineBanner unitId={BANNER_ID} />
       </ScrollView>
 
 </KeyboardAvoidingView>

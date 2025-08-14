@@ -105,7 +105,11 @@ extra: {
         }
       }
     ],
- ['react-native-google-mobile-ads', { androidAppId: 'ca-app-pub-1780309959690745~9976973421', iosAppId: 'ca-app-pub-1780309959690745~3609223231' }],
+['react-native-google-mobile-ads', {
+  android_app_id: 'ca-app-pub-1780309959690745~9976973421',
+  ios_app_id:     'ca-app-pub-1780309959690745~3609223231'
+}],
+
     './plugins/withGoogleMapsString',
   ],
   experiments: {
