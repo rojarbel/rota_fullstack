@@ -31,9 +31,9 @@ export default function App() {
       const netState = await NetInfo.fetch();
       console.log('NetInfo isInternetReachable', netState.isInternetReachable);
 
-      if (canRequestAds) {
+
         await mobileAds().initialize();
-      }
+
     }
 
     init();

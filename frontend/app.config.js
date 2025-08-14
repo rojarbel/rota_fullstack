@@ -43,7 +43,14 @@ export default {
   },
 android: {
   package: 'com.rojar.rota',
-  permissions: ['ACCESS_FINE_LOCATION', 'READ_MEDIA_IMAGES', 'ACCESS_COARSE_LOCATION'],
+  permissions: [
+    'INTERNET',
+    'ACCESS_NETWORK_STATE',
+    'com.google.android.gms.permission.AD_ID',
+    'ACCESS_FINE_LOCATION',
+    'READ_MEDIA_IMAGES',
+    'ACCESS_COARSE_LOCATION'
+  ],
   adaptiveIcon: {
     foregroundImage: './assets/images/adaptive-icon.png',
     backgroundColor: '#ffffff',
