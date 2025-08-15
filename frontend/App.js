@@ -7,6 +7,7 @@ import mobileAds, {
 } from 'react-native-google-mobile-ads';
 import NetInfo from '@react-native-community/netinfo';
 import linking from './linking';
+
 global.canShowAds = false;
 export default function App() {
   useEffect(() => {
@@ -31,10 +32,9 @@ export default function App() {
 
       const netState = await NetInfo.fetch();
       console.log('NetInfo isInternetReachable', netState.isInternetReachable);
-      if (canRequestAds) {
-
-        await mobileAds().initialize();
-    }
+// Test/teşhis: consent ne olursa olsun SDK’yı başlat
+await mobileAds().initialize();
+console.log('AdMob initialized (forced init for testing)');
     }
 
     init();
