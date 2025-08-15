@@ -9,15 +9,16 @@ const Menu = ({ isMobile }) => {
   const currentPath = usePathname();
 
   const categories = [
-    { path: '/aktivizm', label: 'Aktivizm' },
+        { path: '/konser', label: 'Konser' },
+           { path: '/tiyatro', label: 'Tiyatro' },
     { path: '/atolye', label: 'Atölye' },
-    { path: '/dans', label: 'Dans' },
-    { path: '/konferans', label: 'Konferans' },
-    { path: '/konser', label: 'Konser' },
     { path: '/sergi', label: 'Sergi' },
-    { path: '/sinema', label: 'Sinema' },
+    { path: '/dans', label: 'Dans' },
     { path: '/spor', label: 'Spor' },
-    { path: '/tiyatro', label: 'Tiyatro' }
+        { path: '/sinema', label: 'Sinema' },
+        { path: '/konferans', label: 'Konferans' },
+        { path: '/aktivizm', label: 'Aktivizm' }
+
   ];
 
   return (
