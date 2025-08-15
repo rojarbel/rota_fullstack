@@ -1,15 +1,14 @@
 // app/arama-sonuclari.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import axiosClient from "../src/api/axiosClient";
 import { IMAGE_BASE_URL } from '../src/constants';
-import { useCallback } from 'react';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import FastImage from 'expo-fast-image';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
-
+import useAdRequestOptions from '../src/hooks/useAdRequestOptions';
 import { BANNER_ID } from '../src/constants/admob';
 
 export default function AramaSonuclari() {
@@ -20,13 +19,14 @@ export default function AramaSonuclari() {
   const router = useRouter();
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
   const [visible, setVisible] = React.useState(true);
-  if (!global.canShowAds || !visible) return null;
+  const requestOptions = useAdRequestOptions();
+  if (!global.canShowAds || !visible || !requestOptions) return null;
   return (
     <View style={{ alignItems: 'center', marginVertical: 12 }}>
       <BannerAd
         unitId={unitId}
         size={size}
-        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        requestOptions={requestOptions}
         onAdFailedToLoad={() => setVisible(false)}
       />
     </View>

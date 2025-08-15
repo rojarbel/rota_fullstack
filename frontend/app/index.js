@@ -14,24 +14,15 @@ import FastImage from 'expo-fast-image';
 import logger from '../src/utils/logger';
 import formatDate from '../src/utils/formatDate';
 import { IMAGE_BASE_URL } from '../src/constants';
-import { AdsConsent, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import useAdRequestOptions from '../src/hooks/useAdRequestOptions';
 
 
 import { BANNER_ID } from '../src/constants/admob';
 
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
   const [visible, setVisible] = useState(true);
-  const [requestOptions, setRequestOptions] = useState();
-
-  useEffect(() => {
-        if (!global.canShowAds) return;
-    AdsConsent.getUserChoices()
-      .then(({ selectPersonalisedAds }) => {
-        setRequestOptions({ requestNonPersonalizedAdsOnly: !selectPersonalisedAds });
-      })
-      .catch(() => setRequestOptions({ requestNonPersonalizedAdsOnly: true }));
-  }, []);
-
+    const requestOptions = useAdRequestOptions();
   if (!global.canShowAds || !visible || !requestOptions) return null;
   return (
     <View style={{ alignItems: 'center', marginBottom: 12 }}>

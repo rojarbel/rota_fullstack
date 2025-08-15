@@ -8,18 +8,20 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import qs from 'qs';
 import handleApiError from '../utils/handleApiError';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import useAdRequestOptions from '../hooks/useAdRequestOptions';
 
 import { BANNER_ID } from '../constants/admob';
 
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
   const [visible, setVisible] = React.useState(true);
-  if (!global.canShowAds || !visible) return null;
+  const requestOptions = useAdRequestOptions();
+  if (!global.canShowAds || !visible || !requestOptions) return null;
   return (
     <View style={{ alignItems: 'center', marginVertical: 12 }}>
       <BannerAd
         unitId={unitId}
         size={size}
-        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        requestOptions={requestOptions}
         onAdFailedToLoad={() => setVisible(false)}
       />
     </View>
