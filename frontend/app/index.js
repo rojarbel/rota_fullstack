@@ -24,6 +24,7 @@ function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) 
   const [requestOptions, setRequestOptions] = useState();
 
   useEffect(() => {
+        if (!global.canShowAds) return;
     AdsConsent.getUserChoices()
       .then(({ selectPersonalisedAds }) => {
         setRequestOptions({ requestNonPersonalizedAdsOnly: !selectPersonalisedAds });
@@ -31,7 +32,7 @@ function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) 
       .catch(() => setRequestOptions({ requestNonPersonalizedAdsOnly: true }));
   }, []);
 
-  if (!visible || !requestOptions) return null;
+  if (!global.canShowAds || !visible || !requestOptions) return null;
   return (
     <View style={{ alignItems: 'center', marginBottom: 12 }}>
       <BannerAd

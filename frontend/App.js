@@ -7,7 +7,7 @@ import mobileAds, {
 } from 'react-native-google-mobile-ads';
 import NetInfo from '@react-native-community/netinfo';
 import linking from './linking';
-
+global.canShowAds = false;
 export default function App() {
   useEffect(() => {
     async function init() {
@@ -20,6 +20,7 @@ export default function App() {
       }
 
       const { status, canRequestAds } = await AdsConsent.getConsentInfo();
+          global.canShowAds = canRequestAds;
       const requestConfiguration = {
         maxAdContentRating: MaxAdContentRating.T,
         tagForChildDirectedTreatment: false,
@@ -30,10 +31,10 @@ export default function App() {
 
       const netState = await NetInfo.fetch();
       console.log('NetInfo isInternetReachable', netState.isInternetReachable);
-
+      if (canRequestAds) {
 
         await mobileAds().initialize();
-
+    }
     }
 
     init();

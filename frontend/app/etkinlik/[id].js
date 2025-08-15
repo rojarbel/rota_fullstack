@@ -25,9 +25,9 @@ import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
 import { BANNER_ID } from '../../src/constants/admob';
 
-  function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
+function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
   const [visible, setVisible] = React.useState(true);
-  if (!visible) return null;
+  if (!global.canShowAds || !visible) return null;
   return (
     <View style={{ alignItems: 'center', marginVertical: 12 }}>
       <BannerAd

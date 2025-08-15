@@ -20,7 +20,7 @@ export default function AramaSonuclari() {
   const router = useRouter();
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
   const [visible, setVisible] = React.useState(true);
-  if (!visible) return null;
+  if (!global.canShowAds || !visible) return null;
   return (
     <View style={{ alignItems: 'center', marginVertical: 12 }}>
       <BannerAd
