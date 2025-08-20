@@ -10,7 +10,7 @@ try {
 export default {
   name: 'Rota',
   slug: 'urbanrota',
-  version: '1.0.9',
+  version: '1.1',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   userInterfaceStyle: 'automatic',
@@ -29,7 +29,7 @@ export default {
   assetBundlePatterns: ['**/*'],
   ios: {
     bundleIdentifier: 'com.rojar.rota',
-    buildNumber: '9',
+    buildNumber: '10',
     supportsTablet: true,
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS || 'YOUR_IOS_API_KEY',

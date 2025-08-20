@@ -13,20 +13,36 @@ import useAdRequestOptions from '../hooks/useAdRequestOptions';
 import { BANNER_ID } from '../constants/admob';
 
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
-  const [visible, setVisible] = React.useState(true);
+  const [key, setKey] = useState(0);
+  const [cooldown, setCooldown] = useState(false);
   const requestOptions = useAdRequestOptions();
-  if (!global.canShowAds || !visible || !requestOptions) return null;
+
+  if (!requestOptions || cooldown) return null;
+
   return (
-    <View style={{ alignItems: 'center', marginVertical: 12 }}>
+    <View style={{ alignItems: 'center', marginVertical: 12, minHeight: 60 }}>
       <BannerAd
+        key={key}
         unitId={unitId}
         size={size}
         requestOptions={requestOptions}
-        onAdFailedToLoad={() => setVisible(false)}
+        onAdLoaded={() => console.log('banner loaded')}
+        onAdFailedToLoad={(e) => {
+          console.log('banner error', e);
+          setCooldown(true);
+          setTimeout(() => {
+            setKey((k) => k + 1);   // remount
+            setCooldown(false);
+          }, 90000); // 90 sn bekle
+        }}
       />
     </View>
   );
 }
+
+// 👇 BUNU fonksiyon DIŞINA koy
+const MemoInlineBanner = React.memo(InlineBanner);
+
 const PRIMARY = '#7B2CBF';
 const SECONDARY = '#FFD54F';
 
@@ -172,9 +188,14 @@ const renderItem = useCallback(({ item, index }) => (
         </View>
       </View>
     </TouchableOpacity>
-        { ((index + 1) % 8 === 0) && <InlineBanner unitId={BANNER_ID} /> }
+
+    {/* Her 6 öğeden sonra reklam */}
+    {(index + 1) % 6 === 0 && (
+      <MemoInlineBanner unitId={BANNER_ID} size={BannerAdSize.BANNER} />
+    )}
   </>
-  ), [router]);
+), [router]);
+
 
   return (
     <FlatList
@@ -186,10 +207,11 @@ const renderItem = useCallback(({ item, index }) => (
       windowSize={10}
       removeClippedSubviews={false}
       onEndReached={() => {
-        if (hasMore && !loading) {
+        if (!hasMore || loading) return;
+          setLoading(true);             // tek tetik koruması
           setPage(prev => prev + 1);
-        }
-      }}
+        }}
+    
       onEndReachedThreshold={0.4}
       renderItem={renderItem}
       ListHeaderComponent={
@@ -448,7 +470,11 @@ const renderItem = useCallback(({ item, index }) => (
       ListFooterComponent={
         <>
           {loading ? <Text style={{ textAlign: 'center', marginBottom: 12 }}>Yükleniyor...</Text> : null}
-          <InlineBanner unitId={BANNER_ID} />
+
+          {/* Son öğe sayısı 6’nın katı değilse footer reklamını göster */}
+          {filteredEvents.length % 6 !== 0 && (
+            <MemoInlineBanner unitId={BANNER_ID} size={BannerAdSize.BANNER} />
+          )}
         </>
       }
 

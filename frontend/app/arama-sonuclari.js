@@ -17,21 +17,36 @@ export default function AramaSonuclari() {
   const [etkinlikler, setEtkinlikler] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
-  const [visible, setVisible] = React.useState(true);
+  const [key, setKey] = useState(0);
+  const [cooldown, setCooldown] = useState(false);
   const requestOptions = useAdRequestOptions();
-  if (!global.canShowAds || !visible || !requestOptions) return null;
+
+  if (!requestOptions || cooldown) return null;
+
   return (
-    <View style={{ alignItems: 'center', marginVertical: 12 }}>
+    <View style={{ alignItems: 'center', marginVertical: 12, minHeight: 60 }}>
       <BannerAd
+        key={key}
         unitId={unitId}
         size={size}
         requestOptions={requestOptions}
-        onAdFailedToLoad={() => setVisible(false)}
+        onAdLoaded={() => console.log('banner loaded')}
+        onAdFailedToLoad={(e) => {
+          console.log('banner error', e);
+          setCooldown(true);
+          setTimeout(() => {
+            setKey((k) => k + 1);   // remount
+            setCooldown(false);
+          }, 90000); // 90 sn bekle
+        }}
       />
     </View>
   );
 }
+
 useEffect(() => {
   const fetch = async () => {
     try {
@@ -68,46 +83,58 @@ const renderItem = useCallback(({ item, index }) => {
     item.gorsel.startsWith('/')
       ? `${IMAGE_BASE_URL}${item.gorsel}`
       : null;
-        return (
-             <>
-    <TouchableOpacity
-      onPress={() => router.push({ pathname: '/etkinlik/[id]', params: { id: item.id } })}
-      style={{
-        backgroundColor: '#fff',
-        padding: 14,
-        marginBottom: 20,
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 4,
-      }}
-    >
-      {gorselUrl ? (
-        <FastImage uri={gorselUrl} cacheKey={item.id} style={{ width: '100%', height: 240, borderRadius: 12 }} />
-      ) : (
-        <Image
-          source={require('../assets/placeholder.png')}
-          style={{ width: '100%', height: 240, borderRadius: 12 }}
-          resizeMode="cover"
-        />
+
+  return (
+    <>
+      <TouchableOpacity
+        onPress={() =>
+          router.push({ pathname: '/etkinlik/[id]', params: { id: item.id } })
+        }
+        style={{
+          backgroundColor: '#fff',
+          padding: 14,
+          marginBottom: 20,
+          borderRadius: 16,
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 4,
+        }}
+      >
+        {gorselUrl ? (
+          <FastImage
+            uri={gorselUrl}
+            cacheKey={item.id}
+            style={{ width: '100%', height: 240, borderRadius: 12 }}
+          />
+        ) : (
+          <Image
+            source={require('../assets/placeholder.png')}
+            style={{ width: '100%', height: 240, borderRadius: 12 }}
+            resizeMode="cover"
+          />
+        )}
+
+        <Text style={{ fontSize: 17, fontWeight: '700', color: '#111', marginTop: 10 }}>
+          {item.baslik}
+        </Text>
+        <Text style={{ fontSize: 14, color: '#666', marginTop: 6 }}>
+          {item.sehir} • {formatDate(item.tarih)}
+        </Text>
+        <Text style={{ marginTop: 8, color: '#000', fontWeight: '600' }}>
+          {(item.fiyat && item.fiyat !== '0') ? `${item.fiyat} ₺` : 'Ücretsiz'} • {item.kategori}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Her 3 öğeden sonra reklam */}
+      {(index + 1) % 4=== 0 && (
+        <InlineBanner unitId={BANNER_ID} size={BannerAdSize.BANNER} />
       )}
-      <Text style={{ fontSize: 17, fontWeight: '700', color: '#111', marginTop: 10 }}>
-        {item.baslik}
-      </Text>
-      <Text style={{ fontSize: 14, color: '#666', marginTop: 6 }}>
-        {item.sehir} • {formatDate(item.tarih)}
-      </Text>
-      <Text style={{ marginTop: 8, color: '#000', fontWeight: '600' }}>
-        {(item.fiyat && item.fiyat !== '0') ? `${item.fiyat} ₺` : 'Ücretsiz'} • {item.kategori}
-      </Text>
-    </TouchableOpacity>
-    
-      { ((index + 1) % 3 === 0) && <InlineBanner unitId={BANNER_ID} /> }
     </>
   );
-}, []);
+}, [router]);
+
 
   return (
     <View style={{ padding: 16, backgroundColor: '#fff', flex: 1 }}>
@@ -121,16 +148,18 @@ const renderItem = useCallback(({ item, index }) => {
       ) : etkinlikler.length === 0 ? (
         <Text style={{ color: '#888' }}>Etkinlik bulunamadı.</Text>
       ) : (
-      <FlatList
-        data={etkinlikler}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        initialNumToRender={6}
-        maxToRenderPerBatch={10}
-        windowSize={10}
-removeClippedSubviews={false}
-ListFooterComponent={<InlineBanner unitId={BANNER_ID} />}
-      />
+    <FlatList
+      data={etkinlikler}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      initialNumToRender={6}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      removeClippedSubviews={false}
+      ListHeaderComponent={
+        <InlineBanner unitId={BANNER_ID} size={BannerAdSize.BANNER} />
+      }
+    />
       )}
     </View>
   );

@@ -26,20 +26,33 @@ import useAdRequestOptions from '../../src/hooks/useAdRequestOptions';
 import { BANNER_ID } from '../../src/constants/admob';
 
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
-  const [visible, setVisible] = React.useState(true);
+  const [key, setKey] = useState(0);
+  const [cooldown, setCooldown] = useState(false);
   const requestOptions = useAdRequestOptions();
-  if (!global.canShowAds || !visible || !requestOptions) return null;
+
+  if (!requestOptions || cooldown) return null;
+
   return (
-    <View style={{ alignItems: 'center', marginVertical: 12 }}>
+    <View style={{ alignItems: 'center', marginVertical: 12, minHeight: 60 }}>
       <BannerAd
+        key={key}
         unitId={unitId}
         size={size}
         requestOptions={requestOptions}
-        onAdFailedToLoad={() => setVisible(false)}
+        onAdLoaded={() => console.log('banner loaded')}
+        onAdFailedToLoad={(e) => {
+          console.log('banner error', e);
+          setCooldown(true);
+          setTimeout(() => {
+            setKey((k) => k + 1);   // remount
+            setCooldown(false);
+          }, 90000); // 90 sn bekle
+        }}
       />
     </View>
   );
 }
+
 
       
 const PRIMARY = '#7B2CBF';
@@ -558,8 +571,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
   ))}
 </View>
         </View>
-<InlineBanner unitId={BANNER_ID} />
-
+        <InlineBanner unitId={BANNER_ID} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
         <View style={{
           backgroundColor: '#fff',
           borderRadius: 12,
@@ -694,7 +706,7 @@ const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${bac
             </View>
           </View>
         )}
-      <InlineBanner unitId={BANNER_ID} />
+    <InlineBanner unitId={BANNER_ID} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
       </ScrollView>
 
 </KeyboardAvoidingView>

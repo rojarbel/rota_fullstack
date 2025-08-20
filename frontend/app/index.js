@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -21,25 +21,32 @@ import useAdRequestOptions from '../src/hooks/useAdRequestOptions';
 import { BANNER_ID } from '../src/constants/admob';
 
 function InlineBanner({ unitId, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }) {
-  const [visible, setVisible] = useState(true);
-    const requestOptions = useAdRequestOptions();
-  if (!global.canShowAds || !visible || !requestOptions) return null;
+  const [key, setKey] = useState(0);
+  const [cooldown, setCooldown] = useState(false);
+  const requestOptions = useAdRequestOptions();
+
+  if (!requestOptions || cooldown) return null;
+
   return (
-    <View style={{ alignItems: 'center', marginBottom: 12 }}>
+    <View style={{ alignItems: 'center', marginVertical: 12, minHeight: 60 }}>
       <BannerAd
+        key={key}
         unitId={unitId}
         size={size}
         requestOptions={requestOptions}
         onAdLoaded={() => console.log('banner loaded')}
         onAdFailedToLoad={(e) => {
           console.log('banner error', e);
-          setVisible(false); // “no fill / error” ise boşluk bırakma
+          setCooldown(true);
+          setTimeout(() => {
+            setKey((k) => k + 1);   // remount
+            setCooldown(false);
+          }, 90000); // 90 sn bekle
         }}
       />
     </View>
   );
 }
-
 
 
 const Index = () => {
@@ -149,7 +156,7 @@ const Index = () => {
   }, [etkinlikler]);
 
 // Kaç öğede bir reklam? 1 = her etkinlikten sonra
-const AD_EVERY = 3;
+
 
 const renderEtkinlik = useCallback(({ item, index }) => {
   try {
@@ -198,9 +205,10 @@ const renderEtkinlik = useCallback(({ item, index }) => {
         </TouchableOpacity>
 
         {/* REKLAM: her N öğede bir (AD_EVERY) */}
-    { ((index + 1) % AD_EVERY === 0) && (
-      <InlineBanner unitId={BANNER_ID} />
-    )}
+{ ((index + 1) % 3 === 0) && (
+   <InlineBanner unitId={BANNER_ID} size={BannerAdSize.BANNER} />
+) }
+
       </>
     );
   } catch (error) {
