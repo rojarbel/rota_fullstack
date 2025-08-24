@@ -111,11 +111,26 @@ const CategoryList = ({ category, typeOptions = [], emptyMessage = 'Uygun etkinl
           paramsSerializer: p => qs.stringify(p, { arrayFormat: 'repeat' })
         });
 
-        const yeni = res.data.data.map(e => ({
-          ...e,
-          _id: e._id?.toString() || e.id?.toString(),
-          gorsel: e.gorsel ? `${IMAGE_BASE_URL}${e.gorsel}` : null,
-        }));
+        const yeni = res.data.data.map(e => {
+          // 1) R2 tam URL varsa direkt onu kullan
+          if (e.gorselUrl && typeof e.gorselUrl === 'string') {
+            return {
+              ...e,
+              _id: e._id?.toString() || e.id?.toString(),
+              gorsel: e.gorselUrl,
+            };
+          }
+          // 2) Legacy: relatif gorsel alanı varsa base ile güvenli birleştir
+          const rel = typeof e.gorsel === 'string' ? e.gorsel : '';
+          const base = (IMAGE_BASE_URL || '').replace(/\/+$/, '');
+          const path = rel.replace(/^\/+/, '');
+          return {
+            ...e,
+            _id: e._id?.toString() || e.id?.toString(),
+            gorsel: path ? `${base}/${path}` : null,
+          };
+        });
+
 
         if (res.data.hasMore !== undefined) {
           setHasMore(res.data.hasMore);

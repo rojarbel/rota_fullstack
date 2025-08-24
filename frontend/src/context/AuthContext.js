@@ -7,7 +7,7 @@ import {
   deleteItem as deleteSecureItem,
 } from '../utils/storage';
 import jwtDecode from 'jwt-decode';
-import axiosClient, { setCachedToken } from '../api/axiosClient';
+import axiosClient from '../api/axiosClient';
 
 const isTokenExpired = (jwt) => {
   try {
@@ -52,7 +52,6 @@ export const AuthProvider = ({ children }) => {
               const { data } = await axiosClient.post('/auth/refresh', { refreshToken });
               token = data.accessToken;
               await setSecureItem('accessToken', token);
-              setCachedToken(token);
             } catch (refreshError) {
               await deleteSecureItem('accessToken');
               await deleteSecureItem('refreshToken');

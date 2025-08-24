@@ -5,50 +5,65 @@ import qs from 'qs';
 import logger from '../utils/logger';
 import Constants from 'expo-constants';
 
+// 🔗 API BASE: .env / eas.json → app.config.js → extra.apiUrl
+// Fallback'ı Azure yerine Render yapıyoruz.
+const EXTRA = Constants.expoConfig?.extra || Constants.manifest?.extra;
+const API_ORIGIN =
+  EXTRA?.apiUrl ||
+  'https://rota-backend-dlyy.onrender.com'; // <- Render URL'in (gerekirse kendi URL'inle değiştir)
 
-
-// ✅ API URL artık runtime'da expoConfig.extra üzerinden okunuyor
-const API_BASE_URL = `${
-  Constants.expoConfig?.extra?.apiUrl ||
-  Constants.manifest?.extra?.apiUrl ||
-  'https://rotabackend-f4gqewcbfcfud4ac.qatarcentral-01.azurewebsites.net'
-}/api`;
-
+const API_BASE_URL = `${API_ORIGIN.replace(/\/+$/, '')}/api`;
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 20000,
+  headers: {
+    Accept: 'application/json',
+  },
 });
 
+// İsteklere token ekle
 axiosClient.interceptors.request.use(async (config) => {
-  // HER ZAMAN storage'dan oku, cachedToken kullanma!
-  const token = await getSecureItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const token = await getSecureItem('accessToken'); // SecureStore/AsyncStorage wrapper
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
+// 401 → refresh akışı
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-if (error.response?.status === 401 && !originalRequest._retry) {
+
+    if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
-      const refreshToken = await getSecureItem('refreshToken');
+
       try {
+        const refreshToken = await getSecureItem('refreshToken');
+        if (!refreshToken) throw new Error('No refresh token');
+
+        // Refresh'i baseURL ile çağır (axiosClient değil → interceptor loop olmasın)
         const { data } = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
-          { refreshToken }
+          { refreshToken },
+          { timeout: 15000, headers: { Accept: 'application/json' } }
         );
+
+        // Yeni accessToken'ı sakla
         await setSecureItem('accessToken', data.accessToken);
 
+        // Orijinal isteği yeni token ile tekrar dene
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return axiosClient(originalRequest);
-      } catch (refreshError) {
-        logger.log('Token yenileme başarısız');
-        return Promise.reject(refreshError);
+      } catch (refreshErr) {
+        logger.log('Token yenileme başarısız, çıkış yapılıyor');
+        // Tokenları sil → (opsiyonel) kullanıcıyı Login ekranına yönlendir
+        await setSecureItem('accessToken', '');
+        await setSecureItem('refreshToken', '');
+        return Promise.reject(refreshErr);
       }
     }
+
     const map = {
       400: 'İstek hatalı.',
       401: 'Oturum açmanız gerekiyor.',
@@ -61,15 +76,16 @@ if (error.response?.status === 401 && !originalRequest._retry) {
   }
 );
 
+export const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 dk
 
-export const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
+// Basit GET cache
 export async function getWithCache(url, options = {}, ttl = DEFAULT_CACHE_TTL) {
   try {
     const paramsString = options.params
       ? qs.stringify(options.params, { arrayFormat: 'repeat' })
       : '';
     const cacheKey = `cache:${url}?${paramsString}`;
+
     const cached = await AsyncStorage.getItem(cacheKey);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -78,15 +94,17 @@ export async function getWithCache(url, options = {}, ttl = DEFAULT_CACHE_TTL) {
       }
       await AsyncStorage.removeItem(cacheKey);
     }
+
     const response = await axiosClient.get(url, options);
     await AsyncStorage.setItem(
       cacheKey,
       JSON.stringify({ timestamp: Date.now(), data: response.data })
     );
     return response;
-  } catch (err) {
-    // Fallback to normal request if cache fails
+  } catch {
+    // Cache patlarsa normal istek
     return axiosClient.get(url, options);
   }
 }
+
 export default axiosClient;

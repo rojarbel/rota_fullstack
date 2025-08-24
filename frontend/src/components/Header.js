@@ -50,16 +50,17 @@ const Header = ({ onHamburgerClick, onSearchChange }) => {
     setIsProfileDropdownOpen(prev => !prev);
   }, []);
   useEffect(() => {
-    const images = searchResults
-      .map(item => {
-        if (item.gorsel && item.gorsel !== 'null') {
-          return {
-            uri: `${IMAGE_BASE_URL}${item.gorsel}`,
-            cacheKey: item._id || item.id || `search-${item.baslik}`,
-          };
-        }
-        return null;
-      })
+ const images = searchResults 
+   .map(item => { 
+     const src = item.gorselUrl 
+       ? item.gorselUrl 
+       : (item.gorsel && item.gorsel !== 'null') 
+         ? `${IMAGE_BASE_URL}${item.gorsel.startsWith('/') ? '' : '/'}${item.gorsel}` 
+         : null; 
+     return src ? { uri: src, cacheKey: item._id || item.id || `search-${item.baslik}` } : null; 
+   })
+
+
       .filter(Boolean);
 
     if (images.length > 0) {
@@ -209,25 +210,20 @@ useEffect(() => {
   const images = bildirimler
     .map((b, idx) => {
       const etkinlik = b.etkinlikId || b.etkinlik || {};
-      const gorsel = etkinlik.gorsel;
-      if (gorsel) {
-        return {
-          uri: `${IMAGE_BASE_URL}${gorsel}`,
-          cacheKey: `bildirim-${etkinlik._id || etkinlik.id || idx}`,
-        };
-      }
-      return null;
+      const src = etkinlik.gorselUrl
+        ? etkinlik.gorselUrl
+        : etkinlik.gorsel
+          ? `${IMAGE_BASE_URL}${String(etkinlik.gorsel).startsWith('/') ? '' : '/'}${etkinlik.gorsel}`
+          : null;
+      return src ? { uri: src, cacheKey: `bildirim-${etkinlik._id || etkinlik.id || idx}` } : null;
     })
     .filter(Boolean);
 
-  if (images.length > 0) {
-    try {
-      FastImage.preload(images);
-    } catch (e) {
-      console.warn('preload notifications failed', e);
-    }
+  if (images.length) {
+    try { FastImage.preload(images); } catch {}
   }
 }, [bildirimler]);
+
 
 useFocusEffect(
   React.useCallback(() => {
@@ -407,10 +403,12 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
                     setShowDropdown(false);
                   }}
                 >
-                  <FastImage
-                    uri={item.gorsel && item.gorsel !== 'null'
-                     ? `${IMAGE_BASE_URL}${item.gorsel}`
-                      : 'https://via.placeholder.com/100'}
+              <FastImage 
+                uri={item.gorselUrl 
+                  ? item.gorselUrl 
+                  : (item.gorsel && item.gorsel !== 'null') 
+                    ? `${IMAGE_BASE_URL}${item.gorsel.startsWith('/') ? '' : '/'}${item.gorsel}` 
+                    : 'https://via.placeholder.com/100'}
                     cacheKey={item._id || item.id || `search-${item.baslik}`}
                     priority="high"
                     resizeMode="cover"
@@ -477,10 +475,12 @@ if (bildirim.tip === 'favori' && bildirim.etkinlikId) {
         <TouchableOpacity onPress={() => handleBildirimTikla(item)}>
           <View style={styles.panelItemContainer}>
           <FastImage
-            uri={
-              gorsel
-                ? `${IMAGE_BASE_URL}${gorsel}`
-                : 'https://via.placeholder.com/100'
+            uri={ 
+              etkinlik.gorselUrl 
+                ? etkinlik.gorselUrl 
+                : gorsel 
+                  ? `${IMAGE_BASE_URL}${String(gorsel).startsWith('/') ? '' : '/'}${gorsel}` 
+                  : 'https://via.placeholder.com/100' 
             }
             style={styles.panelImage}
             cacheKey={`bildirim-${etkinlik._id || etkinlik.id || index}`}

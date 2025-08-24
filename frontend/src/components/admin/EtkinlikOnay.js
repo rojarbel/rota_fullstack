@@ -74,12 +74,21 @@ const EtkinlikOnay = () => {
         ) : (
         bekleyenEtkinlikler.map((etkinlik) => (
             <View key={etkinlik.id || etkinlik._id} style={styles.card}>
-            <Image
-              source={{ uri: `${IMAGE_BASE_URL}/img/${etkinlik.gorsel?.split('/').pop()}` }}
-              style={{ width: 200, height: 200 }}
-              onError={() => logger.log('Görsel yüklenemedi')}
-
-            />
+            {(() => { 
+              const g = 
+                etkinlik.gorselUrl 
+                  ? etkinlik.gorselUrl 
+                  : etkinlik.gorsel 
+                    ? `${IMAGE_BASE_URL}${etkinlik.gorsel.startsWith('/') ? '' : '/'}${etkinlik.gorsel}` 
+                    : 'https://via.placeholder.com/200'; 
+              return ( 
+                <Image 
+                  source={{ uri: g }} 
+                  style={{ width: 200, height: 200 }} 
+                  onError={() => logger.log('Görsel yüklenemedi')} 
+                /> 
+              ); 
+            })()}
             <Text style={styles.title}>{etkinlik.baslik}</Text>
             <Text style={styles.text}>{etkinlik.sehir} - {etkinlik.tarih}</Text>
             <View style={styles.buttonGroup}>

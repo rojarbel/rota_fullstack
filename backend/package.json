@@ -10,20 +10,21 @@
     "node": ">=18.x"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.873.0",
     "axios": "^1.7.2",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
+    "express-rate-limit": "^6.11.1",
+    "joi": "^17.10.0",
     "jsonwebtoken": "^9.0.2",
-        "joi": "^17.10.0",
     "mongoose": "^7.6.3",
-    "multer": "^2.0.0",
+    "multer": "^2.0.2",
     "node-cache": "^5.1.2",
     "node-cron": "^3.0.3",
     "nodemailer": "^7.0.3",
     "sharp": "^0.33.4"
-        ,"express-rate-limit": "^6.11.1"
   }
 }
