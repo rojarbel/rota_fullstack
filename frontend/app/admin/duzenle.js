@@ -32,7 +32,7 @@ export default function DuzenleEtkinlik() {
     fiyat: etkinlik.fiyat || "",
     kategori: etkinlik.kategori || "",
     tur: etkinlik.tur || "",
-    gorsel: etkinlik.gorsel || "",
+    gorselUrl: etkinlik.gorselUrl || etkinlik.gorsel || "",
     aciklama: etkinlik.aciklama || ""
   });
 
@@ -52,7 +52,11 @@ export default function DuzenleEtkinlik() {
 
 const handleSubmit = async () => {
   try {
-    await axiosClient.put(`/etkinlik/${etkinlik._id || etkinlik.id}`, form);
+    const { baslik, sehir, tarih, fiyat, kategori, tur, gorselUrl, aciklama } = form;
+    await axiosClient.put(
+      `/etkinlik/${etkinlik._id || etkinlik.id}`,
+      { baslik, sehir, tarih, fiyat, kategori, tur, gorselUrl, aciklama }
+    );
     Alert.alert("Başarılı", "Etkinlik güncellendi");
     router.back();
   } catch (err) {
@@ -113,15 +117,19 @@ const handleDelete = () => {
         ))}
       </Picker>
 
-      <Text>Görsel URL</Text>
-      <TextInput value={form.gorsel} onChangeText={text => handleChange("gorsel", text)} style={{ borderWidth: 1, padding: 8, marginBottom: 12 }} />
-      {form.gorsel?.length > 5 && (
-      <FastImage
-        uri={form.gorsel}
-        cacheKey={form.gorsel}
-        style={{ width: '100%', height: 220, borderRadius: 12, marginBottom: 12 }}
+      <Text>Görsel URL (R2)</Text>
+      <TextInput
+        value={form.gorselUrl}
+        onChangeText={text => handleChange("gorselUrl", text)}
+        style={{ borderWidth: 1, padding: 8, marginBottom: 12 }}
       />
-    )}
+      {form.gorselUrl?.length > 5 && (
+        <FastImage
+          uri={form.gorselUrl}
+          cacheKey={form.gorselUrl}
+          style={{ width: '100%', height: 220, borderRadius: 12, marginBottom: 12 }}
+        />
+      )}
 
       <Text>Açıklama</Text>
       <TextInput multiline numberOfLines={4} value={form.aciklama} onChangeText={text => handleChange("aciklama", text)} style={{ borderWidth: 1, padding: 8, marginBottom: 12 }} />

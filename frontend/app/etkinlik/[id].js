@@ -139,9 +139,17 @@ export default function EtkinlikDetay() {
               return;
             }
 
-            const imageUrl = etkinlik.gorsel?.startsWith('http')
-              ? etkinlik.gorsel
-              : `${IMAGE_BASE_URL}${etkinlik.gorsel}`;
+          const imageUrl = etkinlik.gorselUrl
+            ? etkinlik.gorselUrl
+            : etkinlik.gorsel
+              ? `${IMAGE_BASE_URL}${String(etkinlik.gorsel).startsWith('/') ? '' : '/'}${etkinlik.gorsel}`
+              : null;
+
+          if (!imageUrl) {
+            Alert.alert("Görsel yok", "Bu etkinlik için görsel bulunamadı.");
+            return;
+          }
+
 
             const localPath = FileSystem.documentDirectory + `story_${Date.now()}.jpg`;
             const download = FileSystem.createDownloadResumable(imageUrl, localPath);
@@ -401,7 +409,11 @@ const favoriToggle = async () => {
   }
 
 
-const gorselSrc = etkinlik.gorsel?.startsWith('http') ? etkinlik.gorsel : `${backendURL}${etkinlik.gorsel}`;
+const gorselSrc = etkinlik.gorselUrl
+  ? etkinlik.gorselUrl
+  : etkinlik.gorsel
+    ? `${backendURL}${String(etkinlik.gorsel).startsWith('/') ? '' : '/'}${etkinlik.gorsel}`
+    : 'https://via.placeholder.com/600x400';
 
   return (
 <KeyboardAvoidingView
