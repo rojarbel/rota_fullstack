@@ -124,52 +124,56 @@ const handleSubmit = async () => {
     return;
   }
 
-  const formData = new FormData();
-  formData.append('baslik', baslik);
-  formData.append('sehir', sehir);
-  formData.append('kategori', selectedKategori);
-  formData.append('tur', selectedTur);
-  formData.append('tarih', tarih);
-  formData.append('fiyat', fiyat);
-  formData.append('aciklama', aciklama);
-  formData.append('gizli', gizli); // Gizli durumunu ekle
+  try {                         // <--- EKLEDİK
+    // 1) Upload → R2
+    let publicUrl = null;
+    if (gorsel) {
+      const fileName = gorsel.split('/').pop() || `image_${Date.now()}.jpg`;
+      const fileType = (fileName.split('.').pop() || 'jpg').toLowerCase();
+      const mime = `image/${fileType === 'jpg' ? 'jpeg' : fileType}`;
 
-  if (markerCoords) {
-    formData.append('latitude', markerCoords.latitude);
-    formData.append('longitude', markerCoords.longitude);
-  }
+      const fileInfo = await FileSystem.getInfoAsync(gorsel);
+      if (!fileInfo.exists) {
+        Alert.alert('Hata', 'Görsel dosyası bulunamadı.');
+        return;
+      }
 
-  if (gorsel) {
-    const fileName = gorsel.split('/').pop();
-    const fileType = fileName.split('.').pop();
-    const mime = `image/${fileType || 'jpeg'}`;
-
-    const fileInfo = await FileSystem.getInfoAsync(gorsel);
-    if (fileInfo.exists) {
-      formData.append('gorsel', {
+      const fd = new FormData();
+      fd.append('file', {
         uri: fileInfo.uri,
         name: fileName,
         type: mime,
       });
-    } else {
-      Alert.alert('Hata', 'Görsel dosyası bulunamadı.');
-      return;
+
+      const up = await axiosClient.post('/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      publicUrl = up.data?.url || null;
     }
-  }
 
-  try {
-    const res = await axiosClient.post('/etkinlik', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // 2) Event’i JSON ile oluştur
+    const payload = {
+      baslik,
+      sehir,
+      kategori: selectedKategori,
+      tur: selectedTur,
+      tarih,
+      fiyat,
+      aciklama,
+      gizli,
+      ...(markerCoords ? { latitude: markerCoords.latitude, longitude: markerCoords.longitude } : {}),
+      ...(publicUrl ? { gorselUrl: publicUrl } : {}),
+    };
 
-    // Başarı mesajını gizli etkinlik durumuna göre ayarla
-    const successMessage = gizli 
+    const res = await axiosClient.post('/etkinlik', payload);
+
+    // Başarı mesajı
+    const successMessage = gizli
       ? 'Gizli etkinlik başarıyla oluşturuldu! Sadece direkt linkle erişilebilir.'
       : 'Etkinlik başarıyla gönderildi!';
-    
     Alert.alert('Başarılı', successMessage);
-    
-    // Form alanlarını temizle
+
+    // Formu temizle
     setBaslik('');
     setSehir('');
     setSelectedKategori('');
@@ -182,18 +186,18 @@ const handleSubmit = async () => {
     setMarkerCoords(null);
     setGizli(false);
 
-    // Etkinlik sayfasına yönlendir (hem gizli hem normal etkinlikler için)
+    // Yönlendir
     if (res.data && res.data._id) {
       router.push(`/etkinlik/${res.data._id}`);
     } else {
-      // Eğer ID yoksa ana sayfaya yönlendir
       router.push('/');
     }
-  } catch (error) {
+  } catch (error) {             // <--- MEVCUT catch BURAYA BAĞLANDI
     logger.error('Etkinlik gönderme hatası:', error.response?.data || error.message);
     Alert.alert('Hata', 'Gönderim sırasında bir hata oluştu.');
   }
 };
+
 
 
 

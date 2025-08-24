@@ -126,19 +126,18 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, [aktifSekme]);
 
-      useEffect(() => {
-    const images = etkinlikler
-      .map(item => {
-        if (
-          typeof item.gorsel === 'string' &&
-          item.gorsel.trim().length > 0 &&
-          !item.gorsel.startsWith('data:image') &&
-          item.gorsel.startsWith('/')
-        ) {
-          return { uri: `${IMAGE_BASE_URL}${item.gorsel}`, cacheKey: item._id };
-        }
-        return null;
-      })
+  useEffect(() => { 
+    const images = etkinlikler 
+      .map((item) => { 
+        const raw = (item?.gorselUrl || item?.gorsel || '').trim(); 
+        if (!raw || raw.startsWith('data:image')) return null; 
+ 
+        const uri = raw.startsWith('http') 
+          ? raw 
+          : raw.startsWith('/') ? `${IMAGE_BASE_URL}${raw}` : null; 
+ 
+        return uri ? { uri, cacheKey: item._id } : null; 
+      }) 
       .filter(Boolean);
 
     if (images.length > 0) {
@@ -162,13 +161,12 @@ const renderEtkinlik = useCallback(({ item, index }) => {
   try {
     if (!item || typeof item !== 'object') return null;
 
-    const gorselUrl =
-      typeof item.gorsel === 'string' &&
-      item.gorsel.trim().length > 0 &&
-      !item.gorsel.startsWith('data:image') &&
-      item.gorsel.startsWith('/')
-        ? `${IMAGE_BASE_URL}${item.gorsel}`
-        : null;
+    const raw = (item?.gorselUrl || item?.gorsel || '').trim(); 
+    const gorselUrl = !raw || raw.startsWith('data:image') 
+      ? null 
+      : raw.startsWith('http') 
+        ? raw 
+        : raw.startsWith('/') ? `${IMAGE_BASE_URL}${raw}` : null;
 
     return (
       <>

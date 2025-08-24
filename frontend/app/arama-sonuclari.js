@@ -76,13 +76,11 @@ useEffect(() => {
 }, [q, sehir]);
 
 const renderItem = useCallback(({ item, index }) => {
-  const gorselUrl =
-    typeof item.gorsel === 'string' &&
-    item.gorsel.trim().length > 0 &&
-    !item.gorsel.startsWith('data:image') &&
-    item.gorsel.startsWith('/')
-      ? `${IMAGE_BASE_URL}${item.gorsel}`
-      : null;
+const imgSrc = item.gorselUrl
+  ? item.gorselUrl
+  : (typeof item.gorsel === 'string' && item.gorsel.trim() && !item.gorsel.startsWith('data:image')
+      ? `${IMAGE_BASE_URL}${item.gorsel.startsWith('/') ? '' : '/'}${item.gorsel}`
+      : null);
 
   return (
     <>
@@ -102,9 +100,9 @@ const renderItem = useCallback(({ item, index }) => {
           elevation: 4,
         }}
       >
-        {gorselUrl ? (
+        {imgSrc ? (
           <FastImage
-            uri={gorselUrl}
+            uri={imgSrc}
             cacheKey={item.id}
             style={{ width: '100%', height: 240, borderRadius: 12 }}
           />
@@ -115,7 +113,6 @@ const renderItem = useCallback(({ item, index }) => {
             resizeMode="cover"
           />
         )}
-
         <Text style={{ fontSize: 17, fontWeight: '700', color: '#111', marginTop: 10 }}>
           {item.baslik}
         </Text>

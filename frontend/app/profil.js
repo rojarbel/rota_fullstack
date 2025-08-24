@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { useEffect, useState, useCallback } from 'react';
 import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Linking } from 'react-native';
 import { deleteItems } from '../src/utils/storage';
-import { setCachedToken } from '../src/api/axiosClient';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getItem as getSecureItem } from '../src/utils/storage';
 import logger from '../src/utils/logger';
@@ -166,7 +166,7 @@ const handleDeleteAccount = useCallback(() => {
             'image',
             'userId',
           ]);
-          setCachedToken(null);
+
                     setAuthImage('');
           router.push('/login');
         } catch (err) {

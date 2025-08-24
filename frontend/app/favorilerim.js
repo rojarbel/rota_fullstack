@@ -50,7 +50,11 @@ const Favorilerim = () => {
         favoriler.map((etkinlik) => (
           <TouchableOpacity key={etkinlik._id || etkinlik.id} style={styles.card} onPress={() => detayGoster(etkinlik)}>
             <FastImage
-              uri={`${IMAGE_BASE_URL}${etkinlik.gorsel}`}
+              uri={
+                etkinlik.gorselUrl
+                  ? etkinlik.gorselUrl
+                  : `${IMAGE_BASE_URL}${String(etkinlik.gorsel || '').startsWith('/') ? '' : '/'}${etkinlik.gorsel || ''}`
+              }
               cacheKey={etkinlik._id || etkinlik.id}
               style={styles.image}
             />
